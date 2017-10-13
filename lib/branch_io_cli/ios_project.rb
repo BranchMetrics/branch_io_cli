@@ -5,6 +5,10 @@ module BranchIOCLI
     attr_accessor :path
     attr_accessor :xcodeproj
 
+    def initialize(path)
+      @path = path
+    end
+
     def open
       raise "No path specified" if path.nil?
       @xcodeproj = Xcodeproj::Project.open path

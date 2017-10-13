@@ -3,69 +3,71 @@ require "optparse"
 module BranchIOCLI
   class Options
     class << self
-      def parse(args)
-        options = Options.new
+      attr_accessor :options
+
+      def parse!(args)
+        @options = Options.new
         option_parser = OptionParser.new do |opts|
           opts.banner = "Usage: branch_io [options]"
 
           opts.on("-xXCODEPROJ", "--xcodeproj=XCODEPROJ", "Path to an Xcode project to update") do |path|
-            options.xcodeproj = path
+            @options.xcodeproj = path
           end
 
           opts.on("-lLIVE_KEY", "--live_key=LIVE_KEY", "Branch live key") do |key|
-            options.live_key = key
+            @options.live_key = key
           end
 
           opts.on("-tTEST_KEY", "--test_key=TEST_KEY", "Branch test key") do |key|
-            options.test_key = key
+            @options.test_key = key
           end
 
           opts.on("-TTARGET", "--target=TARGET", "Target to modify in the Xcode project") do |target|
-            options.target = target
+            @options.target = target
           end
 
           opts.on("-aAPP_LINK_SUBDOMAIN", "--app_link_subdomain=APP_LINK_SUBDOMAIN", "An app.link subdomain for Branch links") do |subdomain|
-            options.app_link_subdomain = subdomain
+            @options.app_link_subdomain = subdomain
           end
 
           opts.on("-dDOMAINS", "--domains=DOMAINS", Array, "Comma-separated list of custom or non-Branch domains to use") do |domains|
-            options.domains = domains
+            @options.domains = domains
           end
 
           opts.on("-FFRAMEWORKS", "--frameworks=FRAMEWORKS", Array, "Comma-separated list of system frameworks to add to the Xcode target") do |frameworks|
-            options.frameworks = frameworks
+            @options.frameworks = frameworks
           end
 
           opts.on("-s", "--no_add_sdk", "Don't add the Branch framework to the Xcode project") do
-            options.add_sdk = false
+            @options.add_sdk = false
           end
 
           opts.on("-P", "--no_patch_source", "Don't add source code patches to the Xcode project") do
-            options.patch_source = false
+            @options.patch_source = false
           end
 
           opts.on("-p", "--podfile=PODFILE", "Path to the project's Podfile") do |path|
-            options.podfile = path
+            @options.podfile = path
           end
 
           opts.on("-C", "--cartfile=CARTFILE", "Path to the project's Cartfile") do |path|
-            options.cartfile = path
+            @options.cartfile = path
           end
 
           opts.on("-V", "--no_validate", "Don't validate the AASA files for the project's Universal Link domains") do
-            options.validate = false
+            @options.validate = false
           end
 
           opts.on("-f", "--force", "Set up project even if Universal Link validation fails") do
-            options.force = true
+            @options.force = true
           end
 
           opts.on("-c", "--commit", "Commit the results to Git") do
-            options.commit = true
+            @options.commit = true
           end
 
           opts.on("-u", "--no_pod_repo_update", "Don't update the local podspec repo before adding the Branch pod") do
-            options.pod_repo_update = false
+            @options.pod_repo_update = false
           end
 
           opts.on("-h", "--help", "Display help") do
@@ -75,7 +77,7 @@ module BranchIOCLI
         end
 
         option_parser.parse! args
-        options
+        @options
       end
     end
 
@@ -141,6 +143,8 @@ Options:
     def validate!
       valid = true
       valid &&= !keys.empty?
+
+      # TODO: Validate all parameters
 
       raise "Invalid parameters" unless valid
     end
