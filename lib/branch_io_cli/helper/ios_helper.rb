@@ -1,3 +1,4 @@
+require "json"
 require "net/http"
 require "openssl"
 require "plist"
@@ -145,7 +146,7 @@ module BranchIOCLI
         all_domains.each do |domain|
           domain_valid = validate_team_and_bundle_ids project, target_name, domain, configuration
           valid &&= domain_valid
-          puts "Valid Universal Link configuration for #{domain} ✅" if domain_valid
+          say "Valid Universal Link configuration for #{domain} ✅" if domain_valid
         end
         valid
       end
@@ -192,11 +193,11 @@ module BranchIOCLI
             # Better to use Net::HTTPRedirection and Net::HTTPSuccess here, but
             # having difficulty with the unit tests.
             if (300..399).cover?(response.code.to_i)
-              puts "#{uri} cannot result in a redirect. Ignoring."
+              say "#{uri} cannot result in a redirect. Ignoring."
               next
             elsif response.code.to_i != 200
               # Try the next URI.
-              puts "Could not retrieve #{uri}: #{response.code} #{response.message}. Ignoring."
+              say "Could not retrieve #{uri}: #{response.code} #{response.message}. Ignoring."
               next
             end
 
@@ -216,7 +217,7 @@ module BranchIOCLI
               data = response.body
             end
 
-            puts "GET #{uri}: #{response.code} #{response.message} (Content-type:#{content_type}) ✅"
+            say "GET #{uri}: #{response.code} #{response.message} (Content-type:#{content_type}) ✅"
           end
         end
 
@@ -347,7 +348,7 @@ module BranchIOCLI
         app_delegate = File.open(app_delegate_swift_path, &:read)
         return false if app_delegate =~ /import\s+Branch/
 
-        puts "Patching #{app_delegate_swift_path}"
+        say "Patching #{app_delegate_swift_path}"
 
         apply_patch(
           files: app_delegate_swift_path,
@@ -407,7 +408,7 @@ module BranchIOCLI
         app_delegate = File.open(app_delegate_objc_path, &:read)
         return false if app_delegate =~ %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch;}
 
-        puts "Patching #{app_delegate_objc_path}"
+        say "Patching #{app_delegate_objc_path}"
 
         apply_patch(
           files: app_delegate_objc_path,
@@ -463,7 +464,7 @@ module BranchIOCLI
         # Podfile already contains the Branch pod
         return false if podfile =~ /pod\s+('Branch'|"Branch")/
 
-        puts "Adding pod \"Branch\" to #{podfile_path}"
+        say "Adding pod \"Branch\" to #{podfile_path}"
 
         # TODO: Improve this patch. Should work in the majority of cases for now.
         apply_patch(
@@ -482,7 +483,7 @@ module BranchIOCLI
         # Cartfile already contains the Branch framework
         return false if cartfile =~ /git.+Branch/
 
-        puts "Adding \"Branch\" to #{cartfile_path}"
+        say "Adding \"Branch\" to #{cartfile_path}"
 
         apply_patch(
           files: cartfile_path,

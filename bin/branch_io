@@ -2,9 +2,4 @@
 
 require "branch_io_cli"
 
-begin
-  cli = BranchIOCLI::CLI.new ARGV
-  cli.run
-rescue StandardError => e
-  STDERR.puts "Error setting up Branch: #{e.message}"
-end
+BranchIOCLI::CLI.new.run
