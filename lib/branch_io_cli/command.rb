@@ -1,6 +1,10 @@
 module BranchIOCLI
-  class Action
+  class Command
     class << self
+      def setup(options)
+        # TODO: Rebuild the SetupBranchAction here
+      end
+
       def validate(options)
         project = IOSProject.new options.xcodeproj
         # raises

@@ -34,7 +34,7 @@ module BranchIOCLI
         c.option "--commit", TrueClass, "Commit the results to Git"
 
         c.action do |args, options|
-          # TODO: Pass the options to a method to do the setup
+          Command.setup options
         end
       end
 
@@ -47,7 +47,7 @@ module BranchIOCLI
         c.option "--domains example.com,www.example.com", Array, "Comma-separated list of domains to validate (Branch domains or non-Branch domains)"
 
         c.action do |args, options|
-          Action.validate options
+          Command.validate options
         end
       end
 
