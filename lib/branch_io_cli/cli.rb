@@ -6,6 +6,7 @@ module BranchIOCLI
 
     def run
       # TODO: This
+      puts "branch.io CLI v. #{VERSION}"
       puts Options.options
     end
   end
