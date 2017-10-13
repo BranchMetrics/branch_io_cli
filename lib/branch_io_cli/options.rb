@@ -77,6 +77,7 @@ module BranchIOCLI
         end
 
         option_parser.parse! args
+        @options.validate!
         @options
       end
     end
@@ -96,6 +97,7 @@ module BranchIOCLI
     attr_accessor :force
     attr_accessor :commit
     attr_accessor :pod_repo_update
+    attr_accessor :errors
 
     def initialize
       # Set default values
@@ -106,6 +108,7 @@ module BranchIOCLI
       @add_sdk = true
       @patch_source = true
       @pod_repo_update = true
+      @errors = []
     end
 
     def to_s
@@ -140,7 +143,18 @@ Options:
       # TODO: Merge app_link_subdomain and domains params
     end
 
+    def xcodeproj_path
+    end
+
+    def podfile_path
+    end
+
+    def cartfile_path
+    end
+
     def validate!
+      @errors = []
+
       valid = true
       valid &&= !keys.empty?
 
