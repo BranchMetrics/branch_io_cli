@@ -2,8 +2,5 @@
 
 require "branch_io_cli"
 
-module BranchIOCLI
-  Options.parse! ARGV
-
-  puts Options.options
-end
+cli = BranchIOCLI::CLI.new ARGV
+cli.run
