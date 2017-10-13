@@ -2,4 +2,6 @@
 
 require "branch_io_cli"
 
-puts "TODO: This"
+options = BranchIOCLI::Options.parse ARGV
+
+puts options
