@@ -6,7 +6,8 @@ Gem::Specification.new do |spec|
   spec.name          = 'branch_io_cli'
   spec.version       = BranchIOCLI::VERSION
   spec.summary       = 'Branch.io command-line interface for mobile app integration'
-  spec.description   = 'More to come'
+  spec.description   = 'Set up mobile app projects (currently iOS only) to use the Branch SDK ' \
+                         'without opening Xcode. Validate the Universal Link settings for any project.'
   spec.authors       = ['Branch', 'Jimmy Dee']
   spec.email         = ['integrations@branch.io', 'jgvdthree@gmail.com']
 

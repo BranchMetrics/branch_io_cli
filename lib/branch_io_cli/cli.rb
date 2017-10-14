@@ -17,7 +17,7 @@ module BranchIOCLI
         # Required Branch params
         c.option "--live_key key_live_xxxx", String, "Branch live key"
         c.option "--test_key key_test_yyyy", String, "Branch test key"
-        c.option "--app_link_subdomain myapp", String, "Branch app.link subdomain, e.g. myapp.app.link"
+        c.option "--app_link_subdomain myapp", String, "Branch app.link subdomain, e.g. myapp for myapp.app.link"
         c.option "--domains example.com,www.example.com", Array, "Comma-separated list of custom domain(s) or non-Branch domain(s)"
 
         c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project to update"
@@ -47,7 +47,9 @@ module BranchIOCLI
         c.option "--domains example.com,www.example.com", Array, "Comma-separated list of domains to validate (Branch domains or non-Branch domains)"
 
         c.action do |args, options|
-          Command.validate options
+          valid = Command.validate options
+          exit_code = valid ? 0 : 1
+          exit exit_code
         end
       end
 

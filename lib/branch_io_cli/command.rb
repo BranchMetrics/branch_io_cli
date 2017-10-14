@@ -95,15 +95,7 @@ module BranchIOCLI
 
         say "Universal Link configuration passed validation. ✅" if valid
 
-        # TODO: Return an exit code from the CLI indicating success or failure.
-        # e.g. if not valid
-        # $ branch_io validate
-        # $ echo $?
-        # 1
-        # if valid
-        # $ branch_io validate
-        # $ echo $?
-        # 0
+        valid
       end
 
       def helper
