@@ -18,7 +18,7 @@ module BranchIOCLI
         end
 
         @xcodeproj_path = xcodeproj_path options
-        unless path
+        unless @xcodeproj_path
           say "Please specify the --xcodeproj option."
           return
         end
@@ -26,23 +26,23 @@ module BranchIOCLI
         # raises
         xcodeproj = Xcodeproj::Project.open @xcodeproj_path
 
-        update_podfile(params) || update_cartfile(params, xcodeproj)
+        update_podfile(options) || update_cartfile(options, xcodeproj)
 
         target = options.target # may be nil
 
-        if options.no_validate &&
-           helper.validate_team_and_bundle_ids_from_aasa_files(xcodeproj, target, domains, params[:remove_existing_domains])
+        if !options.no_validate &&
+           !helper.validate_team_and_bundle_ids_from_aasa_files(xcodeproj, target, @domains)
           say "Universal Link configuration failed validation."
           helper.errors.each { |error| say " #{error}" }
           return unless options.force
-        else
+        elsif !options.no_validate
           say "Universal Link configuration passed validation. ✅"
         end
 
         # the following calls can all raise IOError
-        helper.add_keys_to_info_plist xcodeproj, target, keys
-        helper.add_branch_universal_link_domains_to_info_plist xcodeproj, target, domains
-        new_path = helper.add_universal_links_to_project xcodeproj, target, domains, false
+        helper.add_keys_to_info_plist xcodeproj, target, @keys
+        helper.add_branch_universal_link_domains_to_info_plist xcodeproj, target, @domains
+        new_path = helper.add_universal_links_to_project xcodeproj, target, @domains, false
         `git add #{new_path}` if options.commit && new_path
 
         helper.add_system_frameworks xcodeproj, target, options.frameworks unless options.frameworks.nil? || options.frameworks.empty?
@@ -159,14 +159,14 @@ module BranchIOCLI
       end
 
       def all_domains(options)
-        app_link_subdomains = app_link_subdomains params
+        app_link_subdomains = app_link_subdomains options
         custom_domains = options.domains || []
         (app_link_subdomains + custom_domains).uniq
       end
 
       def keys(options)
-        live_key = params[:live_key]
-        test_key = params[:test_key]
+        live_key = options.live_key
+        test_key = options.test_key
         keys = {}
         keys[:live] = live_key unless live_key.nil?
         keys[:test] = test_key unless test_key.nil?
@@ -215,8 +215,9 @@ module BranchIOCLI
         return false unless helper.patch_podfile podfile_path
 
         # 2. pod install
+        # command = "PATH='#{ENV['PATH']}' pod install"
         command = 'pod install'
-        command += ' --repo_update' unless options.no_pod_repo_update
+        command += ' --repo-update' unless options.no_pod_repo_update
 
         Dir.chdir(File.dirname(podfile_path)) do
           `#{command}`

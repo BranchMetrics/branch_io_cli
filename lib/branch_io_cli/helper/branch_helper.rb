@@ -1,6 +1,7 @@
 require "branch_io_cli/helper/android_helper"
 require "branch_io_cli/helper/ios_helper"
 require "pattern_patch"
+require "set"
 
 module BranchIOCLI
   module Helper
@@ -28,7 +29,7 @@ module BranchIOCLI
                                                 options[:offset] || 0
           end
 
-          File.open(options[:file], "w") do |file|
+          File.open(options[:files], "w") do |file|
             file.write modified
           end
         end
