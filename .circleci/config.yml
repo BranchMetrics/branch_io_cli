@@ -35,7 +35,7 @@ jobs:
       - run:
           name: run tests
           command: |
-            bundle exec rake ci
+            bundle exec rake
 
       # collect reports
       - store_test_results:
