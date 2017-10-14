@@ -61,7 +61,7 @@ This can be suppressed using `--no_patch_source`.
 
 #### Prerequisites
 
-Before using this action, make sure to set up your app in the [Branch Dashboard](https://dashboard.branch.io). See https://docs.branch.io/pages/dashboard/integrate/ for details. To use the `setup` command, you need:
+Before using this command, make sure to set up your app in the [Branch Dashboard](https://dashboard.branch.io). See https://docs.branch.io/pages/dashboard/integrate/ for details. To use the `setup` command, you need:
 
 - Branch key(s), either live, test or both
 - Domain name(s) used for Branch links
