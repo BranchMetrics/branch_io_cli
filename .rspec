@@ -1,5 +1,5 @@
 --require spec_helper
 --color
 --format d
---format j
---out test_results/report.json
+--format RspecJunitFormatter
+--out test-results/rspec/rspec.xml
