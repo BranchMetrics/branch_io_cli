@@ -20,10 +20,6 @@ module BranchIOCLI
         end
 
         @xcodeproj_path = options.xcodeproj
-        unless @xcodeproj_path
-          say "Please specify the --xcodeproj option."
-          return
-        end
 
         # raises
         xcodeproj = Xcodeproj::Project.open @xcodeproj_path
@@ -62,10 +58,6 @@ module BranchIOCLI
         options = Helper::ConfigurationHelper.validate_validation_options options
 
         path = options.xcodeproj
-        unless path
-          say "Please specify the --xcodeproj option."
-          return
-        end
 
         # raises
         xcodeproj = Xcodeproj::Project.open path
