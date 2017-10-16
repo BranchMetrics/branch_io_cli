@@ -4,20 +4,26 @@ module BranchIOCLI
   module Helper
     class ConfigurationHelper
       class << self
+        attr_accessor :xcodeproj_path
         attr_accessor :xcodeproj
         attr_accessor :keys
         attr_accessor :all_domains
+        attr_accessor :podfile_path
+        attr_accessor :cartfile_path
 
         def validate_setup_options(options)
-          options.xcodeproj = xcodeproj_path options
+          say "--force is ignored when --no_validate is used." if options.no_validate && options.force
+
+          validate_xcodeproj_path options
           validate_keys_from_setup_options options
           validate_all_domains options
-          options
+          validate_buildfile_path options, "Podfile"
+          validate_buildfile_path options, "Cartfile"
+          validate_sdk_addition options
         end
 
         def validate_validation_options(options)
-          options.xcodeproj = xcodeproj_path options
-          options
+          validate_xcodeproj_path options
         end
 
         def validate_keys_from_setup_options(options)
@@ -50,7 +56,7 @@ module BranchIOCLI
         # 1. Look for options.xcodeproj.
         # 2. If not specified, look for projects under . (excluding anything in Pods or Carthage folder).
         # 3. If none or more than one found, prompt the user.
-        def xcodeproj_path(options)
+        def validate_xcodeproj_path(options)
           if options.xcodeproj
             path = options.xcodeproj
           else
@@ -67,7 +73,8 @@ module BranchIOCLI
             # TODO: Allow the user to choose if xcodeproj_paths.count > 0
             begin
               @xcodeproj = Xcodeproj::Project.open path
-              return path
+              @xcodeproj_path = path
+              return
             rescue StandardError => e
               say e.message
             end
@@ -96,6 +103,92 @@ module BranchIOCLI
           end
           domains
         end
+
+        def validate_buildfile_path(options, filename)
+          # Disable Podfile/Cartfile update if --no_add_sdk is present
+          return if options.no_add_sdk
+
+          buildfile_path = filename == "Podfile" ? options.podfile : options.cartfile
+
+          # Was --podfile/--cartfile used?
+          if buildfile_path
+            # Yes: Validate. Prompt if not valid.
+            loop do
+              valid = buildfile_path =~ %r{/?#{filename}$}
+              say "#{filename} path must end in /#{filename}." unless valid
+
+              if valid
+                valid = File.exist? buildfile_path
+                say "#{buildfile_path} not found." unless valid
+              end
+
+              if valid
+                if filename == "Podfile"
+                  @podfile_path = buildfile_path
+                else
+                  @cartfile_path = buildfile_path
+                end
+                return
+              end
+
+              buildfile_path = ask "Please enter the path to your #{filename}: "
+            end
+          end
+
+          # No: Check for Podfile/Cartfile next to @xcodeproj_path
+          buildfile_path = File.expand_path "../#{filename}", @xcodeproj_path
+          return unless File.exist? buildfile_path
+
+          # Exists: Use it (valid if found)
+          if filename == "Podfile"
+            @podfile_path = buildfile_path
+          else
+            @cartfile_path = buildfile_path
+          end
+        end
+
+        def validate_sdk_addition(options)
+          return if options.no_add_sdk || @podfile_path || @cartfile_path
+
+          # --podfile, --cartfile not specified. No Podfile found. No Cartfile found.
+          # Prompt the user:
+          selected = choose do |menu|
+            menu.header = "No Podfile or Cartfile specified or found. Here are your options"
+
+            SDK_OPTIONS.each_key { |k| menu.choice k }
+
+            menu.prompt = "What would you like to do?"
+          end
+
+          option = SDK_OPTIONS[selected]
+
+          case option
+          when :skip
+            return
+          else
+            send "set_up_#{option}"
+          end
+        end
+
+        def set_up_cocoapods
+          say "Setting up CocoaPods"
+        end
+
+        def set_up_carthage
+          say "Setting up Carthage"
+        end
+
+        def set_up_manual
+          say "Setting up manual installation"
+        end
+
+        SDK_OPTIONS =
+          {
+            "Set this project up to use CocoaPods and add the Branch SDK." => :cocoapods,
+            "Set this project up to use Carthage and add the Branch SDK." => :carthage,
+            "Add Branch.framework directly to the project's dependencies." => :manual,
+            "Skip adding the framework to the project." => :skip
+          }
       end
     end
   end

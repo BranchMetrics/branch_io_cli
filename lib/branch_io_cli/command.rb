@@ -4,12 +4,12 @@ module BranchIOCLI
   class Command
     class << self
       def setup(options)
-        options = Helper::ConfigurationHelper.validate_setup_options options
+        options = config_helper.validate_setup_options options
 
-        @keys = Helper::ConfigurationHelper.keys
-        @domains = Helper::ConfigurationHelper.all_domains
-        @xcodeproj_path = options.xcodeproj
-        xcodeproj = Helper::ConfigurationHelper.xcodeproj
+        @keys = config_helper.keys
+        @domains = config_helper.all_domains
+        @xcodeproj_path = config_helper.xcodeproj_path
+        xcodeproj = config_helper.xcodeproj
 
         update_podfile(options) || update_cartfile(options, xcodeproj)
 
@@ -42,10 +42,10 @@ module BranchIOCLI
       end
 
       def validate(options)
-        options = Helper::ConfigurationHelper.validate_validation_options options
+        options = config_helper.validate_validation_options options
 
         # raises
-        xcodeproj = Helper::ConfigurationHelper.xcodeproj
+        xcodeproj = config_helper.xcodeproj
 
         valid = true
 
@@ -80,45 +80,15 @@ module BranchIOCLI
       end
 
       def helper
-        BranchIOCLI::Helper::BranchHelper
+        Helper::BranchHelper
       end
 
-      def podfile_path(options)
-        # Disable Podfile update if add_sdk: false is present
-        return nil if options.no_add_sdk
-
-        # Use the :podfile parameter if present
-        if options.podfile
-          raise "--podfile argument must specify a path ending in '/Podfile'" unless options.podfile =~ %r{/Podfile$}
-          podfile_path = File.expand_path options.podfile, "."
-          return podfile_path if File.exist? podfile_path
-          raise "#{podfile_path} not found"
-        end
-
-        # Look in the same directory as the project (typical setup)
-        podfile_path = File.expand_path "../Podfile", @xcodeproj_path
-        return podfile_path if File.exist? podfile_path
-      end
-
-      def cartfile_path(options)
-        # Disable Cartfile update if add_sdk: false is present
-        return nil if options.no_add_sdk
-
-        # Use the :cartfile parameter if present
-        if options.cartfile
-          raise "--cartfile argument must specify a path ending in '/Cartfile'" unless options.cartfile =~ %r{/Cartfile$}
-          cartfile_path = File.expand_path options.cartfile, "."
-          return cartfile_path if File.exist? cartfile_path
-          raise "#{cartfile_path} not found"
-        end
-
-        # Look in the same directory as the project (typical setup)
-        cartfile_path = File.expand_path "../Cartfile", @xcodeproj_path
-        return cartfile_path if File.exist? cartfile_path
+      def config_helper
+        Helper::ConfigurationHelper
       end
 
       def update_podfile(options)
-        podfile_path = podfile_path options
+        podfile_path = config_helper.podfile_path
         return false if podfile_path.nil?
 
         # 1. Patch Podfile. Return if no change (Branch pod already present).
@@ -150,7 +120,7 @@ module BranchIOCLI
       end
 
       def update_cartfile(options, project)
-        cartfile_path = cartfile_path options
+        cartfile_path = config_helper.cartfile_path
         return false if cartfile_path.nil?
 
         # 1. Patch Cartfile. Return if no change (Branch already present).
