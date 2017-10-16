@@ -8,10 +8,14 @@ module BranchIOCLI
     def run
       program :name, "Branch.io command-line interface"
       program :version, VERSION
-      program :description, "More to come"
+      program :description, <<EOF
+Command-line tool to integrate the Branch SDK into mobile app projects (currently
+iOS only) and validate Universal Link domains
+EOF
 
       command :setup do |c|
         c.syntax = "branch_io setup [OPTIONS]"
+        c.summary = "Integrates the Branch SDK into a native app project"
         c.description = <<EOF
 Integrates the Branch SDK into a native app project. This currently supports iOS only.
 It will infer the project location if there is exactly one .xcodeproj anywhere under
@@ -54,7 +58,12 @@ To use the <%= color('--commit', BOLD) %> option, you must have the <%= color('g
 To add the SDK with CocoaPods or Carthage, you must have the <%= color('pod', BOLD) %> or <%= color('carthage', BOLD) %>
 command, respectively, available in your path.
 
-See https://github.com/BranchMetrics/branch_io_cli for more information.
+All parameters are optional. A live key or test key, or both is required, as well
+as at least one domain. Specify <%= color('--live_key', BOLD) %>, <%= color('--test_key', BOLD) %> or both and <%= color('--app_link_subdomain', BOLD) %>,
+<%= color('--domains', BOLD) %> or both. If these are not specified, this command will prompt you
+for this information.
+
+See https://github.com/BranchMetrics/branch_io_cli#setup-command for more information.
 EOF
 
         # Required Branch params
@@ -83,7 +92,22 @@ EOF
 
       command :validate do |c|
         c.syntax = "branch_io validate [OPTIONS]"
-        c.description = "Validate the Universal Link configuration for an Xcode project."
+        c.summary = "Validates all Universal Link domains configured in a project"
+        c.description = <<EOF
+This command validates all Universal Link domains configured in a project without making any modification.
+It validates both Branch and non-Branch domains. Unlike web-based Universal Link validators,
+this command operates directly on the project. It finds the bundle and
+signing team identifiers in the project as well as the app's Associated Domains.
+It requests the apple-app-site-association file for each domain and validates
+the file against the project's settings.
+
+All parameters are optional. If <%= color('--domains', BOLD) %> is specified, the list of Universal Link domains in the
+Associated Domains entitlement must exactly match this list, without regard to order. If no <%= color('--domains', BOLD) %>
+are provided, validation passes if at least one Universal Link domain is configured and passes validation,
+and no Universal Link domain is present that does not pass validation.
+
+See https://github.com/BranchMetrics/branch_io_cli#validate-command for more information.
+EOF
 
         c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project to update"
         c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"
