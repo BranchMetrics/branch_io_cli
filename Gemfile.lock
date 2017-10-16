@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    branch_io_cli (0.1.1)
+    branch_io_cli (0.2.0)
       commander
       pattern_patch
       plist
@@ -26,7 +26,7 @@ GEM
     parallel (1.12.0)
     parser (2.4.0.0)
       ast (~> 2.2)
-    pattern_patch (0.1.0)
+    pattern_patch (0.1.1)
     plist (3.3.0)
     powerpack (0.1.1)
     pry (0.11.1)

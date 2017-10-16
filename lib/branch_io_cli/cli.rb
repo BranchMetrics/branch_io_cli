@@ -11,7 +11,7 @@ module BranchIOCLI
       program :description, "More to come"
 
       command :setup do |c|
-        c.syntax = "branch_io setup"
+        c.syntax = "branch_io setup [OPTIONS]"
         c.description = "Set up an iOS project to use the Branch SDK."
 
         # Required Branch params
@@ -39,8 +39,8 @@ module BranchIOCLI
       end
 
       command :validate do |c|
-        c.syntax = "branch_io validate"
-        c.description = "Validate the Universal Link configuration for an Xcode project"
+        c.syntax = "branch_io validate [OPTIONS]"
+        c.description = "Validate the Universal Link configuration for an Xcode project."
 
         c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project to update"
         c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"

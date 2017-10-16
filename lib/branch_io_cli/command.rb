@@ -4,27 +4,12 @@ module BranchIOCLI
   class Command
     class << self
       def setup(options)
-        @domains = all_domains options
-        @keys = keys options
+        options = Helper::ConfigurationHelper.validate_setup_options options
 
-        if @keys.empty?
-          say "Please specify --live_key or --test_key or both."
-          return
-        end
-
-        if @domains.empty?
-          say "Please specify --app_link_subdomain or --domains or both."
-          return
-        end
-
-        @xcodeproj_path = xcodeproj_path options
-        unless @xcodeproj_path
-          say "Please specify the --xcodeproj option."
-          return
-        end
-
-        # raises
-        xcodeproj = Xcodeproj::Project.open @xcodeproj_path
+        @keys = Helper::ConfigurationHelper.keys
+        @domains = Helper::ConfigurationHelper.all_domains
+        @xcodeproj_path = options.xcodeproj
+        xcodeproj = Helper::ConfigurationHelper.xcodeproj
 
         update_podfile(options) || update_cartfile(options, xcodeproj)
 
@@ -57,14 +42,10 @@ module BranchIOCLI
       end
 
       def validate(options)
-        path = xcodeproj_path options
-        unless path
-          say "Please specify the --xcodeproj option."
-          return
-        end
+        options = Helper::ConfigurationHelper.validate_validation_options options
 
         # raises
-        xcodeproj = Xcodeproj::Project.open path
+        xcodeproj = Helper::ConfigurationHelper.xcodeproj
 
         valid = true
 
@@ -100,69 +81,6 @@ module BranchIOCLI
 
       def helper
         BranchIOCLI::Helper::BranchHelper
-      end
-
-      def xcodeproj_path(options)
-        return options.xcodeproj if options.xcodeproj
-
-        repo_path = "."
-
-        all_xcodeproj_paths = Dir[File.expand_path(File.join(repo_path, '**/*.xcodeproj'))]
-        # find an xcodeproj (ignoring the Pods and Carthage folders)
-        # TODO: Improve this filter
-        xcodeproj_paths = all_xcodeproj_paths.reject { |p| p =~ /Pods|Carthage/ }
-
-        # no projects found: error
-        say 'Could not find a .xcodeproj in the current repository\'s working directory.' and return nil if xcodeproj_paths.count == 0
-
-        # too many projects found: error
-        if xcodeproj_paths.count > 1
-          repo_pathname = Pathname.new repo_path
-          relative_projects = xcodeproj_paths.map { |e| Pathname.new(e).relative_path_from(repo_pathname).to_s }.join("\n")
-          say "Found multiple .xcodeproj projects in the current repository's working directory. Please specify your app's main project: \n#{relative_projects}"
-          return nil
-        end
-
-        # one project found: great
-        xcodeproj_paths.first
-      end
-
-      def app_link_subdomains(options)
-        app_link_subdomain = options.app_link_subdomain
-        live_key = options.live_key
-        test_key = options.test_key
-        return [] if live_key.nil? and test_key.nil?
-        return [] if app_link_subdomain.nil?
-
-        domains = []
-        unless live_key.nil?
-          domains += [
-            "#{app_link_subdomain}.app.link",
-            "#{app_link_subdomain}-alternate.app.link"
-          ]
-        end
-        unless test_key.nil?
-          domains += [
-            "#{app_link_subdomain}.test-app.link",
-            "#{app_link_subdomain}-alternate.test-app.link"
-          ]
-        end
-        domains
-      end
-
-      def all_domains(options)
-        app_link_subdomains = app_link_subdomains options
-        custom_domains = options.domains || []
-        (app_link_subdomains + custom_domains).uniq
-      end
-
-      def keys(options)
-        live_key = options.live_key
-        test_key = options.test_key
-        keys = {}
-        keys[:live] = live_key unless live_key.nil?
-        keys[:test] = test_key unless test_key.nil?
-        keys
       end
 
       def podfile_path(options)
