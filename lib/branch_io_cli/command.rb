@@ -38,7 +38,7 @@ module BranchIOCLI
 
         return unless options.commit
 
-        `git commit #{helper.changes.join(" ")} -m '[branch_io_cli] Branch SDK integration'`
+        `git commit #{helper.changes.to_a.join(" ")} -m '[branch_io_cli] Branch SDK integration'`
       end
 
       def validate(options)
@@ -130,7 +130,7 @@ module BranchIOCLI
         command += ' --repo-update' unless options.no_pod_repo_update
 
         Dir.chdir(File.dirname(podfile_path)) do
-          `#{command}`
+          system command
         end
 
         # 3. Add Podfile and Podfile.lock to commit (in case :commit param specified)
@@ -144,7 +144,8 @@ module BranchIOCLI
 
         # 5. If so, add the Pods folder to the commit (in case :commit param specified)
         helper.add_change pods_folder_path
-        other_action.git_add path: pods_folder_path if options.commit
+        `git add #{pods_folder_path}` if options.commit
+
         true
       end
 
@@ -157,7 +158,7 @@ module BranchIOCLI
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          `carthage update`
+          system "carthage update"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
@@ -187,7 +188,8 @@ module BranchIOCLI
 
         # 7. If so, add the Pods folder to the commit (in case :commit param specified)
         helper.add_change carthage_folder_path
-        other_action.git_add path: carthage_folder_path if options.commit
+        `git add #{carthage_folder_path}` if options.commit
+
         true
       end
 
