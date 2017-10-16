@@ -77,6 +77,7 @@ module BranchIOCLI
               return
             rescue StandardError => e
               say e.message
+              path = nil
             end
           end
         end
@@ -179,14 +180,14 @@ module BranchIOCLI
         end
 
         def set_up_manual
-          say "Setting up manual installation"
+          say "Setting up direct installation"
         end
 
         SDK_OPTIONS =
           {
             "Set this project up to use CocoaPods and add the Branch SDK." => :cocoapods,
             "Set this project up to use Carthage and add the Branch SDK." => :carthage,
-            "Add Branch.framework directly to the project's dependencies." => :manual,
+            "Add Branch.framework directly to the project's dependencies." => :direct,
             "Skip adding the framework to the project." => :skip
           }
       end

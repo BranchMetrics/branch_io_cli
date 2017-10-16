@@ -4,7 +4,7 @@ module BranchIOCLI
   class Command
     class << self
       def setup(options)
-        options = config_helper.validate_setup_options options
+        config_helper.validate_setup_options options
 
         @keys = config_helper.keys
         @domains = config_helper.all_domains
@@ -42,7 +42,7 @@ module BranchIOCLI
       end
 
       def validate(options)
-        options = config_helper.validate_validation_options options
+        config_helper.validate_validation_options options
 
         # raises
         xcodeproj = config_helper.xcodeproj
