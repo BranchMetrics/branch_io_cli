@@ -22,7 +22,7 @@ module BranchIOCLI
         @xcodeproj_path = options.xcodeproj
 
         # raises
-        xcodeproj = Xcodeproj::Project.open @xcodeproj_path
+        xcodeproj = Helper.configuration_helper.xcodeproj
 
         update_podfile(options) || update_cartfile(options, xcodeproj)
 
@@ -57,10 +57,8 @@ module BranchIOCLI
       def validate(options)
         options = Helper::ConfigurationHelper.validate_validation_options options
 
-        path = options.xcodeproj
-
         # raises
-        xcodeproj = Xcodeproj::Project.open path
+        xcodeproj = Helper::ConfigurationHelper.xcodeproj
 
         valid = true
 
