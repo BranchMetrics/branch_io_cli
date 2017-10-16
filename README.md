@@ -87,8 +87,9 @@ Before using this command, make sure to set up your app in the [Branch Dashboard
 |--no_patch_source|Don't add Branch SDK calls to the AppDelegate|
 |--commit|Commit the results to Git|
 
-All parameters are optional, but either `--live_key` or `--test_key` or both must be specified, as well as
-`--app_link_subdomain` or `--domains` or both.
+All parameters are optional. A live key or test key, or both is required, as well as at least one domain.
+Specify --live_key, --test_key or both and --app_link_subdomain, --domains or both. If these are not
+specified, this command will prompt you for this information.
 
 ### Validate command
 
