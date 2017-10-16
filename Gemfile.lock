@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    branch_io_cli (0.2.1)
+    branch_io_cli (0.2.2)
       commander
       pattern_patch
       plist
