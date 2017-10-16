@@ -65,7 +65,12 @@ Before using this command, make sure to set up your app in the [Branch Dashboard
 
 - Branch key(s), either live, test or both
 - Domain name(s) used for Branch links
-- Location of your Xcode project
+- Location of your Xcode project (may be inferred in simple projects)
+
+To use the `--commit` option, you must have the `git` command available in your path.
+
+To add the SDK with CocoaPods or Carthage, you must have the `pod` or `carthage`
+command, respectively, available in your path.
 
 #### Options
 
