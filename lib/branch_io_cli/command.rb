@@ -6,23 +6,10 @@ module BranchIOCLI
       def setup(options)
         options = Helper::ConfigurationHelper.validate_setup_options options
 
-        @domains = all_domains options
-        @keys = keys options
-
-        if @keys.empty?
-          say "Please specify --live_key or --test_key or both."
-          return
-        end
-
-        if @domains.empty?
-          say "Please specify --app_link_subdomain or --domains or both."
-          return
-        end
-
+        @keys = Helper::ConfigurationHelper.keys
+        @domains = Helper::ConfigurationHelper.all_domains
         @xcodeproj_path = options.xcodeproj
-
-        # raises
-        xcodeproj = Helper.configuration_helper.xcodeproj
+        xcodeproj = Helper::ConfigurationHelper.xcodeproj
 
         update_podfile(options) || update_cartfile(options, xcodeproj)
 
@@ -94,44 +81,6 @@ module BranchIOCLI
 
       def helper
         BranchIOCLI::Helper::BranchHelper
-      end
-
-      def app_link_subdomains(options)
-        app_link_subdomain = options.app_link_subdomain
-        live_key = options.live_key
-        test_key = options.test_key
-        return [] if live_key.nil? and test_key.nil?
-        return [] if app_link_subdomain.nil?
-
-        domains = []
-        unless live_key.nil?
-          domains += [
-            "#{app_link_subdomain}.app.link",
-            "#{app_link_subdomain}-alternate.app.link"
-          ]
-        end
-        unless test_key.nil?
-          domains += [
-            "#{app_link_subdomain}.test-app.link",
-            "#{app_link_subdomain}-alternate.test-app.link"
-          ]
-        end
-        domains
-      end
-
-      def all_domains(options)
-        app_link_subdomains = app_link_subdomains options
-        custom_domains = options.domains || []
-        (app_link_subdomains + custom_domains).uniq
-      end
-
-      def keys(options)
-        live_key = options.live_key
-        test_key = options.test_key
-        keys = {}
-        keys[:live] = live_key unless live_key.nil?
-        keys[:test] = test_key unless test_key.nil?
-        keys
       end
 
       def podfile_path(options)

@@ -10,12 +10,41 @@ module BranchIOCLI
 
         def validate_setup_options(options)
           options.xcodeproj = xcodeproj_path options
+          validate_keys_from_setup_options options
+          validate_all_domains options
           options
         end
 
         def validate_validation_options(options)
           options.xcodeproj = xcodeproj_path options
           options
+        end
+
+        def validate_keys_from_setup_options(options)
+          live_key = options.live_key
+          test_key = options.test_key
+          @keys = {}
+          @keys[:live] = live_key unless live_key.nil?
+          @keys[:test] = test_key unless test_key.nil?
+
+          while @keys.empty?
+            say "A live key, a test key or both is required."
+            live_key = ask "Please enter your live Branch key or use --live_key [enter for none]: "
+            test_key = ask "Please enter your test Branch key or use --test_key [enter for none]: "
+
+            @keys[:live] = live_key unless live_key == ""
+            @keys[:test] = test_key unless test_key == ""
+          end
+        end
+
+        def validate_all_domains(options)
+          app_link_subdomains = app_link_subdomains options
+          custom_domains = options.domains || []
+          @all_domains = (app_link_subdomains + custom_domains).uniq
+
+          while @all_domains.empty?
+            @all_domains = ask "Please enter domains as a comma-separated list: ", ->(str) { str.split "," }
+          end
         end
 
         # 1. Look for options.xcodeproj.
@@ -43,6 +72,29 @@ module BranchIOCLI
               say e.message
             end
           end
+        end
+
+        def app_link_subdomains(options)
+          app_link_subdomain = options.app_link_subdomain
+          live_key = options.live_key
+          test_key = options.test_key
+          return [] if live_key.nil? and test_key.nil?
+          return [] if app_link_subdomain.nil?
+
+          domains = []
+          unless live_key.nil?
+            domains += [
+              "#{app_link_subdomain}.app.link",
+              "#{app_link_subdomain}-alternate.app.link"
+            ]
+          end
+          unless test_key.nil?
+            domains += [
+              "#{app_link_subdomain}.test-app.link",
+              "#{app_link_subdomain}-alternate.test-app.link"
+            ]
+          end
+          domains
         end
       end
     end
