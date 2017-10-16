@@ -167,20 +167,46 @@ module BranchIOCLI
           when :skip
             return
           else
-            send "set_up_#{option}"
+            send "add_#{option}", options
           end
         end
 
-        def set_up_cocoapods
-          say "Setting up CocoaPods"
+        def add_cocoapods(options)
+          @podfile_path = File.expand_path "../Podfile", @xcodeproj_path
+          target = BranchHelper.target_from_project @xcodeproj, options.target
+
+          File.open(@podfile_path, "w") do |file|
+            file.write <<EOF
+platform :ios, "#{target.deployment_target}"
+
+pod "Branch"
+
+#{@xcodeproj.targets.map { |t| "target \"#{t.name}\"" }.join("\n")}
+EOF
+          end
+
+          command = "pod install"
+          command += " --repo-update" unless options.no_pod_repo_update
+          system command
+
+          BranchHelper.add_change @podfile_path
+          BranchHelper.add_change "#{@podfile_path}.lock"
         end
 
-        def set_up_carthage
-          say "Setting up Carthage"
+        def add_carthage
+          @cartfile_path = File.expand_path "../Cartfile", @xcodeproj_path
+          File.open(@cartfile_path, "w") do |file|
+            file.write <<EOF
+git "https://github.com/BranchMetrics/ios-branch-deep-linking"
+EOF
+          end
+          system "carthage update"
+          # TODO: The rest of this/merge this with update_cartfile
         end
 
-        def set_up_manual
-          say "Setting up direct installation"
+        def add_direct
+          say "Direct installation not yet supported."
+          exit 1
         end
 
         SDK_OPTIONS =
