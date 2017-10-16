@@ -4,6 +4,8 @@ module BranchIOCLI
   class Command
     class << self
       def setup(options)
+        options = Helper::ConfigurationHelper.validate_setup_options options
+
         @domains = all_domains options
         @keys = keys options
 
@@ -17,7 +19,7 @@ module BranchIOCLI
           return
         end
 
-        @xcodeproj_path = xcodeproj_path options
+        @xcodeproj_path = options.xcodeproj
         unless @xcodeproj_path
           say "Please specify the --xcodeproj option."
           return
@@ -57,7 +59,9 @@ module BranchIOCLI
       end
 
       def validate(options)
-        path = xcodeproj_path options
+        options = Helper::ConfigurationHelper.validate_validation_options options
+
+        path = options.xcodeproj
         unless path
           say "Please specify the --xcodeproj option."
           return
@@ -100,31 +104,6 @@ module BranchIOCLI
 
       def helper
         BranchIOCLI::Helper::BranchHelper
-      end
-
-      def xcodeproj_path(options)
-        return options.xcodeproj if options.xcodeproj
-
-        repo_path = "."
-
-        all_xcodeproj_paths = Dir[File.expand_path(File.join(repo_path, '**/*.xcodeproj'))]
-        # find an xcodeproj (ignoring the Pods and Carthage folders)
-        # TODO: Improve this filter
-        xcodeproj_paths = all_xcodeproj_paths.reject { |p| p =~ /Pods|Carthage/ }
-
-        # no projects found: error
-        say 'Could not find a .xcodeproj in the current repository\'s working directory.' and return nil if xcodeproj_paths.count == 0
-
-        # too many projects found: error
-        if xcodeproj_paths.count > 1
-          repo_pathname = Pathname.new repo_path
-          relative_projects = xcodeproj_paths.map { |e| Pathname.new(e).relative_path_from(repo_pathname).to_s }.join("\n")
-          say "Found multiple .xcodeproj projects in the current repository's working directory. Please specify your app's main project: \n#{relative_projects}"
-          return nil
-        end
-
-        # one project found: great
-        xcodeproj_paths.first
       end
 
       def app_link_subdomains(options)
