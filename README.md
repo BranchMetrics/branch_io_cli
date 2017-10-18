@@ -130,3 +130,8 @@ and no Universal Link domain is present that does not pass validation.
 #### Return value
 
 If validation passes, this command returns 0. If validation fails, it returns 1.
+
+## Examples
+
+See the [examples](./examples) folder for several example projects that can be
+used to exercise the CLI.
