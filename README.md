@@ -13,7 +13,7 @@ This is a preliminary release of this gem. Please report any problems by opening
 
 ### Using Fastlane?
 
-<img alt="Fastlane" src="https://raw.githubusercontent.com/fastlane/fastlane/master/fastlane/assets/fastlane_text.png" style="height: 75px;"/>
+<img alt="Fastlane" src="https://raw.githubusercontent.com/fastlane/fastlane/master/fastlane/assets/fastlane_text.png" style="height: 75px; width: 216px;"/>
 
 See also the [Branch Fastlane plugin](https://github.com/BranchMetrics/fastlane-plugin-branch), which offers
 the same support via Fastlane.
