@@ -1,6 +1,7 @@
 AllCops:
   Exclude:
     - "examples/**/*"
+    - "vendor/**/*"
 
 Naming/HeredocDelimiterNaming:
   Enabled: false
