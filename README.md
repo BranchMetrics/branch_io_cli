@@ -11,6 +11,13 @@ This is a command-line tool to integrate the Branch SDK into mobile app projects
 
 This is a preliminary release of this gem. Please report any problems by opening issues in this repo.
 
+### Using Fastlane?
+
+<img alt="Fastlane" src="https://raw.githubusercontent.com/fastlane/fastlane/master/fastlane/assets/fastlane_text.png" style="height: 75px;"/>
+
+See also the [Branch Fastlane plugin](https://github.com/BranchMetrics/fastlane-plugin-branch), which offers
+the same support via Fastlane.
+
 ## Getting started
 
 ```bash
