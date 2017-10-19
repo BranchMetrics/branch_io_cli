@@ -24,6 +24,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'commander'
   spec.add_dependency 'pattern_patch'
   spec.add_dependency 'plist'
+  spec.add_dependency 'rubyzip'
   spec.add_dependency 'xcodeproj'
 
   spec.add_development_dependency 'bundler'

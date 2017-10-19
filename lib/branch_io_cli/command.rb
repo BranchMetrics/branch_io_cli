@@ -128,7 +128,7 @@ module BranchIOCLI
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          system "carthage update"
+          system "carthage update --platform ios"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)

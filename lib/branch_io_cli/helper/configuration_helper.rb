@@ -1,4 +1,7 @@
+require "json"
+require "net/http"
 require "xcodeproj"
+require "zip"
 
 module BranchIOCLI
   module Helper
@@ -193,20 +196,82 @@ EOF
           BranchHelper.add_change "#{@podfile_path}.lock"
         end
 
-        def add_carthage
+        def add_carthage(options)
           @cartfile_path = File.expand_path "../Cartfile", @xcodeproj_path
           File.open(@cartfile_path, "w") do |file|
             file.write <<EOF
-git "https://github.com/BranchMetrics/ios-branch-deep-linking"
+github "BranchMetrics/ios-branch-deep-linking"
 EOF
           end
-          system "carthage update"
+          system "carthage update --platform ios"
           # TODO: The rest of this/merge this with update_cartfile
         end
 
-        def add_direct
-          say "Direct installation not yet supported."
-          exit 1
+        def add_direct(options)
+          target = BranchHelper.target_from_project @xcodeproj, options.target
+          if target.frameworks_build_phase.files.map(&:file_ref).map(&:path).any? { |p| p =~ /Branch.framework/ }
+            say "Branch.framework already integrated into project"
+            return
+          end
+
+          File.unlink "Branch.framework.zip" if File.exist? "Branch.framework.zip"
+          remove_directory "Branch.framework"
+
+          releases = JSON.parse fetch "https://api.github.com/repos/BranchMetrics/ios-branch-deep-linking/releases"
+          current_release = releases.first
+          framework_url = current_release["assets"][0]["browser_download_url"]
+
+          File.open("Branch.framework.zip", "w") do |file|
+            file.write fetch framework_url
+          end
+
+          Zip::File.open "Branch.framework.zip" do |zip_file|
+            # Start with just the framework and add dSYM, etc., later
+            zip_file.glob "Carthage/Build/iOS/Branch.framework/**/*" do |entry|
+              filename = entry.name.sub %r{^Carthage/Build/iOS/}, ""
+              ensure_directory File.dirname filename
+              entry.extract filename
+            end
+          end
+
+          File.unlink "Branch.framework.zip"
+
+          say "downloaded Branch.framework"
+
+          # Now the current framework is in ./Branch.framework
+
+          frameworks_group = @xcodeproj.frameworks_group
+          framework = frameworks_group.new_file "Branch.framework"
+          target.frameworks_build_phase.add_file_reference framework, true
+          @xcodeproj.save
+        end
+
+        def fetch(url)
+          response = Net::HTTP.get_response URI(url)
+
+          case response
+          when Net::HTTPRedirection
+            fetch response['location']
+          else
+            response.body
+          end
+        end
+
+        def ensure_directory(path)
+          return if path == "/" || path == "."
+          parent = File.dirname path
+          ensure_directory parent
+          return if Dir.exist? path
+          Dir.mkdir path
+        end
+
+        def remove_directory(path)
+          return unless File.exist? path
+
+          Dir["#{path}/*"].each do |file|
+            remove_directory(file) and next if File.directory?(file)
+            File.unlink file
+          end
         end
 
         SDK_OPTIONS =
