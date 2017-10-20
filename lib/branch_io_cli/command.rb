@@ -1,15 +1,16 @@
+require "pathname"
 require "xcodeproj"
 
 module BranchIOCLI
   class Command
     class << self
       def setup(options)
-        options = Helper::ConfigurationHelper.validate_setup_options options
+        config_helper.validate_setup_options options
 
-        @keys = Helper::ConfigurationHelper.keys
-        @domains = Helper::ConfigurationHelper.all_domains
-        @xcodeproj_path = options.xcodeproj
-        xcodeproj = Helper::ConfigurationHelper.xcodeproj
+        @keys = config_helper.keys
+        @domains = config_helper.all_domains
+        @xcodeproj_path = config_helper.xcodeproj_path
+        xcodeproj = config_helper.xcodeproj
 
         update_podfile(options) || update_cartfile(options, xcodeproj)
 
@@ -38,14 +39,17 @@ module BranchIOCLI
 
         return unless options.commit
 
-        `git commit #{helper.changes.to_a.join(" ")} -m '[branch_io_cli] Branch SDK integration'`
+        current_pathname = Pathname.new File.expand_path "."
+        changes = helper.changes.to_a.map { |c| Pathname.new(File.expand_path(c)).relative_path_from(current_pathname).to_s }
+
+        `git commit #{changes.join(" ")} -m '[branch_io_cli] Branch SDK integration'`
       end
 
       def validate(options)
-        options = Helper::ConfigurationHelper.validate_validation_options options
+        config_helper.validate_validation_options options
 
         # raises
-        xcodeproj = Helper::ConfigurationHelper.xcodeproj
+        xcodeproj = config_helper.xcodeproj
 
         valid = true
 
@@ -80,45 +84,15 @@ module BranchIOCLI
       end
 
       def helper
-        BranchIOCLI::Helper::BranchHelper
+        Helper::BranchHelper
       end
 
-      def podfile_path(options)
-        # Disable Podfile update if add_sdk: false is present
-        return nil if options.no_add_sdk
-
-        # Use the :podfile parameter if present
-        if options.podfile
-          raise "--podfile argument must specify a path ending in '/Podfile'" unless options.podfile =~ %r{/Podfile$}
-          podfile_path = File.expand_path options.podfile, "."
-          return podfile_path if File.exist? podfile_path
-          raise "#{podfile_path} not found"
-        end
-
-        # Look in the same directory as the project (typical setup)
-        podfile_path = File.expand_path "../Podfile", @xcodeproj_path
-        return podfile_path if File.exist? podfile_path
-      end
-
-      def cartfile_path(options)
-        # Disable Cartfile update if add_sdk: false is present
-        return nil if options.no_add_sdk
-
-        # Use the :cartfile parameter if present
-        if options.cartfile
-          raise "--cartfile argument must specify a path ending in '/Cartfile'" unless options.cartfile =~ %r{/Cartfile$}
-          cartfile_path = File.expand_path options.cartfile, "."
-          return cartfile_path if File.exist? cartfile_path
-          raise "#{cartfile_path} not found"
-        end
-
-        # Look in the same directory as the project (typical setup)
-        cartfile_path = File.expand_path "../Cartfile", @xcodeproj_path
-        return cartfile_path if File.exist? cartfile_path
+      def config_helper
+        Helper::ConfigurationHelper
       end
 
       def update_podfile(options)
-        podfile_path = podfile_path options
+        podfile_path = config_helper.podfile_path
         return false if podfile_path.nil?
 
         # 1. Patch Podfile. Return if no change (Branch pod already present).
@@ -138,7 +112,8 @@ module BranchIOCLI
         helper.add_change "#{podfile_path}.lock"
 
         # 4. Check if Pods folder is under SCM
-        pods_folder_path = File.expand_path "../Pods", podfile_path
+        current_pathname = Pathname.new File.expand_path "."
+        pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from current_pathname
         `git ls-files #{pods_folder_path} --error-unmatch > /dev/null 2>&1`
         return true unless $?.exitstatus == 0
 
@@ -150,7 +125,7 @@ module BranchIOCLI
       end
 
       def update_cartfile(options, project)
-        cartfile_path = cartfile_path options
+        cartfile_path = config_helper.cartfile_path
         return false if cartfile_path.nil?
 
         # 1. Patch Cartfile. Return if no change (Branch already present).
@@ -158,7 +133,7 @@ module BranchIOCLI
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          system "carthage update"
+          system "carthage update --platform ios"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
@@ -166,7 +141,7 @@ module BranchIOCLI
         helper.add_change "#{cartfile_path}.resolved"
 
         # 4. Add to target depependencies
-        frameworks_group = project['Frameworks']
+        frameworks_group = project.frameworks_group
         branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
         target = helper.target_from_project project, options.target
         target.frameworks_build_phase.add_file_reference branch_framework
@@ -182,11 +157,12 @@ module BranchIOCLI
         end
 
         # 6. Check if Carthage folder is under SCM
-        carthage_folder_path = File.expand_path "../Carthage", cartfile_path
+        current_pathname = Pathname.new File.expand_path "."
+        carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from current_pathname
         `git ls-files #{carthage_folder_path} --error-unmatch > /dev/null 2>&1`
         return true unless $?.exitstatus == 0
 
-        # 7. If so, add the Pods folder to the commit (in case :commit param specified)
+        # 7. If so, add the Carthage folder to the commit (in case :commit param specified)
         helper.add_change carthage_folder_path
         `git add #{carthage_folder_path}` if options.commit
 
