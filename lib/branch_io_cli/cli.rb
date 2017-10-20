@@ -25,8 +25,8 @@ the project location using the <%= color('--xcodeproj', BOLD) %> option.
 If a Podfile or Cartfile is detected, the Branch SDK will be added to the relevant
 configuration file and the dependencies updated to include the Branch framework.
 This behavior may be suppressed using <%= color('--no_add_sdk', BOLD) %>. If no Podfile or Cartfile
-is found, the SDK dependency must be added manually. This will improve in a future
-release.
+is found, and Branch.framework is not already among the project's dependencies,
+you will be prompted for a number of choices.
 
 By default, all supplied Universal Link domains are validated. If validation passes,
 the setup continues. If validation fails, no further action is taken. Suppress
