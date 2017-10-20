@@ -154,7 +154,11 @@ module BranchIOCLI
         def validate_sdk_addition(options)
           return if options.no_add_sdk || @podfile_path || @cartfile_path
 
-          # --podfile, --cartfile not specified. No Podfile found. No Cartfile found.
+          # If no CocoaPods or Carthage, check to see if the framework is linked.
+          target = BranchHelper.target_from_project @xcodeproj, options.target
+          return if target.frameworks_build_phase.files.map(&:file_ref).map(&:path).any? { |p| p =~ $r{/Branch.framework$} }
+
+          # --podfile, --cartfile not specified. No Podfile found. No Cartfile found. No Branch.framework in project.
           # Prompt the user:
           selected = choose do |menu|
             menu.header = "No Podfile or Cartfile specified or found. Here are your options"
@@ -208,23 +212,23 @@ EOF
         end
 
         def add_direct(options)
-          target = BranchHelper.target_from_project @xcodeproj, options.target
-          if target.frameworks_build_phase.files.map(&:file_ref).map(&:path).any? { |p| p =~ /Branch.framework/ }
-            say "Branch.framework already integrated into project"
-            return
-          end
-
+          # TODO: Put these intermediates in a temp directory until Branch.framework is unzipped
+          # (and validated?). For now dumped in the current directory.
           File.unlink "Branch.framework.zip" if File.exist? "Branch.framework.zip"
           remove_directory "Branch.framework"
 
+          # Find the latest release from GitHub.
           releases = JSON.parse fetch "https://api.github.com/repos/BranchMetrics/ios-branch-deep-linking/releases"
           current_release = releases.first
+          # Get the download URL for the framework.
           framework_url = current_release["assets"][0]["browser_download_url"]
 
+          # Download the framework zip
           File.open("Branch.framework.zip", "w") do |file|
             file.write fetch framework_url
           end
 
+          # Unzip
           Zip::File.open "Branch.framework.zip" do |zip_file|
             # Start with just the framework and add dSYM, etc., later
             zip_file.glob "Carthage/Build/iOS/Branch.framework/**/*" do |entry|
@@ -234,12 +238,14 @@ EOF
             end
           end
 
+          # Remove intermediate zip file
           File.unlink "Branch.framework.zip"
 
           say "downloaded Branch.framework"
 
           # Now the current framework is in ./Branch.framework
 
+          # Add as a dependency in the Frameworks group
           frameworks_group = @xcodeproj.frameworks_group
           framework = frameworks_group.new_file "Branch.framework"
           target.frameworks_build_phase.add_file_reference framework, true
