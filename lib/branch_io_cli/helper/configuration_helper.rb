@@ -14,13 +14,15 @@ module BranchIOCLI
         attr_accessor :all_domains
         attr_accessor :podfile_path
         attr_accessor :cartfile_path
+        attr_accessor :target
 
         def validate_setup_options(options)
           say "--force is ignored when --no_validate is used." if options.no_validate && options.force
 
           validate_xcodeproj_path options
+          validate_target options
           validate_keys_from_setup_options options
-          validate_all_domains options
+          validate_all_domains options, !@target.extension_target_type?
           validate_buildfile_path options, "Podfile"
           validate_buildfile_path options, "Cartfile"
           validate_sdk_addition options
@@ -28,6 +30,7 @@ module BranchIOCLI
 
         def validate_validation_options(options)
           validate_xcodeproj_path options
+          validate_target options, false
         end
 
         def validate_keys_from_setup_options(options)
@@ -47,12 +50,12 @@ module BranchIOCLI
           end
         end
 
-        def validate_all_domains(options)
+        def validate_all_domains(options, required = true)
           app_link_subdomains = app_link_subdomains options
           custom_domains = options.domains || []
           @all_domains = (app_link_subdomains + custom_domains).uniq
 
-          while @all_domains.empty?
+          while required && @all_domains.empty?
             @all_domains = ask "Please enter domains as a comma-separated list: ", ->(str) { str.split "," }
           end
         end
@@ -89,6 +92,34 @@ module BranchIOCLI
               say e.message
               path = nil
             end
+          end
+        end
+
+        def validate_target(options, allow_extensions = true)
+          non_test_targets = @xcodeproj.targets.reject(&:test_target_type?)
+          raise "No non-test target found in project" if non_test_targets.empty?
+
+          valid_targets = non_test_targets.reject { |t| !allow_extensions && t.extension_target_type? }
+
+          begin
+            target = BranchHelper.target_from_project @xcodeproj, options.target
+
+            # If a test target was explicitly specified.
+            raise "Cannot use test targets" if target.test_target_type?
+
+            # If an extension target was explicitly specified for validation.
+            raise "Extension targets not allowed for this command" if !allow_extensions && target.extension_target_type?
+
+            @target = target
+          rescue StandardError => e
+            say e.message
+
+            choice = choose do |menu|
+              valid_targets.each { |t| menu.choice t.name }
+              menu.prompt = "Which target do you wish to use? "
+            end
+
+            @target = @xcodeproj.targets.find { |t| t.name = choice }
           end
         end
 

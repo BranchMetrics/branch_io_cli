@@ -14,24 +14,25 @@ module BranchIOCLI
 
         update_podfile(options) || update_cartfile(options, xcodeproj)
 
-        target = options.target # may be nil
+        target_name = options.target # may be nil
+        is_app_target = !ConfigurationHelper.target.extension_target_type?
 
-        if !options.no_validate &&
-           !helper.validate_team_and_bundle_ids_from_aasa_files(xcodeproj, target, @domains)
+        if is_app_target && !options.no_validate &&
+           !helper.validate_team_and_bundle_ids_from_aasa_files(xcodeproj, target_name, @domains)
           say "Universal Link configuration failed validation."
           helper.errors.each { |error| say " #{error}" }
           return unless options.force
-        elsif !options.no_validate
+        elsif is_app_target && !options.no_validate
           say "Universal Link configuration passed validation. ✅"
         end
 
         # the following calls can all raise IOError
-        helper.add_keys_to_info_plist xcodeproj, target, @keys
-        helper.add_branch_universal_link_domains_to_info_plist xcodeproj, target, @domains
-        new_path = helper.add_universal_links_to_project xcodeproj, target, @domains, false
+        helper.add_keys_to_info_plist xcodeproj, target_name, @keys
+        helper.add_branch_universal_link_domains_to_info_plist xcodeproj, target_name, @domains if is_app_target
+        new_path = helper.add_universal_links_to_project xcodeproj, target_name, @domains, false if is_app_target
         `git add #{new_path}` if options.commit && new_path
 
-        helper.add_system_frameworks xcodeproj, target, options.frameworks unless options.frameworks.nil? || options.frameworks.empty?
+        helper.add_system_frameworks xcodeproj, target_name, options.frameworks unless options.frameworks.nil? || options.frameworks.empty?
 
         xcodeproj.save
 
@@ -143,7 +144,7 @@ module BranchIOCLI
         # 4. Add to target depependencies
         frameworks_group = project.frameworks_group
         branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
-        target = helper.target_from_project project, options.target
+        target = ConfigurationHelper.target
         target.frameworks_build_phase.add_file_reference branch_framework
 
         # 5. Add to copy-frameworks build phase
