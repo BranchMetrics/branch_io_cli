@@ -67,7 +67,13 @@ module BranchIOCLI
             all_xcodeproj_paths = Dir[File.expand_path(File.join(".", "**/*.xcodeproj"))]
             # find an xcodeproj (ignoring the Pods and Carthage folders)
             # TODO: Improve this filter
-            xcodeproj_paths = all_xcodeproj_paths.reject { |p| p =~ /Pods|Carthage/ }
+            xcodeproj_paths = all_xcodeproj_paths.select do |p|
+              valid = true
+              Pathname.new(p).each_filename do |f|
+                valid = false && break if f == "Carthage" || f == "Pods"
+              end
+              valid
+            end
 
             path = xcodeproj_paths.first if xcodeproj_paths.count == 1
           end
