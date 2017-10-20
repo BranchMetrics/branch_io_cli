@@ -307,6 +307,17 @@ EOF
           framework = frameworks_group.new_file "Branch.framework"
           target = BranchHelper.target_from_project @xcodeproj, options.target
           target.frameworks_build_phase.add_file_reference framework, true
+
+          # Make sure this is in the FRAMEWORK_SEARCH_PATHS
+          @xcodeproj.build_configurations.each do |config|
+            setting = config.build_settings["FRAMEWORK_SEARCH_PATHS"] || []
+            setting = [setting] if setting.kind_of? String
+            next if setting.any? { |p| p == "$(SRCROOT)" }
+
+            setting << "$(SRCROOT)"
+            config.build_settings["FRAMEWORK_SEARCH_PATHS"] = setting
+          end
+
           @xcodeproj.save
 
           BranchHelper.add_change File.expand_path "Branch.framework"
