@@ -8,6 +8,8 @@ module BranchIOCLI
   module Helper
     class ConfigurationHelper
       class << self
+        APP_LINK_REGEXP = /\.app\.link$|\.test-app\.link$/
+
         attr_accessor :xcodeproj_path
         attr_accessor :xcodeproj
         attr_accessor :keys
@@ -51,12 +53,23 @@ module BranchIOCLI
         end
 
         def validate_all_domains(options, required = true)
-          app_link_subdomains = app_link_subdomains options
-          custom_domains = options.domains || []
+          app_link_roots = app_link_roots_from_domains options.domains
+
+          unless options.app_link_subdomain.nil? || app_link_roots.include?(options.app_link_subdomain)
+            app_link_roots << options.app_link_subdomain
+          end
+
+          # app_link_roots now contains options.app_link_subdomain, if supplied, and the roots of any
+          # .app.link or .test-app.link domains provided via options.domains.
+
+          app_link_subdomains = app_link_subdomains_from_roots app_link_roots
+          custom_domains = custom_domains_from_domains domains
           @all_domains = (app_link_subdomains + custom_domains).uniq
 
           while required && @all_domains.empty?
-            @all_domains = ask "Please enter domains as a comma-separated list: ", ->(str) { str.split "," }
+            domains = ask "Please enter domains as a comma-separated list: ", ->(str) { str.split "," }
+
+            @all_domains = all_domains_from_domains domains
           end
         end
 
@@ -123,12 +136,25 @@ module BranchIOCLI
           end
         end
 
-        def app_link_subdomains(options)
-          app_link_subdomain = options.app_link_subdomain
-          live_key = options.live_key
-          test_key = options.test_key
-          return [] if live_key.nil? and test_key.nil?
+        def app_link_roots_from_domains(domains)
+          return [] if domains.nil?
+
+          options.domains.select { |d| d =~ APP_LINK_REGEXP }
+                 .map { |d| d.sub!(APP_LINK_REGEXP, '').sub!(/-alternate$/, '') }
+                 .uniq
+        end
+
+        def custom_domains_from_domains(domains)
+          return [] if domains.nil?
+          domains.reject { |d| d =~ APP_LINK_REGEXP }.uniq
+        end
+
+        def app_link_subdomains(root)
+          app_link_subdomain = root
           return [] if app_link_subdomain.nil?
+
+          live_key = @keys[:live]
+          test_key = @keys[:test]
 
           domains = []
           unless live_key.nil?
@@ -144,6 +170,17 @@ module BranchIOCLI
             ]
           end
           domains
+        end
+
+        def app_link_subdomains_from_roots(roots)
+          roots.inject([]) { |domains, root| domains + app_link_subdomains(root) }
+        end
+
+        def all_domains_from_domains(domains)
+          app_link_roots = app_link_roots_from_domains domains
+          app_link_subdomains = app_link_subdomains_from_roots app_link_roots
+          custom_domains = custom_domains_from_domains domains
+          custom_domains + app_link_subdomains
         end
 
         def validate_buildfile_path(options, filename)
