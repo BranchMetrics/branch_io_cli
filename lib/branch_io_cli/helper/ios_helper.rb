@@ -357,12 +357,14 @@ module BranchIOCLI
           mode: :prepend
         )
 
-        # TODO: This is Swift 3. Support other versions, esp. 4.
-        init_session_text = <<-EOF
+        init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
         #if DEBUG
             Branch.setUseTestBranchKey(true)
         #endif
 
+EOF
+
+        init_session_text += <<-EOF
         Branch.getInstance().initSession(launchOptions: launchOptions) {
             universalObject, linkProperties, error in
 
@@ -377,13 +379,29 @@ module BranchIOCLI
           mode: :append
         )
 
-        unless app_delegate =~ /application:.*continueUserActivity:.*restorationHandler:/
+        if app_delegate =~ /application:.*continue userActivity:.*restorationHandler:/
+          # Add something to the top of the method
+          continue_user_activity_text = <<-EOF
+        // TODO: Adjust your method as you see fit.
+        if Branch.getInstance.continue(userActivity) {
+            return true
+        }
+
+          EOF
+
+          apply_patch(
+            files: app_delegate_swift_path,
+            regexp: /application:.*continue userActivity:.*restorationHandler:.*?\{.*?\n/m,
+            text: continue_user_activity_text,
+            mode: :append
+          )
+        else
           # Add the application:continueUserActivity:restorationHandler method if it does not exist
           continue_user_activity_text = <<-EOF
 
 
-    func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
-      return Branch.getInstance().continue(userActivity)
+    func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]?) -> Void) -> Bool {
+        return Branch.getInstance().continue(userActivity)
     }
           EOF
 
@@ -417,11 +435,14 @@ module BranchIOCLI
           mode: :prepend
         )
 
-        init_session_text = <<-EOF
+        init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
 #ifdef DEBUG
     [Branch setUseTestBranchKey:YES];
 #endif // DEBUG
 
+EOF
+
+        init_session_text += <<-EOF
     [[Branch getInstance] initSessionWithLaunchOptions:launchOptions
         andRegisterDeepLinkHandlerUsingBranchUniversalObject:^(BranchUniversalObject *universalObject, BranchLinkProperties *linkProperties, NSError *error){
         // TODO: Route Branch links
@@ -435,7 +456,22 @@ module BranchIOCLI
           mode: :append
         )
 
-        unless app_delegate =~ /application:.*continueUserActivity:.*restorationHandler:/
+        if app_delegate =~ /application:.*continueUserActivity:.*restorationHandler:/
+          continue_user_activity_text = <<-EOF
+    // TODO: Adjust your method as you see fit.
+    if ([[Branch getInstance] continueUserActivity:userActivity]) {
+        return YES;
+    }
+
+EOF
+
+          apply_patch(
+            files: app_delegate_objc_path,
+            regexp: /application:.*continueUserActivity:.*restorationHandler:.*?\{.*?\n/m,
+            text: continue_user_activity_text,
+            mode: :append
+          )
+        else
           # Add the application:continueUserActivity:restorationHandler method if it does not exist
           continue_user_activity_text = <<-EOF
 
