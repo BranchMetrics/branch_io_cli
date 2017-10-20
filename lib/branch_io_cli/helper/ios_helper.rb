@@ -357,12 +357,14 @@ module BranchIOCLI
           mode: :prepend
         )
 
-        # TODO: This is Swift 3. Support other versions, esp. 4.
-        init_session_text = <<-EOF
+        init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
         #if DEBUG
             Branch.setUseTestBranchKey(true)
         #endif
 
+EOF
+
+        init_session_text += <<-EOF
         Branch.getInstance().initSession(launchOptions: launchOptions) {
             universalObject, linkProperties, error in
 
@@ -417,11 +419,14 @@ module BranchIOCLI
           mode: :prepend
         )
 
-        init_session_text = <<-EOF
+        init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
 #ifdef DEBUG
     [Branch setUseTestBranchKey:YES];
 #endif // DEBUG
 
+EOF
+
+        init_session_text += <<-EOF
     [[Branch getInstance] initSessionWithLaunchOptions:launchOptions
         andRegisterDeepLinkHandlerUsingBranchUniversalObject:^(BranchUniversalObject *universalObject, BranchLinkProperties *linkProperties, NSError *error){
         // TODO: Route Branch links
