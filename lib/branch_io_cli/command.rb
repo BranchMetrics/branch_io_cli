@@ -1,3 +1,4 @@
+require "pathname"
 require "xcodeproj"
 
 module BranchIOCLI
@@ -38,7 +39,10 @@ module BranchIOCLI
 
         return unless options.commit
 
-        `git commit #{helper.changes.to_a.join(" ")} -m '[branch_io_cli] Branch SDK integration'`
+        current_pathname = Pathname.new File.expand_path "."
+        changes = helper.changes.to_a.map { |c| Pathname.new(File.expand_path(c)).relative_path_from(current_pathname).to_s }
+
+        `git commit #{changes.join(" ")} -m '[branch_io_cli] Branch SDK integration'`
       end
 
       def validate(options)
@@ -108,7 +112,8 @@ module BranchIOCLI
         helper.add_change "#{podfile_path}.lock"
 
         # 4. Check if Pods folder is under SCM
-        pods_folder_path = File.expand_path "../Pods", podfile_path
+        current_pathname = Pathname.new File.expand_path "."
+        pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from current_pathname
         `git ls-files #{pods_folder_path} --error-unmatch > /dev/null 2>&1`
         return true unless $?.exitstatus == 0
 
@@ -152,7 +157,8 @@ module BranchIOCLI
         end
 
         # 6. Check if Carthage folder is under SCM
-        carthage_folder_path = File.expand_path "../Carthage", cartfile_path
+        current_pathname = Pathname.new File.expand_path "."
+        carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from current_pathname
         `git ls-files #{carthage_folder_path} --error-unmatch > /dev/null 2>&1`
         return true unless $?.exitstatus == 0
 

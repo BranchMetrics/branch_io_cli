@@ -1,5 +1,6 @@
 require "json"
 require "net/http"
+require "pathname"
 require "xcodeproj"
 require "zip"
 
@@ -202,9 +203,13 @@ EOF
           BranchHelper.add_change "#{@podfile_path}.lock"
 
           # For now, add Pods folder to SCM.
-          pods_folder_path = File.expand_path "../Pods", podfile_path
+          current_pathname = Pathname.new File.expand_path "."
+          pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from current_pathname
+          workspace_path = Pathname.new(File.expand_path(@xcodeproj_path.sub(/.xcodeproj$/, ".xcworkspace"))).relative_path_from current_pathname
+          podfile_pathname = Pathname.new(@podfile_path).relative_path_from current_pathname
           BranchHelper.add_change pods_folder_path
-          `git add #{pods_folder_path}` if options.commit
+          BranchHelper.add_change workspace_path
+          `git add #{podfile_pathname} #{podfile_pathname}.lock #{pods_folder_path} #{workspace_path}` if options.commit
         end
 
         def add_carthage(options)
@@ -245,9 +250,11 @@ EOF
           # For now, add Carthage folder to SCM
 
           # 6. Add the Carthage folder to the commit (in case :commit param specified)
-          carthage_folder_path = File.expand_path "../Carthage", cartfile_path
+          current_pathname = Pathname.new File.expand_path "."
+          carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from(current_pathname)
+          cartfile_pathname = Pathname.new(@cartfile_path).relative_path_from current_pathname
           BranchHelper.add_change carthage_folder_path
-          `git add #{carthage_folder_path}` if options.commit
+          `git add #{cartfile_pathname} #{cartfile_pathname}.resolved #{carthage_folder_path}` if options.commit
         end
 
         def add_direct(options)
@@ -298,7 +305,10 @@ EOF
           target.frameworks_build_phase.add_file_reference framework, true
           @xcodeproj.save
 
-          say "Done."
+          BranchHelper.add_change File.expand_path "Branch.framework"
+          `git add Branch.framework` if options.commit
+
+          say "Done. ✅"
         end
 
         def fetch(url)
