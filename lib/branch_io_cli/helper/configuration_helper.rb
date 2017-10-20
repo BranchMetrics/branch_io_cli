@@ -194,21 +194,60 @@ EOF
 
           command = "pod install"
           command += " --repo-update" unless options.no_pod_repo_update
-          system command
+          Dir.chdir(File.dirname(@podfile_path)) do
+            system command
+          end
 
           BranchHelper.add_change @podfile_path
           BranchHelper.add_change "#{@podfile_path}.lock"
+
+          # For now, add Pods folder to SCM.
+          pods_folder_path = File.expand_path "../Pods", podfile_path
+          BranchHelper.add_change pods_folder_path
+          `git add #{pods_folder_path}` if options.commit
         end
 
         def add_carthage(options)
+          # TODO: Collapse this and Command::update_cartfile
+
+          # 1. Generate Cartfile
           @cartfile_path = File.expand_path "../Cartfile", @xcodeproj_path
           File.open(@cartfile_path, "w") do |file|
             file.write <<EOF
 github "BranchMetrics/ios-branch-deep-linking"
 EOF
           end
-          system "carthage update --platform ios"
-          # TODO: The rest of this/merge this with update_cartfile
+
+          # 2. carthage update
+          Dir.chdir(File.dirname(@cartfile_path)) do
+            system "carthage update --platform ios"
+          end
+
+          # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
+          BranchHelper.add_change cartfile_path
+          BranchHelper.add_change "#{cartfile_path}.resolved"
+
+          # 4. Add to target depependencies
+          frameworks_group = @xcodeproj.frameworks_group
+          branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
+          target = BranchHelper.target_from_project @xcodeproj, options.target
+          target.frameworks_build_phase.add_file_reference branch_framework
+
+          # 5. Create a copy-frameworks build phase
+          carthage_build_phase = target.new_shell_script_build_phase "carthage copy-frameworks"
+          carthage_build_phase.shell_script = "/usr/local/bin/carthage copy-frameworks"
+
+          carthage_build_phase.input_paths << "$(SRCROOT)/Carthage/Build/iOS/Branch.framework"
+          carthage_build_phase.output_paths << "$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/Branch.framework"
+
+          @xcodeproj.save
+
+          # For now, add Carthage folder to SCM
+
+          # 6. Add the Carthage folder to the commit (in case :commit param specified)
+          carthage_folder_path = File.expand_path "../Carthage", cartfile_path
+          BranchHelper.add_change carthage_folder_path
+          `git add #{carthage_folder_path}` if options.commit
         end
 
         def add_direct(options)
@@ -226,7 +265,7 @@ EOF
           framework_asset = current_release["assets"][0]
           framework_url = framework_asset["browser_download_url"]
 
-          say "Downloading Branch.framework v. #{current_release["tag_name"]} (#{framework_asset["size"]} bytes zipped)..."
+          say "Downloading Branch.framework v. #{current_release['tag_name']} (#{framework_asset['size']} bytes zipped)..."
 
           # Download the framework zip
           File.open("Branch.framework.zip", "w") do |file|

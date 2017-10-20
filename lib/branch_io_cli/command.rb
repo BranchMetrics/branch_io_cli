@@ -136,7 +136,7 @@ module BranchIOCLI
         helper.add_change "#{cartfile_path}.resolved"
 
         # 4. Add to target depependencies
-        frameworks_group = project['Frameworks']
+        frameworks_group = project.frameworks_group
         branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
         target = helper.target_from_project project, options.target
         target.frameworks_build_phase.add_file_reference branch_framework
@@ -156,7 +156,7 @@ module BranchIOCLI
         `git ls-files #{carthage_folder_path} --error-unmatch > /dev/null 2>&1`
         return true unless $?.exitstatus == 0
 
-        # 7. If so, add the Pods folder to the commit (in case :commit param specified)
+        # 7. If so, add the Carthage folder to the commit (in case :commit param specified)
         helper.add_change carthage_folder_path
         `git add #{carthage_folder_path}` if options.commit
 
