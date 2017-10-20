@@ -156,7 +156,7 @@ module BranchIOCLI
 
           # If no CocoaPods or Carthage, check to see if the framework is linked.
           target = BranchHelper.target_from_project @xcodeproj, options.target
-          return if target.frameworks_build_phase.files.map(&:file_ref).map(&:path).any? { |p| p =~ $r{/Branch.framework$} }
+          return if target.frameworks_build_phase.files.map(&:file_ref).map(&:path).any? { |p| p =~ %r{/Branch.framework$} }
 
           # --podfile, --cartfile not specified. No Podfile found. No Cartfile found. No Branch.framework in project.
           # Prompt the user:
@@ -217,16 +217,23 @@ EOF
           File.unlink "Branch.framework.zip" if File.exist? "Branch.framework.zip"
           remove_directory "Branch.framework"
 
+          say "Finding current framework release..."
+
           # Find the latest release from GitHub.
           releases = JSON.parse fetch "https://api.github.com/repos/BranchMetrics/ios-branch-deep-linking/releases"
           current_release = releases.first
           # Get the download URL for the framework.
-          framework_url = current_release["assets"][0]["browser_download_url"]
+          framework_asset = current_release["assets"][0]
+          framework_url = framework_asset["browser_download_url"]
+
+          say "Downloading Branch.framework v. #{current_release["tag_name"]} (#{framework_asset["size"]} bytes zipped)..."
 
           # Download the framework zip
           File.open("Branch.framework.zip", "w") do |file|
             file.write fetch framework_url
           end
+
+          say "Unzipping Branch.framework..."
 
           # Unzip
           Zip::File.open "Branch.framework.zip" do |zip_file|
@@ -241,15 +248,18 @@ EOF
           # Remove intermediate zip file
           File.unlink "Branch.framework.zip"
 
-          say "downloaded Branch.framework"
-
           # Now the current framework is in ./Branch.framework
+
+          say "Adding to #{@xcodeproj_path}..."
 
           # Add as a dependency in the Frameworks group
           frameworks_group = @xcodeproj.frameworks_group
           framework = frameworks_group.new_file "Branch.framework"
+          target = BranchHelper.target_from_project @xcodeproj, options.target
           target.frameworks_build_phase.add_file_reference framework, true
           @xcodeproj.save
+
+          say "Done."
         end
 
         def fetch(url)
