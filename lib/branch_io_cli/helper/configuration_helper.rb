@@ -192,6 +192,11 @@ module BranchIOCLI
           File.open(@podfile_path, "w") do |file|
             file.write <<EOF
 platform :ios, "#{target.deployment_target}"
+EOF
+
+            file.write "use_frameworks!\n" unless target.resolved_build_setting("SWIFT_VERSION")["Release"].nil?
+
+            file.write <<EOF
 
 pod "Branch"
 
