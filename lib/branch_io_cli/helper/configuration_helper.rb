@@ -189,25 +189,18 @@ module BranchIOCLI
           @podfile_path = File.expand_path "../Podfile", @xcodeproj_path
           target = BranchHelper.target_from_project @xcodeproj, options.target
 
-          File.open(@podfile_path, "w") do |file|
-            file.write <<EOF
-platform :ios, "#{target.deployment_target}"
-EOF
-
-            file.write "use_frameworks!\n" unless target.resolved_build_setting("SWIFT_VERSION")["Release"].nil?
-
-            file.write <<EOF
-
-pod "Branch"
-
-#{@xcodeproj.targets.map { |t| "target \"#{t.name}\"" }.join("\n")}
-EOF
-          end
-
-          command = "pod install"
-          command += " --repo-update" unless options.no_pod_repo_update
+          install_command = "pod install"
+          install_command += " --repo-update" unless options.no_pod_repo_update
           Dir.chdir(File.dirname(@podfile_path)) do
-            system command
+            system "pod init"
+            BranchHelper.apply_patch(
+              files: @podfile_path,
+              regexp: /^(\s*)# Pods for #{target.name}$/,
+              mode: :append,
+              text: "\n\\1pod \"Branch\"",
+              global: false
+            )
+            system install_command
           end
 
           BranchHelper.add_change @podfile_path
