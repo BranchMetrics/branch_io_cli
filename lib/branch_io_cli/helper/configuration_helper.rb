@@ -6,6 +6,7 @@ require "zip"
 
 module BranchIOCLI
   module Helper
+    # rubocop: disable Metrics/ClassLength
     class ConfigurationHelper
       class << self
         APP_LINK_REGEXP = /\.app\.link$|\.test-app\.link$/
@@ -59,11 +60,11 @@ EOF
 
 <%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
 <%= color('Target:', BOLD) %> #{@target.name}
-<%= color('Live key:', BOLD) %> #{@keys[:live] || "(none)"}
-<%= color('Test key:', BOLD) %> #{@keys[:test] || "(none)"}
+<%= color('Live key:', BOLD) %> #{@keys[:live] || '(none)'}
+<%= color('Test key:', BOLD) %> #{@keys[:test] || '(none)'}
 <%= color('Domains:', BOLD) %> #{@all_domains}
-<%= color('Podfile:', BOLD) %> #{@podfile_path || "(none)"}
-<%= color('Cartfile:', BOLD) %> #{@cartfile_path || "(none)"}
+<%= color('Podfile:', BOLD) %> #{@podfile_path || '(none)'}
+<%= color('Cartfile:', BOLD) %> #{@cartfile_path || '(none)'}
 
 EOF
         end
@@ -185,8 +186,8 @@ EOF
           return [] if domains.nil?
 
           domains.select { |d| d =~ APP_LINK_REGEXP }
-            .map { |d| d.sub(APP_LINK_REGEXP, '').sub(/-alternate$/, '') }
-            .uniq
+                 .map { |d| d.sub(APP_LINK_REGEXP, '').sub(/-alternate$/, '') }
+                 .uniq
         end
 
         def custom_domains_from_domains(domains)
@@ -477,4 +478,5 @@ EOF
       end
     end
   end
+  # rubocop enable: Metrics/ClassLength
 end
