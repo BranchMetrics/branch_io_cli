@@ -15,7 +15,7 @@ module BranchIOCLI
         update_podfile(options) || update_cartfile(options, xcodeproj)
 
         target_name = options.target # may be nil
-        is_app_target = !ConfigurationHelper.target.extension_target_type?
+        is_app_target = !Helper::ConfigurationHelper.target.extension_target_type?
 
         if is_app_target && !options.no_validate &&
            !helper.validate_team_and_bundle_ids_from_aasa_files(xcodeproj, target_name, @domains)

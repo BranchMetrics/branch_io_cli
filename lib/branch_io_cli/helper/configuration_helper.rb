@@ -28,11 +28,27 @@ module BranchIOCLI
           validate_buildfile_path options, "Podfile"
           validate_buildfile_path options, "Cartfile"
           validate_sdk_addition options
+
+          print_configuration "setup"
         end
 
         def validate_validation_options(options)
           validate_xcodeproj_path options
           validate_target options, false
+
+          print_configuration "validate"
+        end
+
+        def print_configuration(command)
+          say "Configuration: "
+          say ""
+          say "- Xcode project: #{@xcodeproj_path}"
+          say "- Target: #{@target.name}"
+          say "- Live key: #{@keys[:live] || "(none)"}"
+          say "- Test key: #{@keys[:test] || "(none)"}"
+          say "- Domains: #{@all_domains}"
+          say "- Podfile: #{@podfile_path || "(none)"}"
+          say "- Cartfile: #{@cartfile_path || "(none)"}"
         end
 
         def validate_keys_from_setup_options(options)
@@ -63,7 +79,9 @@ module BranchIOCLI
           # .app.link or .test-app.link domains provided via options.domains.
 
           app_link_subdomains = app_link_subdomains_from_roots app_link_roots
-          custom_domains = custom_domains_from_domains domains
+
+          custom_domains = custom_domains_from_domains options.domains
+
           @all_domains = (app_link_subdomains + custom_domains).uniq
 
           while required && @all_domains.empty?
@@ -139,9 +157,9 @@ module BranchIOCLI
         def app_link_roots_from_domains(domains)
           return [] if domains.nil?
 
-          options.domains.select { |d| d =~ APP_LINK_REGEXP }
-                 .map { |d| d.sub!(APP_LINK_REGEXP, '').sub!(/-alternate$/, '') }
-                 .uniq
+          domains.select { |d| d =~ APP_LINK_REGEXP }
+            .map { |d| d.sub(APP_LINK_REGEXP, '').sub(/-alternate$/, '') }
+            .uniq
         end
 
         def custom_domains_from_domains(domains)
