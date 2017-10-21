@@ -29,9 +29,10 @@ module BranchIOCLI
           validate_all_domains options, !@target.extension_target_type?
           validate_buildfile_path options, "Podfile"
           validate_buildfile_path options, "Cartfile"
-          validate_sdk_addition options
 
           print_setup_configuration
+
+          validate_sdk_addition options
         end
 
         def validate_validation_options(options)
@@ -53,6 +54,7 @@ EOF
 
         def print_setup_configuration
           say <<EOF
+
 <%= color('Configuration:', BOLD) %>
 
 <%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
@@ -62,6 +64,7 @@ EOF
 <%= color('Domains:', BOLD) %> #{@all_domains}
 <%= color('Podfile:', BOLD) %> #{@podfile_path || "(none)"}
 <%= color('Cartfile:', BOLD) %> #{@cartfile_path || "(none)"}
+
 EOF
         end
 
