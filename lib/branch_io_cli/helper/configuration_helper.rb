@@ -19,6 +19,8 @@ module BranchIOCLI
         attr_accessor :target
 
         def validate_setup_options(options)
+          print_identification "setup"
+
           say "--force is ignored when --no_validate is used." if options.no_validate && options.force
 
           validate_xcodeproj_path options
@@ -29,26 +31,48 @@ module BranchIOCLI
           validate_buildfile_path options, "Cartfile"
           validate_sdk_addition options
 
-          print_configuration "setup"
+          print_setup_configuration
         end
 
         def validate_validation_options(options)
+          print_identification "validate"
+
           validate_xcodeproj_path options
           validate_target options, false
 
-          print_configuration "validate"
+          print_validation_configuration
         end
 
-        def print_configuration(command)
-          say "Configuration: "
-          say ""
-          say "- Xcode project: #{@xcodeproj_path}"
-          say "- Target: #{@target.name}"
-          say "- Live key: #{@keys[:live] || "(none)"}"
-          say "- Test key: #{@keys[:test] || "(none)"}"
-          say "- Domains: #{@all_domains}"
-          say "- Podfile: #{@podfile_path || "(none)"}"
-          say "- Cartfile: #{@cartfile_path || "(none)"}"
+        def print_identification(command)
+          say <<EOF
+
+<%= color("branch_io #{command} v. #{VERSION}", BOLD) %>
+
+EOF
+        end
+
+        def print_setup_configuration
+          say <<EOF
+<%= color('Configuration:', BOLD) %>
+
+<%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
+<%= color('Target:', BOLD) %> #{@target.name}
+<%= color('Live key:', BOLD) %> #{@keys[:live] || "(none)"}
+<%= color('Test key:', BOLD) %> #{@keys[:test] || "(none)"}
+<%= color('Domains:', BOLD) %> #{@all_domains}
+<%= color('Podfile:', BOLD) %> #{@podfile_path || "(none)"}
+<%= color('Cartfile:', BOLD) %> #{@cartfile_path || "(none)"}
+EOF
+        end
+
+        def print_validation_configuration
+          say <<EOF
+<%= color('Configuration:', BOLD) %>
+
+<%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
+<%= color('Target:', BOLD) %> #{@target.name}
+<%= color('Domains:', BOLD) %> #{@all_domains}
+EOF
         end
 
         def validate_keys_from_setup_options(options)
