@@ -537,11 +537,11 @@ EOF
 
       def patch_open_url_method_swift(app_delegate_swift_path)
         app_delegate_swift = File.open app_delegate_swift_path, &:read
-        if app_delegate_swift =~ /application:.*open\s+url.*options/
+        if app_delegate_swift =~ /application.*open\s+url.*options/
           # Has application:openURL:options:
           open_url_text = <<-EOF
         // TODO: Adjust your method as you see fit.
-        if Branch.getInstance.application(app, open: URL, options: options) {
+        if Branch.getInstance().application(app, open: url, options: options) {
             return true
         }
 
@@ -549,16 +549,16 @@ EOF
 
           apply_patch(
             files: app_delegate_swift_path,
-            regexp: /application:.*open\s+url.*options:.*?\{.*?\n/m,
+            regexp: /application.*open\s+url.*options:.*?\{.*?\n/m,
             text: open_url_text,
             mode: :append
           )
-        elsif app_delegate_swift =~ /application:.*open\s+url.*sourceApplication/
+        elsif app_delegate_swift =~ /application.*open\s+url.*sourceApplication/
           # Has application:openURL:sourceApplication:annotation:
           # TODO: This method is deprecated.
           open_url_text = <<-EOF
         // TODO: Adjust your method as you see fit.
-        if Branch.getInstance.application(application, open: URL, sourceApplication: sourceApplication, annotation: annotation) {
+        if Branch.getInstance().application(application, open: url, sourceApplication: sourceApplication, annotation: annotation) {
             return true
         }
 
@@ -566,7 +566,7 @@ EOF
 
           apply_patch(
             files: app_delegate_swift_path,
-            regexp: /application:.*open\s+url.*sourceApplication:.*?\{.*?\n/m,
+            regexp: /application.*open\s+url.*sourceApplication:.*?\{.*?\n/m,
             text: open_url_text,
             mode: :append
           )
@@ -595,7 +595,7 @@ EOF
           # Has application:openURL:options:
           open_url_text = <<-EOF
     // TODO: Adjust your method as you see fit.
-    if ([[Branch getInstance] application:app openURL:URL options:options]) {
+    if ([[Branch getInstance] application:app openURL:url options:options]) {
         return YES;
     }
 
@@ -611,7 +611,7 @@ EOF
           # Has application:openURL:sourceApplication:annotation:
           open_url_text = <<-EOF
     // TODO: Adjust your method as you see fit.
-    if ([[Branch getInstance] application:application openURL:URL sourceApplication:sourceApplication annotation:annotation]) {
+    if ([[Branch getInstance] application:application openURL:url sourceApplication:sourceApplication annotation:annotation]) {
         return YES;
     }
 
