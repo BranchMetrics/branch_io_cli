@@ -35,6 +35,43 @@ module BranchIOCLI
         end
       end
 
+      def ensure_uri_scheme_in_info_plist
+        uri_scheme = ConfigurationHelper.uri_scheme
+
+        # No URI scheme specified. Do nothing.
+        return if uri_scheme.nil?
+
+        update_info_plist_setting ConfigurationHelper.xcodeproj,
+                                  ConfigurationHelper.target.name,
+                                  RELEASE_CONFIGURATION do |info_plist|
+          url_types = info_plist["CFBundleURLTypes"] || []
+          uri_schemes = url_types.inject([]) { |schemes, t| schemes + t["CFBundleURLSchemes"] }
+
+          if uri_schemes.empty?
+            say "No URI scheme currently defined in project."
+          else
+            say "Existing URI schemes found in project:"
+            uri_schemes.each do |scheme|
+              say " #{scheme}"
+            end
+          end
+
+          # Already present. Don't mess with the identifier.
+          return if uri_schemes.include? uri_scheme
+
+          # Not found. Add. Don't worry about the CFBundleURLName (reverse-DNS identifier)
+          # TODO: Should we prompt here to add or let them change the Dashboard? If there's already
+          # a URI scheme in the app, seems likely they'd want to use it. They may have just made
+          # a typo at the CLI or in the Dashboard.
+          url_types << {
+            "CFBundleURLSchemes" => [uri_scheme]
+          }
+          info_plist["CFBundleURLTypes"] = url_types
+
+          say "Added URI scheme #{uri_scheme} to project."
+        end
+      end
+
       def update_info_plist_setting(project, target_name, configuration = RELEASE_CONFIGURATION, &b)
         # raises
         target = target_from_project project, target_name
@@ -413,6 +450,8 @@ EOF
           )
         end
 
+        patch_open_url_method_swift app_delegate_swift_path
+
         add_change app_delegate_swift_path
         true
       end
@@ -490,8 +529,118 @@ EOF
           )
         end
 
+        patch_open_url_method_objc app_delegate_objc_path
+
         add_change app_delegate_objc_path
         true
+      end
+
+      def patch_open_url_method_swift(app_delegate_swift_path)
+        app_delegate_swift = File.open app_delegate_swift_path, &:read
+        if app_delegate_swift =~ /application.*open\s+url.*options/
+          # Has application:openURL:options:
+          open_url_text = <<-EOF
+        // TODO: Adjust your method as you see fit.
+        if Branch.getInstance().application(app, open: url, options: options) {
+            return true
+        }
+
+          EOF
+
+          apply_patch(
+            files: app_delegate_swift_path,
+            regexp: /application.*open\s+url.*options:.*?\{.*?\n/m,
+            text: open_url_text,
+            mode: :append
+          )
+        elsif app_delegate_swift =~ /application.*open\s+url.*sourceApplication/
+          # Has application:openURL:sourceApplication:annotation:
+          # TODO: This method is deprecated.
+          open_url_text = <<-EOF
+        // TODO: Adjust your method as you see fit.
+        if Branch.getInstance().application(application, open: url, sourceApplication: sourceApplication, annotation: annotation) {
+            return true
+        }
+
+          EOF
+
+          apply_patch(
+            files: app_delegate_swift_path,
+            regexp: /application.*open\s+url.*sourceApplication:.*?\{.*?\n/m,
+            text: open_url_text,
+            mode: :append
+          )
+        else
+          # Has neither
+          open_url_text = <<EOF
+
+
+    func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
+        return Branch.getInstance().application(app, open: url, options: options)
+    }
+EOF
+
+          apply_patch(
+            files: app_delegate_swift_path,
+            regexp: /\n\s*\}[^{}]*\Z/m,
+            text: open_url_text,
+            mode: :prepend
+          )
+        end
+      end
+
+      def patch_open_url_method_objc(app_delegate_objc_path)
+        app_delegate_objc = File.open app_delegate_objc_path, &:read
+        if app_delegate_objc =~ /application:.*openURL:.*options/
+          # Has application:openURL:options:
+          open_url_text = <<-EOF
+    // TODO: Adjust your method as you see fit.
+    if ([[Branch getInstance] application:app openURL:url options:options]) {
+        return YES;
+    }
+
+EOF
+
+          apply_patch(
+            files: app_delegate_objc_path,
+            regexp: /application:.*openURL:.*options:.*?\{.*?\n/m,
+            text: open_url_text,
+            mode: :append
+          )
+        elsif app_delegate_objc =~ /application:.*openURL:.*sourceApplication/
+          # Has application:openURL:sourceApplication:annotation:
+          open_url_text = <<-EOF
+    // TODO: Adjust your method as you see fit.
+    if ([[Branch getInstance] application:application openURL:url sourceApplication:sourceApplication annotation:annotation]) {
+        return YES;
+    }
+
+EOF
+
+          apply_patch(
+            files: app_delegate_objc_path,
+            regexp: /application:.*openURL:.*sourceApplication:.*?\{.*?\n/m,
+            text: open_url_text,
+            mode: :append
+          )
+        else
+          # Has neither
+          open_url_text = <<-EOF
+
+
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options
+{
+    return [[Branch getInstance] application:app openURL:url options:options];
+}
+          EOF
+
+          apply_patch(
+            files: app_delegate_objc_path,
+            regexp: /\n\s*@end[^@]*\Z/m,
+            text: open_url_text,
+            mode: :prepend
+          )
+        end
       end
 
       def patch_podfile(podfile_path)

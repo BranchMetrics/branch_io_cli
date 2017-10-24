@@ -76,6 +76,7 @@ EOF
         c.option "--test_key key_test_yyyy", String, "Branch test key"
         c.option "--app_link_subdomain myapp", String, "Branch app.link subdomain, e.g. myapp for myapp.app.link"
         c.option "--domains example.com,www.example.com", Array, "Comma-separated list of custom domain(s) or non-Branch domain(s)"
+        c.option "--uri_scheme myurischeme[://]", String, "Custom URI scheme used in the Branch Dashboard for this app"
 
         c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project to update"
         c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"
