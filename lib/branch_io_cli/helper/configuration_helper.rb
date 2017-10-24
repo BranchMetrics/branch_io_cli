@@ -239,6 +239,7 @@ EOF
 
         # Removes any trailing :// from the argument and returns a copy
         def uri_scheme_without_suffix(scheme)
+          return nil if scheme.nil?
           scheme.sub %r{://$}, ""
         end
 
