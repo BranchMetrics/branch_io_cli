@@ -35,6 +35,40 @@ module BranchIOCLI
         end
       end
 
+      def ensure_uri_scheme_in_info_plist
+        uri_scheme = ConfigurationHelper.uri_scheme
+
+        # No URI scheme specified. Do nothing.
+        return if uri_scheme.nil?
+
+        update_info_plist_setting ConfigurationHelper.xcodeproj,
+                                  ConfigurationHelper.target.name,
+                                  RELEASE_CONFIGURATION do |info_plist|
+          url_types = info_plist["CFBundleURLTypes"] || []
+          uri_schemes = url_types.inject([]) { |schemes, t| schemes + t["CFBundleURLSchemes"] }
+
+          if uri_schemes.empty?
+            say "No URI scheme currently defined in project."
+          else
+            say "Existing URI schemes found in project:"
+            uri_schemes.each do |scheme|
+              say " #{scheme}"
+            end
+          end
+
+          # Already present. Don't mess with the identifier.
+          return if uri_schemes.include? uri_scheme
+
+          # Not found. Add. Don't worry about the CFBundleURLName (reverse-DNS identifier)
+          url_types << {
+            "CFBundleURLSchemes" => [uri_scheme]
+          }
+          info_plist["CFBundleURLTypes"] = url_types
+
+          say "Added URI scheme #{uri_scheme} to project."
+        end
+      end
+
       def update_info_plist_setting(project, target_name, configuration = RELEASE_CONFIGURATION, &b)
         # raises
         target = target_from_project project, target_name

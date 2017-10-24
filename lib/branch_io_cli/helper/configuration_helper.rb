@@ -18,6 +18,7 @@ module BranchIOCLI
         attr_accessor :podfile_path
         attr_accessor :cartfile_path
         attr_accessor :target
+        attr_accessor :uri_scheme
 
         def validate_setup_options(options)
           print_identification "setup"
@@ -28,6 +29,7 @@ module BranchIOCLI
           validate_target options
           validate_keys_from_setup_options options
           validate_all_domains options, !@target.extension_target_type?
+          validate_uri_scheme options
           validate_buildfile_path options, "Podfile"
           validate_buildfile_path options, "Cartfile"
 
@@ -63,6 +65,7 @@ EOF
 <%= color('Live key:', BOLD) %> #{@keys[:live] || '(none)'}
 <%= color('Test key:', BOLD) %> #{@keys[:test] || '(none)'}
 <%= color('Domains:', BOLD) %> #{@all_domains}
+<%= color('URI scheme:', BOLD) %> #{@uri_scheme || '(none)'}
 <%= color('Podfile:', BOLD) %> #{@podfile_path || '(none)'}
 <%= color('Cartfile:', BOLD) %> #{@cartfile_path || '(none)'}
 
@@ -117,6 +120,11 @@ EOF
 
             @all_domains = all_domains_from_domains domains
           end
+        end
+
+        def validate_uri_scheme(options)
+          # No validation at the moment. Just strips off any trailing ://
+          @uri_scheme = uri_scheme_without_suffix options.uri_scheme
         end
 
         # 1. Look for options.xcodeproj.
@@ -227,6 +235,11 @@ EOF
           app_link_subdomains = app_link_subdomains_from_roots app_link_roots
           custom_domains = custom_domains_from_domains domains
           custom_domains + app_link_subdomains
+        end
+
+        # Removes any trailing :// from the argument and returns a copy
+        def uri_scheme_without_suffix(scheme)
+          scheme.sub %r{://$}, ""
         end
 
         def validate_buildfile_path(options, filename)

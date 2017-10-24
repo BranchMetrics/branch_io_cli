@@ -29,6 +29,8 @@ module BranchIOCLI
         # the following calls can all raise IOError
         helper.add_keys_to_info_plist xcodeproj, target_name, @keys
         helper.add_branch_universal_link_domains_to_info_plist xcodeproj, target_name, @domains if is_app_target
+        helper.ensure_uri_scheme_in_info_plist if is_app_target # does nothing if already present
+
         new_path = helper.add_universal_links_to_project xcodeproj, target_name, @domains, false if is_app_target
         `git add #{new_path}` if options.commit && new_path
 
