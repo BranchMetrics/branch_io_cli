@@ -393,7 +393,7 @@ EOF
           File.unlink "Branch.framework.zip" if File.exist? "Branch.framework.zip"
           remove_directory "Branch.framework"
 
-          say "Finding current framework release..."
+          say "Finding current framework release"
 
           # Find the latest release from GitHub.
           releases = JSON.parse fetch "https://api.github.com/repos/BranchMetrics/ios-branch-deep-linking/releases"
@@ -402,12 +402,12 @@ EOF
           framework_asset = current_release["assets"][0]
           framework_url = framework_asset["browser_download_url"]
 
-          say "Downloading Branch.framework v. #{current_release['tag_name']} (#{framework_asset['size']} bytes zipped)..."
+          say "Downloading Branch.framework v. #{current_release['tag_name']} (#{framework_asset['size']} bytes zipped)"
 
           # Download the framework zip
           download framework_url, "Branch.framework.zip"
 
-          say "Unzipping Branch.framework..."
+          say "Unzipping Branch.framework"
 
           # Unzip
           Zip::File.open "Branch.framework.zip" do |zip_file|
@@ -424,7 +424,7 @@ EOF
 
           # Now the current framework is in ./Branch.framework
 
-          say "Adding to #{@xcodeproj_path}..."
+          say "Adding to #{@xcodeproj_path}"
 
           # Add as a dependency in the Frameworks group
           frameworks_group = @xcodeproj.frameworks_group
