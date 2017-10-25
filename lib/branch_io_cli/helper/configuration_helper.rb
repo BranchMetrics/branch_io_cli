@@ -78,7 +78,7 @@ EOF
 
 <%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
 <%= color('Target:', BOLD) %> #{@target.name}
-<%= color('Domains:', BOLD) %> #{@all_domains}
+<%= color('Domains:', BOLD) %> #{@all_domains || '(none)'}
 EOF
         end
 
@@ -335,10 +335,9 @@ EOF
           BranchHelper.add_change "#{@podfile_path}.lock"
 
           # For now, add Pods folder to SCM.
-          current_pathname = Pathname.new File.expand_path "."
-          pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from current_pathname
-          workspace_path = Pathname.new(File.expand_path(@xcodeproj_path.sub(/.xcodeproj$/, ".xcworkspace"))).relative_path_from current_pathname
-          podfile_pathname = Pathname.new(@podfile_path).relative_path_from current_pathname
+          pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from Pathname.pwd
+          workspace_path = Pathname.new(File.expand_path(@xcodeproj_path.sub(/.xcodeproj$/, ".xcworkspace"))).relative_path_from Pathname.pwd
+          podfile_pathname = Pathname.new(@podfile_path).relative_path_from Pathname.pwd
           BranchHelper.add_change pods_folder_path
           BranchHelper.add_change workspace_path
           `git add #{podfile_pathname} #{podfile_pathname}.lock #{pods_folder_path} #{workspace_path}` if options.commit
@@ -382,9 +381,8 @@ EOF
           # For now, add Carthage folder to SCM
 
           # 6. Add the Carthage folder to the commit (in case :commit param specified)
-          current_pathname = Pathname.new File.expand_path "."
-          carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from(current_pathname)
-          cartfile_pathname = Pathname.new(@cartfile_path).relative_path_from current_pathname
+          carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from(Pathname.pwd)
+          cartfile_pathname = Pathname.new(@cartfile_path).relative_path_from Pathname.pwd
           BranchHelper.add_change carthage_folder_path
           `git add #{cartfile_pathname} #{cartfile_pathname}.resolved #{carthage_folder_path}` if options.commit
         end
