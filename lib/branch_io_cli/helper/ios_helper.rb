@@ -673,7 +673,7 @@ EOF
         apply_patch(
           files: cartfile_path,
           regexp: /\z/,
-          text: "git \"https://github.com/BranchMetrics/ios-branch-deep-linking\"\n",
+          text: "github \"BranchMetrics/ios-branch-deep-linking\"\n",
           mode: :append
         )
 

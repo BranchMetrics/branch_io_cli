@@ -144,7 +144,7 @@ module BranchIOCLI
         # 4. Add to target dependencies
         frameworks_group = project.frameworks_group
         branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
-        target = ConfigurationHelper.target
+        target = Helper::ConfigurationHelper.target
         target.frameworks_build_phase.add_file_reference branch_framework
 
         # 5. Add to copy-frameworks build phase
