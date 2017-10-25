@@ -57,7 +57,6 @@ EOF
 
         def print_setup_configuration
           say <<EOF
-
 <%= color('Configuration:', BOLD) %>
 
 <%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
