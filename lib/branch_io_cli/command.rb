@@ -141,7 +141,7 @@ module BranchIOCLI
         helper.add_change cartfile_path
         helper.add_change "#{cartfile_path}.resolved"
 
-        # 4. Add to target depependencies
+        # 4. Add to target dependencies
         frameworks_group = project.frameworks_group
         branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
         target = ConfigurationHelper.target

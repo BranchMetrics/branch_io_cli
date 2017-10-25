@@ -363,7 +363,7 @@ EOF
           BranchHelper.add_change cartfile_path
           BranchHelper.add_change "#{cartfile_path}.resolved"
 
-          # 4. Add to target depependencies
+          # 4. Add to target dependencies
           frameworks_group = @xcodeproj.frameworks_group
           branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
           target = BranchHelper.target_from_project @xcodeproj, options.target
