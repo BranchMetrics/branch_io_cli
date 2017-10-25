@@ -435,7 +435,11 @@ EOF
           @xcodeproj.build_configurations.each do |config|
             setting = config.build_settings["FRAMEWORK_SEARCH_PATHS"] || []
             setting = [setting] if setting.kind_of? String
-            next if setting.any? { |p| p == "$(SRCROOT)" }
+            # Look for recursive or non-recursive SRCROOT
+            # TODO: If the project already has a FRAMEWORK_SEARCH_PATHS, perhaps
+            # try to put the framework in one of those folders. Alternately,
+            # prompt the user and/or add an argument for the location.
+            next if setting.any? { |p| p == "$(SRCROOT)" || p == "$(SRCROOT)/**" }
 
             setting << "$(SRCROOT)"
             config.build_settings["FRAMEWORK_SEARCH_PATHS"] = setting
