@@ -78,7 +78,7 @@ EOF
 
 <%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
 <%= color('Target:', BOLD) %> #{@target.name}
-<%= color('Domains:', BOLD) %> #{@all_domains}
+<%= color('Domains:', BOLD) %> #{@all_domains || '(none)'}
 EOF
         end
 
@@ -335,10 +335,9 @@ EOF
           BranchHelper.add_change "#{@podfile_path}.lock"
 
           # For now, add Pods folder to SCM.
-          current_pathname = Pathname.new File.expand_path "."
-          pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from current_pathname
-          workspace_path = Pathname.new(File.expand_path(@xcodeproj_path.sub(/.xcodeproj$/, ".xcworkspace"))).relative_path_from current_pathname
-          podfile_pathname = Pathname.new(@podfile_path).relative_path_from current_pathname
+          pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from Pathname.pwd
+          workspace_path = Pathname.new(File.expand_path(@xcodeproj_path.sub(/.xcodeproj$/, ".xcworkspace"))).relative_path_from Pathname.pwd
+          podfile_pathname = Pathname.new(@podfile_path).relative_path_from Pathname.pwd
           BranchHelper.add_change pods_folder_path
           BranchHelper.add_change workspace_path
           `git add #{podfile_pathname} #{podfile_pathname}.lock #{pods_folder_path} #{workspace_path}` if options.commit
@@ -364,7 +363,7 @@ EOF
           BranchHelper.add_change cartfile_path
           BranchHelper.add_change "#{cartfile_path}.resolved"
 
-          # 4. Add to target depependencies
+          # 4. Add to target dependencies
           frameworks_group = @xcodeproj.frameworks_group
           branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
           target = BranchHelper.target_from_project @xcodeproj, options.target
@@ -382,9 +381,8 @@ EOF
           # For now, add Carthage folder to SCM
 
           # 6. Add the Carthage folder to the commit (in case :commit param specified)
-          current_pathname = Pathname.new File.expand_path "."
-          carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from(current_pathname)
-          cartfile_pathname = Pathname.new(@cartfile_path).relative_path_from current_pathname
+          carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from(Pathname.pwd)
+          cartfile_pathname = Pathname.new(@cartfile_path).relative_path_from Pathname.pwd
           BranchHelper.add_change carthage_folder_path
           `git add #{cartfile_pathname} #{cartfile_pathname}.resolved #{carthage_folder_path}` if options.commit
         end
@@ -407,9 +405,7 @@ EOF
           say "Downloading Branch.framework v. #{current_release['tag_name']} (#{framework_asset['size']} bytes zipped)..."
 
           # Download the framework zip
-          File.open("Branch.framework.zip", "w") do |file|
-            file.write fetch framework_url
-          end
+          download framework_url, "Branch.framework.zip"
 
           say "Unzipping Branch.framework..."
 
@@ -458,10 +454,35 @@ EOF
           response = Net::HTTP.get_response URI(url)
 
           case response
+          when Net::HTTPSuccess
+            response.body
           when Net::HTTPRedirection
             fetch response['location']
           else
-            response.body
+            raise "Error fetching #{url}: #{response.code} #{response.message}"
+          end
+        end
+
+        def download(url, dest)
+          uri = URI(url)
+
+          Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
+            request = Net::HTTP::Get.new uri
+
+            http.request request do |response|
+              case response
+              when Net::HTTPSuccess
+                File.open dest, 'w' do |io|
+                  response.read_body do |chunk|
+                    io.write chunk
+                  end
+                end
+              when Net::HTTPRedirection
+                download response['location'], dest
+              else
+                raise "Error downloading #{url}: #{response.code} #{response.message}"
+              end
+            end
           end
         end
 

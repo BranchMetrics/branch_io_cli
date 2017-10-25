@@ -42,8 +42,7 @@ module BranchIOCLI
 
         return unless options.commit
 
-        current_pathname = Pathname.new File.expand_path "."
-        changes = helper.changes.to_a.map { |c| Pathname.new(File.expand_path(c)).relative_path_from(current_pathname).to_s }
+        changes = helper.changes.to_a.map { |c| Pathname.new(File.expand_path(c)).relative_path_from(Pathname.pwd).to_s }
 
         `git commit #{changes.join(" ")} -m '[branch_io_cli] Branch SDK integration'`
       end
@@ -115,8 +114,7 @@ module BranchIOCLI
         helper.add_change "#{podfile_path}.lock"
 
         # 4. Check if Pods folder is under SCM
-        current_pathname = Pathname.new File.expand_path "."
-        pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from current_pathname
+        pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from Pathname.pwd
         `git ls-files #{pods_folder_path} --error-unmatch > /dev/null 2>&1`
         return true unless $?.exitstatus == 0
 
@@ -143,10 +141,10 @@ module BranchIOCLI
         helper.add_change cartfile_path
         helper.add_change "#{cartfile_path}.resolved"
 
-        # 4. Add to target depependencies
+        # 4. Add to target dependencies
         frameworks_group = project.frameworks_group
         branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
-        target = ConfigurationHelper.target
+        target = Helper::ConfigurationHelper.target
         target.frameworks_build_phase.add_file_reference branch_framework
 
         # 5. Add to copy-frameworks build phase
@@ -160,8 +158,7 @@ module BranchIOCLI
         end
 
         # 6. Check if Carthage folder is under SCM
-        current_pathname = Pathname.new File.expand_path "."
-        carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from current_pathname
+        carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from Pathname.pwd
         `git ls-files #{carthage_folder_path} --error-unmatch > /dev/null 2>&1`
         return true unless $?.exitstatus == 0
 
