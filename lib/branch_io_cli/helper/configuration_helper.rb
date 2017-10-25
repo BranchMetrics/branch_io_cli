@@ -405,9 +405,7 @@ EOF
           say "Downloading Branch.framework v. #{current_release['tag_name']} (#{framework_asset['size']} bytes zipped)..."
 
           # Download the framework zip
-          File.open("Branch.framework.zip", "w") do |file|
-            file.write fetch framework_url
-          end
+          download framework_url, "Branch.framework.zip"
 
           say "Unzipping Branch.framework..."
 
@@ -456,10 +454,35 @@ EOF
           response = Net::HTTP.get_response URI(url)
 
           case response
+          when Net::HTTPSuccess
+            response.body
           when Net::HTTPRedirection
             fetch response['location']
           else
-            response.body
+            raise "Error fetching #{url}: #{response.code} #{response.message}"
+          end
+        end
+
+        def download(url, dest)
+          uri = URI(url)
+
+          Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
+            request = Net::HTTP::Get.new uri
+
+            http.request request do |response|
+              case response
+              when Net::HTTPSuccess
+                File.open dest, 'w' do |io|
+                  response.read_body do |chunk|
+                    io.write chunk
+                  end
+                end
+              when Net::HTTPRedirection
+                download response['location'], dest
+              else
+                raise "Error downloading #{url}: #{response.code} #{response.message}"
+              end
+            end
           end
         end
 
