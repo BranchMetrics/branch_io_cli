@@ -382,7 +382,7 @@ module BranchIOCLI
 
         app_delegate_swift_path = app_delegate_swift.real_path.to_s
 
-        app_delegate = File.open(app_delegate_swift_path, &:read)
+        app_delegate = File.read app_delegate_swift_path
         return false if app_delegate =~ /import\s+Branch/
 
         say "Patching #{app_delegate_swift_path}"
@@ -462,7 +462,7 @@ EOF
 
         app_delegate_objc_path = app_delegate_objc.real_path.to_s
 
-        app_delegate = File.open(app_delegate_objc_path, &:read)
+        app_delegate = File.read app_delegate_objc_path
         return false if app_delegate =~ %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch;}
 
         say "Patching #{app_delegate_objc_path}"
@@ -536,7 +536,7 @@ EOF
       end
 
       def patch_open_url_method_swift(app_delegate_swift_path)
-        app_delegate_swift = File.open app_delegate_swift_path, &:read
+        app_delegate_swift = File.read app_delegate_swift_path
         if app_delegate_swift =~ /application.*open\s+url.*options/
           # Has application:openURL:options:
           open_url_text = <<-EOF
@@ -590,7 +590,7 @@ EOF
       end
 
       def patch_open_url_method_objc(app_delegate_objc_path)
-        app_delegate_objc = File.open app_delegate_objc_path, &:read
+        app_delegate_objc = File.read app_delegate_objc_path
         if app_delegate_objc =~ /application:.*openURL:.*options/
           # Has application:openURL:options:
           open_url_text = <<-EOF
@@ -644,7 +644,7 @@ EOF
       end
 
       def patch_podfile(podfile_path)
-        podfile = File.open(podfile_path, &:read)
+        podfile = File.read podfile_path
 
         # Podfile already contains the Branch pod
         return false if podfile =~ /pod\s+('Branch'|"Branch")/
@@ -663,7 +663,7 @@ EOF
       end
 
       def patch_cartfile(cartfile_path)
-        cartfile = File.open(cartfile_path, &:read)
+        cartfile = File.read cartfile_path
 
         # Cartfile already contains the Branch framework
         return false if cartfile =~ /git.+Branch/
