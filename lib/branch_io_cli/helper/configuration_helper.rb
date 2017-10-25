@@ -472,11 +472,25 @@ EOF
             http.request request do |response|
               case response
               when Net::HTTPSuccess
+                bytes_downloaded = 0
+                dots_reported = 0
+                # report a dot every 100 kB
+                per_dot = 102_400
+
                 File.open dest, 'w' do |io|
                   response.read_body do |chunk|
                     io.write chunk
+
+                    # print progress
+                    bytes_downloaded += chunk.length
+                    while (bytes_downloaded - per_dot * dots_reported) >= per_dot
+                      print "."
+                      dots_reported += 1
+                    end
+                    STDOUT.flush
                   end
                 end
+                say "\n"
               when Net::HTTPRedirection
                 download response['location'], dest
               else
