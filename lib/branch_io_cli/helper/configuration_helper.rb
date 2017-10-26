@@ -4,9 +4,16 @@ require "xcodeproj"
 module BranchIOCLI
   module Helper
     class ConfigurationHelper
-      class << self
-        APP_LINK_REGEXP = /\.app\.link$|\.test-app\.link$/
+      APP_LINK_REGEXP = /\.app\.link$|\.test-app\.link$/
+      SDK_OPTIONS =
+        {
+          "Set this project up to use CocoaPods and add the Branch SDK." => :cocoapods,
+          "Set this project up to use Carthage and add the Branch SDK." => :carthage,
+          "Add Branch.framework directly to the project's dependencies." => :direct,
+          "Skip adding the framework to the project." => :skip
+        }
 
+      class << self
         attr_reader :xcodeproj_path
         attr_reader :xcodeproj
         attr_reader :keys
@@ -342,14 +349,6 @@ EOF
             @cartfile_path = File.expand_path "../Cartfile", @xcodeproj_path
           end
         end
-
-        SDK_OPTIONS =
-          {
-            "Set this project up to use CocoaPods and add the Branch SDK." => :cocoapods,
-            "Set this project up to use Carthage and add the Branch SDK." => :carthage,
-            "Add Branch.framework directly to the project's dependencies." => :direct,
-            "Skip adding the framework to the project." => :skip
-          }
       end
     end
   end
