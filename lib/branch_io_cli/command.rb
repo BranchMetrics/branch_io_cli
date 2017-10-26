@@ -3,7 +3,13 @@ require "xcodeproj"
 
 module BranchIOCLI
   class Command
-    def run(options)
+    attr_reader :options
+
+    def initialize(options)
+      @options = options
+    end
+
+    def run!
       # implemented by subclasses
     end
 

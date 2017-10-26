@@ -106,7 +106,7 @@ EOF
             patch_source: true,
             commit: false
           )
-          Commands::SetupCommand.new.run options
+          Commands::SetupCommand.new(options).run!
         end
       end
 
@@ -139,7 +139,7 @@ EOF
         c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"
 
         c.action do |args, options|
-          valid = Commands::ValidateCommand.new.run options
+          valid = Commands::ValidateCommand.new(options).run!
           exit_code = valid ? 0 : 1
           exit exit_code
         end

@@ -1,9 +1,12 @@
 module BranchIOCLI
   module Commands
     module ValidateCommand
-      def run(options)
+      def initialize(options)
+        super
         config_helper.validate_validation_options options
+      end
 
+      def run!
         # raises
         xcodeproj = config_helper.xcodeproj
 
