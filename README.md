@@ -46,14 +46,14 @@ location.
 
 If a Podfile or Cartfile is detected, the Branch SDK will be added to the relevant
 configuration file and the dependencies updated to include the Branch framework.
-This behavior may be suppressed using `--no_add_sdk`. If no Podfile or Cartfile
+This behavior may be suppressed using `--no-add-sdk`. If no Podfile or Cartfile
 is found, and Branch.framework is not already among the project's dependencies,
 you will be prompted for a number of choices, including setting up CocoaPods or
 Carthage for the project or directly installing the Branch.framework.
 
 By default, all supplied Universal Link domains are validated. If validation passes,
 the setup continues. If validation fails, no further action is taken. Suppress
-validation using `--no_validate` or force changes when validation fails using
+validation using `--no-validate` or force changes when validation fails using
 `--force`.
 
 By default, this command will look for the first app target in the project. Test
@@ -67,7 +67,7 @@ Optionally, if `--frameworks` is specified, this command can add a list of syste
 frameworks to the target's dependencies (e.g., AdSupport, CoreSpotlight, SafariServices).
 
 A language-specific patch is applied to the AppDelegate (Swift or Objective-C).
-This can be suppressed using `--no_patch_source`.
+This can be suppressed using `--no-patch-source`.
 
 #### Prerequisites
 
@@ -86,26 +86,26 @@ command, respectively, available in your path.
 
 |Option|Description|
 |------|-----------|
-|--live_key key_live_xxxx|Branch live key|
-|--test_key key_test_yyyy|Branch test key|
-|--app_link_subdomain myapp|Branch app.link subdomain, e.g. myapp for myapp.app.link|
+|--live-key key_live_xxxx|Branch live key|
+|--test-key key_test_yyyy|Branch test key|
+|--app-link-subdomain myapp|Branch app.link subdomain, e.g. myapp for myapp.app.link|
 |--domains example.com,www.example.com|Comma-separated list of custom domain(s) or non-Branch domain(s)|
-|--uri_scheme myurischeme[://]|Custom URI scheme used in the Branch Dashboard for this app|
+|--uri-scheme myurischeme[://]|Custom URI scheme used in the Branch Dashboard for this app|
 |--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|
 |--target MyAppTarget|Name of a target to modify in the Xcode project|
 |--podfile /path/to/Podfile|Path to the Podfile for the project|
 |--cartfile /path/to/Cartfile|Path to the Cartfile for the project|
 |--frameworks AdSupport,CoreSpotlight,SafariServices|Comma-separated list of system frameworks to add to the project|
-|--no_pod_repo_update|Skip update of the local podspec repo before installing|
-|--no_validate|Skip validation of Universal Link configuration|
-|--force|Update project even if Universal Link validation fails|
-|--no_add_sdk|Don't add the Branch framework to the project|
-|--no_patch_source|Don't add Branch SDK calls to the AppDelegate|
-|--commit|Commit the results to Git|
+|--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|
+|--[no-]validate|Validate Universal Link configuration (default: yes)|
+|--[no-]force|Update project even if Universal Link validation fails (default: no)|
+|--[no-]add-sdk|Add the Branch framework to the project (default: yes)|
+|--[no-]patch-source|Add Branch SDK calls to the AppDelegate (default: yes)|
+|--[no-]commit|Commit the results to Git (default: no)|
 
 All parameters are optional. A live key or test key, or both is required, as well as at least one domain.
-Specify --live_key, --test_key or both and --app_link_subdomain, --domains or both. If these are not
-specified, this command will prompt you for this information.
+Specify --live-key, --test-key or both and --app-link-subdomain, --domains or both. If these are not
+specified, this command will prompt you for the information.
 
 ### Validate command
 
