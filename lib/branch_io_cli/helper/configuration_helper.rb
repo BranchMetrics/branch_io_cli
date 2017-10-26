@@ -388,9 +388,16 @@ EOF
 
         def add_direct(options)
           # TODO: Put these intermediates in a temp directory until Branch.framework is unzipped
-          # (and validated?). For now dumped in the current directory.
-          File.unlink "Branch.framework.zip" if File.exist? "Branch.framework.zip"
-          remove_directory "Branch.framework"
+          # (and validated?). For now dumped in the project folder and the destination path.
+          project_folder = File.dirname @xcodeproj_path
+          zip_path = File.join project_folder, "Branch.framework.zip"
+
+          # Put the framework in the path for any existing Frameworks group in the project.
+          frameworks_group = @xcodeproj.frameworks_group
+          framework_path = File.join frameworks_group.real_path, "Branch.framework"
+
+          File.unlink zip_path if File.exist? zip_path
+          remove_directory framework_path
 
           say "Finding current framework release"
 
@@ -404,51 +411,52 @@ EOF
           say "Downloading Branch.framework v. #{current_release['tag_name']} (#{framework_asset['size']} bytes zipped)"
 
           # Download the framework zip
-          download framework_url, "Branch.framework.zip"
+          download framework_url, zip_path
 
           say "Unzipping Branch.framework"
 
           # Unzip
-          Zip::File.open "Branch.framework.zip" do |zip_file|
+          Zip::File.open zip_path do |zip_file|
             # Start with just the framework and add dSYM, etc., later
             zip_file.glob "Carthage/Build/iOS/Branch.framework/**/*" do |entry|
-              filename = entry.name.sub %r{^Carthage/Build/iOS/}, ""
+              filename = entry.name.sub %r{^Carthage/Build/iOS}, frameworks_group.real_path.to_s
               ensure_directory File.dirname filename
               entry.extract filename
             end
           end
 
           # Remove intermediate zip file
-          File.unlink "Branch.framework.zip"
+          File.unlink zip_path
 
-          # Now the current framework is in ./Branch.framework
+          # Now the current framework is in framework_path
 
           say "Adding to #{@xcodeproj_path}"
 
           # Add as a dependency in the Frameworks group
-          frameworks_group = @xcodeproj.frameworks_group
-          framework = frameworks_group.new_file "Branch.framework"
+          framework = frameworks_group.new_file "Branch.framework" # relative to frameworks_group.real_path
           target = BranchHelper.target_from_project @xcodeproj, options.target
           target.frameworks_build_phase.add_file_reference framework, true
 
-          # Make sure this is in the FRAMEWORK_SEARCH_PATHS
-          @xcodeproj.build_configurations.each do |config|
-            setting = config.build_settings["FRAMEWORK_SEARCH_PATHS"] || []
-            setting = [setting] if setting.kind_of? String
-            # Look for recursive or non-recursive SRCROOT
-            # TODO: If the project already has a FRAMEWORK_SEARCH_PATHS, perhaps
-            # try to put the framework in one of those folders. Alternately,
-            # prompt the user and/or add an argument for the location.
-            next if setting.any? { |p| p == "$(SRCROOT)" || p == "$(SRCROOT)/**" }
-
-            setting << "$(SRCROOT)"
-            config.build_settings["FRAMEWORK_SEARCH_PATHS"] = setting
+          # Make sure this is in the FRAMEWORK_SEARCH_PATHS if frameworks_group.path is nil,
+          # which means it points to $(SRCROOT).
+          if frameworks_group.path.nil?
+            @xcodeproj.build_configurations.each do |config|
+              setting = config.build_settings["FRAMEWORK_SEARCH_PATHS"] || []
+              setting = [setting] if setting.kind_of? String
+              next if setting.any? { |p| p == "$(SRCROOT)" || p == "$(SRCROOT)/**" }
+              setting << "$(SRCROOT)"
+              config.build_settings["FRAMEWORK_SEARCH_PATHS"] = setting
+            end
           end
+
+          # If frameworks_group.path is non-nil, we did not just add it. If it
+          # already existed, it's likely it's already in FRAMEWORK_SEARCH_PATHS.
+          # TODO: Verify and add if needed.
 
           @xcodeproj.save
 
-          BranchHelper.add_change File.expand_path "Branch.framework"
-          `git add Branch.framework` if options.commit
+          BranchHelper.add_change framework_path
+          `git add #{framework_path}` if options.commit
 
           say "Done. ✅"
         end
@@ -518,6 +526,8 @@ EOF
             remove_directory(file) and next if File.directory?(file)
             File.unlink file
           end
+
+          Dir.rmdir path
         end
 
         SDK_OPTIONS =
