@@ -72,11 +72,11 @@ See https://github.com/BranchMetrics/branch_io_cli#setup-command for more inform
 EOF
 
         # Required Branch params
-        c.option "--live-key key_live_xxxx", String, "Branch live key"
-        c.option "--test-key key_test_yyyy", String, "Branch test key"
+        c.option "-L", "--live-key key_live_xxxx", String, "Branch live key"
+        c.option "-T", "--test-key key_test_yyyy", String, "Branch test key"
         c.option "--app-link-subdomain myapp", String, "Branch app.link subdomain, e.g. myapp for myapp.app.link"
-        c.option "--domains example.com,www.example.com", Array, "Comma-separated list of custom domain(s) or non-Branch domain(s)"
-        c.option "--uri-scheme myurischeme[://]", String, "Custom URI scheme used in the Branch Dashboard for this app"
+        c.option "-D", "--domains example.com,www.example.com", Array, "Comma-separated list of custom domain(s) or non-Branch domain(s)"
+        c.option "-U", "--uri-scheme myurischeme[://]", String, "Custom URI scheme used in the Branch Dashboard for this app"
 
         c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project to update"
         c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"
@@ -90,6 +90,11 @@ EOF
         c.option "--[no-]add-sdk", "Add the Branch framework to the project (default: yes)"
         c.option "--[no-]patch-source", "Add Branch SDK calls to the AppDelegate (default: yes)"
         c.option "--[no-]commit", "Commit the results to Git (default: no)"
+
+        c.example "Test without validation (can use dummy keys and domains)", "branch_io setup -L key_live_xxxx -D myapp.app.link --no-validate"
+        c.example "Use both live and test keys", "branch_io setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link"
+        c.example "Use custom or non-Branch domains", "branch_io setup -D myapp.app.link,example.com,www.example.com"
+        c.example "Avoid pod repo update", "branch_io setup --no-pod-repo-update"
 
         c.action do |args, options|
           options.default(
@@ -129,9 +134,9 @@ validation.
 See https://github.com/BranchMetrics/branch_io_cli#validate-command for more information.
 EOF
 
+        c.option "-D", "--domains example.com,www.example.com", Array, "Comma-separated list of domains to validate (Branch domains or non-Branch domains)"
         c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project to update"
         c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"
-        c.option "--domains example.com,www.example.com", Array, "Comma-separated list of domains to validate (Branch domains or non-Branch domains)"
 
         c.action do |args, options|
           valid = Command.validate options

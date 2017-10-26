@@ -86,11 +86,11 @@ command, respectively, available in your path.
 
 |Option|Description|
 |------|-----------|
-|--live-key key_live_xxxx|Branch live key|
-|--test-key key_test_yyyy|Branch test key|
+|-L, --live-key key_live_xxxx|Branch live key|
+|-T, --test-key key_test_yyyy|Branch test key|
 |--app-link-subdomain myapp|Branch app.link subdomain, e.g. myapp for myapp.app.link|
-|--domains example.com,www.example.com|Comma-separated list of custom domain(s) or non-Branch domain(s)|
-|--uri-scheme myurischeme[://]|Custom URI scheme used in the Branch Dashboard for this app|
+|-D --domains example.com,www.example.com|Comma-separated list of custom domain(s) or non-Branch domain(s)|
+|-U --uri-scheme myurischeme[://]|Custom URI scheme used in the Branch Dashboard for this app|
 |--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|
 |--target MyAppTarget|Name of a target to modify in the Xcode project|
 |--podfile /path/to/Podfile|Path to the Podfile for the project|
@@ -106,6 +106,32 @@ command, respectively, available in your path.
 All parameters are optional. A live key or test key, or both is required, as well as at least one domain.
 Specify --live-key, --test-key or both and --app-link-subdomain, --domains or both. If these are not
 specified, this command will prompt you for the information.
+
+#### Examples
+
+##### Test without validation (can use dummy keys and domains)
+
+```bash
+branch_io setup -L key_live_xxxx -D myapp.app.link --no-validate
+```
+
+##### Use both live and test keys
+
+```bash
+branch_io setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link
+```
+
+##### Use custom or non-Branch domains
+
+```bash
+branch_io setup -D myapp.app.link,example.com,www.example.com
+```
+
+##### Avoid pod repo update
+
+```bash
+branch_io setup --no-pod-repo-update
+```
 
 ### Validate command
 
@@ -128,7 +154,7 @@ targets.
 
 |Option|Description|
 |------|-----------|
-|--domains example.com,www.example.com|Comma-separated list of domains. May include app.link subdomains.|
+|-D, --domains example.com,www.example.com|Comma-separated list of domains. May include app.link subdomains.|
 |--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|
 |--target MyAppTarget|Name of a target to modify in the Xcode project|
 
