@@ -1,6 +1,6 @@
 module BranchIOCLI
   module Commands
-    module ValidateCommand
+    class ValidateCommand < Command
       def initialize(options)
         super
         config_helper.validate_validation_options options
