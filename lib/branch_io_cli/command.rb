@@ -17,12 +17,12 @@ module BranchIOCLI
         target_name = options.target # may be nil
         is_app_target = !Helper::ConfigurationHelper.target.extension_target_type?
 
-        if is_app_target && !options.no_validate &&
+        if is_app_target && options.validate &&
            !helper.validate_team_and_bundle_ids_from_aasa_files(xcodeproj, target_name, @domains)
           say "Universal Link configuration failed validation."
           helper.errors.each { |error| say " #{error}" }
           return unless options.force
-        elsif is_app_target && !options.no_validate
+        elsif is_app_target && options.validate
           say "Universal Link configuration passed validation. ✅"
         end
 
@@ -38,7 +38,7 @@ module BranchIOCLI
 
         xcodeproj.save
 
-        patch_source xcodeproj unless options.no_patch_source
+        patch_source xcodeproj if options.patch_source
 
         return unless options.commit
 
@@ -103,7 +103,7 @@ module BranchIOCLI
         # 2. pod install
         # command = "PATH='#{ENV['PATH']}' pod install"
         command = 'pod install'
-        command += ' --repo-update' unless options.no_pod_repo_update
+        command += ' --repo-update' if options.pod_repo_update
 
         Dir.chdir(File.dirname(podfile_path)) do
           system command

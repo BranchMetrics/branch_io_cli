@@ -25,14 +25,14 @@ location.
 
 If a Podfile or Cartfile is detected, the Branch SDK will be added to the relevant
 configuration file and the dependencies updated to include the Branch framework.
-This behavior may be suppressed using <%= color('--no_add_sdk', BOLD) %>. If no Podfile or Cartfile
+This behavior may be suppressed using <%= color('--no-add-sdk', BOLD) %>. If no Podfile or Cartfile
 is found, and Branch.framework is not already among the project's dependencies,
 you will be prompted for a number of choices, including setting up CocoaPods or
 Carthage for the project or directly installing the Branch.framework.
 
 By default, all supplied Universal Link domains are validated. If validation passes,
 the setup continues. If validation fails, no further action is taken. Suppress
-validation using <%= color('--no_validate', BOLD) %> or force changes when validation fails using
+validation using <%= color('--no-validate', BOLD) %> or force changes when validation fails using
 <%= color('--force', BOLD) %>.
 
 By default, this command will look for the first app target in the project. Test
@@ -46,7 +46,7 @@ Optionally, if <%= color('--frameworks', BOLD) %> is specified, this command can
 frameworks to the target's dependencies (e.g., AdSupport, CoreSpotlight, SafariServices).
 
 A language-specific patch is applied to the AppDelegate (Swift or Objective-C).
-This can be suppressed using <%= color('--no_patch_source', BOLD) %>.
+This can be suppressed using <%= color('--no-patch-source', BOLD) %>.
 
 <%= color('Prerequisites', BOLD) %>
 
@@ -64,7 +64,7 @@ To add the SDK with CocoaPods or Carthage, you must have the <%= color('pod', BO
 command, respectively, available in your path.
 
 All parameters are optional. A live key or test key, or both is required, as well
-as at least one domain. Specify <%= color('--live_key', BOLD) %>, <%= color('--test_key', BOLD) %> or both and <%= color('--app_link_subdomain', BOLD) %>,
+as at least one domain. Specify <%= color('--live-key', BOLD) %>, <%= color('--test-key', BOLD) %> or both and <%= color('--app-link-subdomain', BOLD) %>,
 <%= color('--domains', BOLD) %> or both. If these are not specified, this command will prompt you
 for this information.
 
@@ -72,11 +72,11 @@ See https://github.com/BranchMetrics/branch_io_cli#setup-command for more inform
 EOF
 
         # Required Branch params
-        c.option "--live_key key_live_xxxx", String, "Branch live key"
-        c.option "--test_key key_test_yyyy", String, "Branch test key"
-        c.option "--app_link_subdomain myapp", String, "Branch app.link subdomain, e.g. myapp for myapp.app.link"
-        c.option "--domains example.com,www.example.com", Array, "Comma-separated list of custom domain(s) or non-Branch domain(s)"
-        c.option "--uri_scheme myurischeme[://]", String, "Custom URI scheme used in the Branch Dashboard for this app"
+        c.option "-L", "--live-key key_live_xxxx", String, "Branch live key"
+        c.option "-T", "--test-key key_test_yyyy", String, "Branch test key"
+        c.option "--app-link-subdomain myapp", String, "Branch app.link subdomain, e.g. myapp for myapp.app.link"
+        c.option "-D", "--domains example.com,www.example.com", Array, "Comma-separated list of custom domain(s) or non-Branch domain(s)"
+        c.option "-U", "--uri-scheme myurischeme[://]", String, "Custom URI scheme used in the Branch Dashboard for this app"
 
         c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project to update"
         c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"
@@ -84,14 +84,28 @@ EOF
         c.option "--cartfile /path/to/Cartfile", String, "Path to the Cartfile for the project"
         c.option "--frameworks AdSupport,CoreSpotlight,SafariServices", Array, "Comma-separated list of system frameworks to add to the project"
 
-        c.option "--no_pod_repo_update", TrueClass, "Skip update of the local podspec repo before installing"
-        c.option "--no_validate", TrueClass, "Skip validation of Universal Link configuration"
-        c.option "--force", TrueClass, "Update project even if Universal Link validation fails"
-        c.option "--no_add_sdk", TrueClass, "Don't add the Branch framework to the project"
-        c.option "--no_patch_source", TrueClass, "Don't add Branch SDK calls to the AppDelegate"
-        c.option "--commit", TrueClass, "Commit the results to Git"
+        c.option "--[no-]pod-repo-update", "Update the local podspec repo before installing (default: yes)"
+        c.option "--[no-]validate", "Validate Universal Link configuration (default: yes)"
+        c.option "--[no-]force", "Update project even if Universal Link validation fails (default: no)"
+        c.option "--[no-]add-sdk", "Add the Branch framework to the project (default: yes)"
+        c.option "--[no-]patch-source", "Add Branch SDK calls to the AppDelegate (default: yes)"
+        c.option "--[no-]commit", "Commit the results to Git (default: no)"
+
+        c.example "Test without validation (can use dummy keys and domains)", "branch_io setup -L key_live_xxxx -D myapp.app.link --no-validate"
+        c.example "Use both live and test keys", "branch_io setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link"
+        c.example "Use custom or non-Branch domains", "branch_io setup -D myapp.app.link,example.com,www.example.com"
+        c.example "Avoid pod repo update", "branch_io setup --no-pod-repo-update"
 
         c.action do |args, options|
+          options.default(
+            # Defaults for boolean options
+            pod_repo_update: true,
+            validate: true,
+            force: false,
+            add_sdk: true,
+            patch_source: true,
+            commit: false
+          )
           Command.setup options
         end
       end
@@ -120,9 +134,9 @@ validation.
 See https://github.com/BranchMetrics/branch_io_cli#validate-command for more information.
 EOF
 
+        c.option "-D", "--domains example.com,www.example.com", Array, "Comma-separated list of domains to validate (Branch domains or non-Branch domains)"
         c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project to update"
         c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"
-        c.option "--domains example.com,www.example.com", Array, "Comma-separated list of domains to validate (Branch domains or non-Branch domains)"
 
         c.action do |args, options|
           valid = Command.validate options

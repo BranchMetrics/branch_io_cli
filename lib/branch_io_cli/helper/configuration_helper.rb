@@ -12,19 +12,32 @@ module BranchIOCLI
       class << self
         APP_LINK_REGEXP = /\.app\.link$|\.test-app\.link$/
 
-        attr_accessor :xcodeproj_path
-        attr_accessor :xcodeproj
-        attr_accessor :keys
-        attr_accessor :all_domains
-        attr_accessor :podfile_path
-        attr_accessor :cartfile_path
-        attr_accessor :target
-        attr_accessor :uri_scheme
+        attr_reader :xcodeproj_path
+        attr_reader :xcodeproj
+        attr_reader :keys
+        attr_reader :all_domains
+        attr_reader :podfile_path
+        attr_reader :cartfile_path
+        attr_reader :target
+        attr_reader :uri_scheme
+        attr_reader :pod_repo_update
+        attr_reader :validate
+        attr_reader :add_sdk
+        attr_reader :force
+        attr_reader :patch_source
+        attr_reader :commit
 
         def validate_setup_options(options)
           print_identification "setup"
 
-          say "--force is ignored when --no_validate is used." if options.no_validate && options.force
+          @pod_repo_update = options.pod_repo_update
+          @validate = options.validate
+          @patch_source = options.patch_source
+          @add_sdk = options.add_sdk
+          @force = options.force
+          @commit = options.commit
+
+          say "--force is ignored when --no-validate is used." if !options.validate && options.force
 
           validate_xcodeproj_path options
           validate_target options
@@ -68,6 +81,12 @@ EOF
 <%= color('URI scheme:', BOLD) %> #{@uri_scheme || '(none)'}
 <%= color('Podfile:', BOLD) %> #{@podfile_path || '(none)'}
 <%= color('Cartfile:', BOLD) %> #{@cartfile_path || '(none)'}
+<%= color('Pod repo update:', BOLD) %> #{@pod_repo_update.inspect}
+<%= color('Validate:', BOLD) %> #{@validate.inspect}
+<%= color('Force:', BOLD) %> #{@force.inspect}
+<%= color('Add SDK:', BOLD) %> #{@add_sdk.inspect}
+<%= color('Patch source:', BOLD) %> #{@patch_source.inspect}
+<%= color('Commit:', BOLD) %> #{@commit.inspect}
 
 EOF
         end
@@ -244,8 +263,8 @@ EOF
         end
 
         def validate_buildfile_path(options, filename)
-          # Disable Podfile/Cartfile update if --no_add_sdk is present
-          return if options.no_add_sdk
+          # Disable Podfile/Cartfile update if --no-add-sdk is present
+          return unless options.add_sdk
 
           buildfile_path = filename == "Podfile" ? options.podfile : options.cartfile
 
@@ -287,7 +306,7 @@ EOF
         end
 
         def validate_sdk_addition(options)
-          return if options.no_add_sdk || @podfile_path || @cartfile_path
+          return if !options.add_sdk || @podfile_path || @cartfile_path
 
           # If no CocoaPods or Carthage, check to see if the framework is linked.
           target = BranchHelper.target_from_project @xcodeproj, options.target
@@ -318,7 +337,7 @@ EOF
           target = BranchHelper.target_from_project @xcodeproj, options.target
 
           install_command = "pod install"
-          install_command += " --repo-update" unless options.no_pod_repo_update
+          install_command += " --repo-update" if options.pod_repo_update
           Dir.chdir(File.dirname(@podfile_path)) do
             system "pod init"
             BranchHelper.apply_patch(
