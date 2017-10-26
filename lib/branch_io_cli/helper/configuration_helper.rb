@@ -291,7 +291,7 @@ EOF
 
           # If no CocoaPods or Carthage, check to see if the framework is linked.
           target = BranchHelper.target_from_project @xcodeproj, options.target
-          return if target.frameworks_build_phase.files.map(&:file_ref).map(&:path).any? { |p| p =~ %r{/Branch.framework$} }
+          return if target.frameworks_build_phase.files.map(&:file_ref).map(&:path).any? { |p| p =~ %r{Branch.framework$} }
 
           # --podfile, --cartfile not specified. No Podfile found. No Cartfile found. No Branch.framework in project.
           # Prompt the user:
