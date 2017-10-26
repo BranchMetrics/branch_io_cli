@@ -1,6 +1,7 @@
 require "json"
 require "net/http"
 require "pathname"
+require "tmpdir"
 require "xcodeproj"
 require "zip"
 
@@ -57,7 +58,6 @@ EOF
 
         def print_setup_configuration
           say <<EOF
-
 <%= color('Configuration:', BOLD) %>
 
 <%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
@@ -291,7 +291,7 @@ EOF
 
           # If no CocoaPods or Carthage, check to see if the framework is linked.
           target = BranchHelper.target_from_project @xcodeproj, options.target
-          return if target.frameworks_build_phase.files.map(&:file_ref).map(&:path).any? { |p| p =~ %r{/Branch.framework$} }
+          return if target.frameworks_build_phase.files.map(&:file_ref).map(&:path).any? { |p| p =~ /Branch.framework$/ }
 
           # --podfile, --cartfile not specified. No Podfile found. No Cartfile found. No Branch.framework in project.
           # Prompt the user:
@@ -388,12 +388,12 @@ EOF
         end
 
         def add_direct(options)
-          # TODO: Put these intermediates in a temp directory until Branch.framework is unzipped
-          # (and validated?). For now dumped in the current directory.
-          File.unlink "Branch.framework.zip" if File.exist? "Branch.framework.zip"
-          remove_directory "Branch.framework"
+          # Put the framework in the path for any existing Frameworks group in the project.
+          frameworks_group = @xcodeproj.frameworks_group
+          framework_path = File.join frameworks_group.real_path, "Branch.framework"
+          raise "#{framework_path} exists." if File.exist? framework_path
 
-          say "Finding current framework release..."
+          say "Finding current framework release"
 
           # Find the latest release from GitHub.
           releases = JSON.parse fetch "https://api.github.com/repos/BranchMetrics/ios-branch-deep-linking/releases"
@@ -402,50 +402,52 @@ EOF
           framework_asset = current_release["assets"][0]
           framework_url = framework_asset["browser_download_url"]
 
-          say "Downloading Branch.framework v. #{current_release['tag_name']} (#{framework_asset['size']} bytes zipped)..."
+          say "Downloading Branch.framework v. #{current_release['tag_name']} (#{framework_asset['size']} bytes zipped)"
 
-          # Download the framework zip
-          download framework_url, "Branch.framework.zip"
+          Dir.mktmpdir do |download_folder|
+            zip_path = File.join download_folder, "Branch.framework.zip"
 
-          say "Unzipping Branch.framework..."
+            File.unlink zip_path if File.exist? zip_path
 
-          # Unzip
-          Zip::File.open "Branch.framework.zip" do |zip_file|
-            # Start with just the framework and add dSYM, etc., later
-            zip_file.glob "Carthage/Build/iOS/Branch.framework/**/*" do |entry|
-              filename = entry.name.sub %r{^Carthage/Build/iOS/}, ""
-              ensure_directory File.dirname filename
-              entry.extract filename
+            # Download the framework zip
+            download framework_url, zip_path
+
+            say "Unzipping Branch.framework"
+
+            # Unzip
+            Zip::File.open zip_path do |zip_file|
+              # Start with just the framework and add dSYM, etc., later
+              zip_file.glob "Carthage/Build/iOS/Branch.framework/**/*" do |entry|
+                filename = entry.name.sub %r{^Carthage/Build/iOS}, frameworks_group.real_path.to_s
+                ensure_directory File.dirname filename
+                entry.extract filename
+              end
             end
           end
 
-          # Remove intermediate zip file
-          File.unlink "Branch.framework.zip"
+          # Now the current framework is in framework_path
 
-          # Now the current framework is in ./Branch.framework
-
-          say "Adding to #{@xcodeproj_path}..."
+          say "Adding to #{@xcodeproj_path}"
 
           # Add as a dependency in the Frameworks group
-          frameworks_group = @xcodeproj.frameworks_group
-          framework = frameworks_group.new_file "Branch.framework"
-          target = BranchHelper.target_from_project @xcodeproj, options.target
-          target.frameworks_build_phase.add_file_reference framework, true
+          framework = frameworks_group.new_file "Branch.framework" # relative to frameworks_group.real_path
+          @target.frameworks_build_phase.add_file_reference framework, true
 
-          # Make sure this is in the FRAMEWORK_SEARCH_PATHS
-          @xcodeproj.build_configurations.each do |config|
-            setting = config.build_settings["FRAMEWORK_SEARCH_PATHS"] || []
-            setting = [setting] if setting.kind_of? String
-            next if setting.any? { |p| p == "$(SRCROOT)" }
-
-            setting << "$(SRCROOT)"
-            config.build_settings["FRAMEWORK_SEARCH_PATHS"] = setting
+          # Make sure this is in the FRAMEWORK_SEARCH_PATHS if we just added it.
+          if frameworks_group.files.count == 1
+            @target.build_configurations.each do |config|
+              paths = config.build_settings["FRAMEWORK_SEARCH_PATHS"] || []
+              next if paths.any? { |p| p == '$(SRCROOT)' || p == '$(SRCROOT)/**' }
+              paths << '$(SRCROOT)'
+              config.build_settings["FRAMEWORK_SEARCH_PATHS"] = paths
+            end
           end
+          # If it already existed, it's almost certainly already in FRAMEWORK_SEARCH_PATHS.
 
           @xcodeproj.save
 
-          BranchHelper.add_change File.expand_path "Branch.framework"
-          `git add Branch.framework` if options.commit
+          BranchHelper.add_change framework_path
+          `git add #{framework_path}` if options.commit
 
           say "Done. ✅"
         end
@@ -472,11 +474,25 @@ EOF
             http.request request do |response|
               case response
               when Net::HTTPSuccess
+                bytes_downloaded = 0
+                dots_reported = 0
+                # report a dot every 100 kB
+                per_dot = 102_400
+
                 File.open dest, 'w' do |io|
                   response.read_body do |chunk|
                     io.write chunk
+
+                    # print progress
+                    bytes_downloaded += chunk.length
+                    while (bytes_downloaded - per_dot * dots_reported) >= per_dot
+                      print "."
+                      dots_reported += 1
+                    end
+                    STDOUT.flush
                   end
                 end
+                say "\n"
               when Net::HTTPRedirection
                 download response['location'], dest
               else
@@ -492,15 +508,6 @@ EOF
           ensure_directory parent
           return if Dir.exist? path
           Dir.mkdir path
-        end
-
-        def remove_directory(path)
-          return unless File.exist? path
-
-          Dir["#{path}/*"].each do |file|
-            remove_directory(file) and next if File.directory?(file)
-            File.unlink file
-          end
         end
 
         SDK_OPTIONS =
