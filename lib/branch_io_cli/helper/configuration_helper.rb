@@ -431,8 +431,7 @@ EOF
 
           # Add as a dependency in the Frameworks group
           framework = frameworks_group.new_file "Branch.framework" # relative to frameworks_group.real_path
-          target = BranchHelper.target_from_project @xcodeproj, options.target
-          target.frameworks_build_phase.add_file_reference framework, true
+          @target.frameworks_build_phase.add_file_reference framework, true
 
           # Make sure this is in the FRAMEWORK_SEARCH_PATHS if frameworks_group.path is nil,
           # which means it points to $(SRCROOT).
