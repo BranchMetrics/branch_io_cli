@@ -38,14 +38,26 @@ module BranchIOCLI
           @commit = options.commit
 
           say "--force is ignored when --no-validate is used." if !options.validate && options.force
+          if options.cartfile && options.podfile
+            say "--cartfile and --podfile are mutually exclusive. Please specify the file to patch."
+            exit 1
+          end
 
           validate_xcodeproj_path options
           validate_target options
           validate_keys_from_setup_options options
           validate_all_domains options, !@target.extension_target_type?
           validate_uri_scheme options
-          validate_buildfile_path options, "Podfile"
-          validate_buildfile_path options, "Cartfile"
+
+          # If neither --podfile nor --cartfile is present, arbitrarily look for a Podfile
+          # first.
+
+          # If --cartfile is present, don't look for a Podfile. Just validate that
+          # Cartfile.
+          validate_buildfile_path options, "Podfile" if options.cartfile.nil?
+
+          # If --podfile is present or a Podfile was found, don't look for a Cartfile.
+          validate_buildfile_path options, "Cartfile" if @podfile.nil?
 
           print_setup_configuration
 
