@@ -3,6 +3,9 @@ require "xcodeproj"
 
 module BranchIOCLI
   module Helper
+    # Processes CLI options.
+    # Validates options.
+    # Prompts for input in a number of cases.
     class ConfigurationHelper
       APP_LINK_REGEXP = /\.app\.link$|\.test-app\.link$/
       SDK_OPTIONS =
