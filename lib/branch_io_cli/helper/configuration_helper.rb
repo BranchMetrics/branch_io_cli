@@ -1,6 +1,7 @@
 require "json"
 require "net/http"
 require "pathname"
+require "tmpdir"
 require "xcodeproj"
 require "zip"
 
@@ -387,17 +388,10 @@ EOF
         end
 
         def add_direct(options)
-          # TODO: Put these intermediates in a temp directory until Branch.framework is unzipped
-          # (and validated?). For now dumped in the project folder and the destination path.
-          project_folder = File.dirname @xcodeproj_path
-          zip_path = File.join project_folder, "Branch.framework.zip"
-
           # Put the framework in the path for any existing Frameworks group in the project.
           frameworks_group = @xcodeproj.frameworks_group
           framework_path = File.join frameworks_group.real_path, "Branch.framework"
-
-          File.unlink zip_path if File.exist? zip_path
-          remove_directory framework_path
+          raise "#{framework_path} exists." if File.exist? framework_path
 
           say "Finding current framework release"
 
@@ -410,23 +404,26 @@ EOF
 
           say "Downloading Branch.framework v. #{current_release['tag_name']} (#{framework_asset['size']} bytes zipped)"
 
-          # Download the framework zip
-          download framework_url, zip_path
+          Dir.mktmpdir do |download_folder|
+            zip_path = File.join download_folder, "Branch.framework.zip"
 
-          say "Unzipping Branch.framework"
+            File.unlink zip_path if File.exist? zip_path
 
-          # Unzip
-          Zip::File.open zip_path do |zip_file|
-            # Start with just the framework and add dSYM, etc., later
-            zip_file.glob "Carthage/Build/iOS/Branch.framework/**/*" do |entry|
-              filename = entry.name.sub %r{^Carthage/Build/iOS}, frameworks_group.real_path.to_s
-              ensure_directory File.dirname filename
-              entry.extract filename
+            # Download the framework zip
+            download framework_url, zip_path
+
+            say "Unzipping Branch.framework"
+
+            # Unzip
+            Zip::File.open zip_path do |zip_file|
+              # Start with just the framework and add dSYM, etc., later
+              zip_file.glob "Carthage/Build/iOS/Branch.framework/**/*" do |entry|
+                filename = entry.name.sub %r{^Carthage/Build/iOS}, frameworks_group.real_path.to_s
+                ensure_directory File.dirname filename
+                entry.extract filename
+              end
             end
           end
-
-          # Remove intermediate zip file
-          File.unlink zip_path
 
           # Now the current framework is in framework_path
 
@@ -450,8 +447,7 @@ EOF
           end
 
           # If frameworks_group.path is non-nil, we did not just add it. If it
-          # already existed, it's likely it's already in FRAMEWORK_SEARCH_PATHS.
-          # TODO: Verify and add if needed.
+          # already existed, it's almost certainly already in FRAMEWORK_SEARCH_PATHS.
 
           @xcodeproj.save
 
@@ -517,17 +513,6 @@ EOF
           ensure_directory parent
           return if Dir.exist? path
           Dir.mkdir path
-        end
-
-        def remove_directory(path)
-          return unless File.exist? path
-
-          Dir["#{path}/*"].each do |file|
-            remove_directory(file) and next if File.directory?(file)
-            File.unlink file
-          end
-
-          Dir.rmdir path
         end
 
         SDK_OPTIONS =
