@@ -433,20 +433,16 @@ EOF
           framework = frameworks_group.new_file "Branch.framework" # relative to frameworks_group.real_path
           @target.frameworks_build_phase.add_file_reference framework, true
 
-          # Make sure this is in the FRAMEWORK_SEARCH_PATHS if frameworks_group.path is nil,
-          # which means it points to $(SRCROOT).
-          if frameworks_group.path.nil?
-            @xcodeproj.build_configurations.each do |config|
-              setting = config.build_settings["FRAMEWORK_SEARCH_PATHS"] || []
-              setting = [setting] if setting.kind_of? String
-              next if setting.any? { |p| p == "$(SRCROOT)" || p == "$(SRCROOT)/**" }
-              setting << "$(SRCROOT)"
-              config.build_settings["FRAMEWORK_SEARCH_PATHS"] = setting
+          # Make sure this is in the FRAMEWORK_SEARCH_PATHS if we just added it.
+          if frameworks_group.files.count == 1
+            @target.build_configurations.each do |config|
+              paths = config.build_settings["FRAMEWORK_SEARCH_PATHS"] || []
+              next if paths.any? { |p| p == '$(SRCROOT)' || p == '$(SRCROOT)/**' }
+              paths << '$(SRCROOT)'
+              config.build_settings["FRAMEWORK_SEARCH_PATHS"] = paths
             end
           end
-
-          # If frameworks_group.path is non-nil, we did not just add it. If it
-          # already existed, it's almost certainly already in FRAMEWORK_SEARCH_PATHS.
+          # If it already existed, it's almost certainly already in FRAMEWORK_SEARCH_PATHS.
 
           @xcodeproj.save
 
