@@ -147,7 +147,7 @@ It requests the apple-app-site-association file for each domain and validates
 the file against the project's settings.
 
 Only app targets are supported for this command. By default, it will validate the first.
-If your project has multiple app targets, specify the <%= color('--target', BOLD) %> option to validate other
+If your project has multiple app targets, specify the `--target` option to validate other
 targets.
 
 #### Options
