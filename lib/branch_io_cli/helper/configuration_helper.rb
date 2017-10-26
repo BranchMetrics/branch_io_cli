@@ -1,13 +1,8 @@
-require "json"
-require "net/http"
 require "pathname"
-require "tmpdir"
 require "xcodeproj"
-require "zip"
 
 module BranchIOCLI
   module Helper
-    # rubocop: disable Metrics/ClassLength
     class ConfigurationHelper
       class << self
         APP_LINK_REGEXP = /\.app\.link$|\.test-app\.link$/
@@ -26,6 +21,7 @@ module BranchIOCLI
         attr_reader :force
         attr_reader :patch_source
         attr_reader :commit
+        attr_reader :sdk_integration_mode
 
         def validate_setup_options(options)
           print_identification "setup"
@@ -59,9 +55,9 @@ module BranchIOCLI
           # If --podfile is present or a Podfile was found, don't look for a Cartfile.
           validate_buildfile_path options, "Cartfile" if @podfile.nil?
 
-          print_setup_configuration
-
           validate_sdk_addition options
+
+          print_setup_configuration
         end
 
         def validate_validation_options(options)
@@ -99,6 +95,7 @@ EOF
 <%= color('Add SDK:', BOLD) %> #{@add_sdk.inspect}
 <%= color('Patch source:', BOLD) %> #{@patch_source.inspect}
 <%= color('Commit:', BOLD) %> #{@commit.inspect}
+<%= color('SDK integration mode:', BOLD) %> #{@sdk_integration_mode || '(none)'}
 
 EOF
         end
@@ -276,9 +273,9 @@ EOF
 
         def validate_buildfile_path(options, filename)
           # Disable Podfile/Cartfile update if --no-add-sdk is present
-          return unless options.add_sdk
+          return unless options.add_sdk && @sdk_integration_mode.nil?
 
-          buildfile_path = filename == "Podfile" ? options.podfile : options.cartfile
+          buildfile_path = options.send filename.downcase
 
           # Was --podfile/--cartfile used?
           if buildfile_path
@@ -315,10 +312,12 @@ EOF
           else
             @cartfile_path = buildfile_path
           end
+
+          @sdk_integration_mode = filename == "Podfile" ? :cocoapods : :carthage
         end
 
         def validate_sdk_addition(options)
-          return if !options.add_sdk || @podfile_path || @cartfile_path
+          return if !options.add_sdk || @sdk_integration_mode
 
           # If no CocoaPods or Carthage, check to see if the framework is linked.
           target = BranchHelper.target_from_project @xcodeproj, options.target
@@ -334,211 +333,14 @@ EOF
             menu.prompt = "What would you like to do?"
           end
 
-          option = SDK_OPTIONS[selected]
+          @sdk_integration_mode = SDK_OPTIONS[selected]
 
-          case option
-          when :skip
-            return
-          else
-            send "add_#{option}", options
+          case @sdk_integration_mode
+          when :cocoapods
+            @podfile_path = File.expand_path "../Podfile", @xcodeproj_path
+          when :carthage
+            @cartfile_path = File.expand_path "../Cartfile", @xcodeproj_path
           end
-        end
-
-        def add_cocoapods(options)
-          @podfile_path = File.expand_path "../Podfile", @xcodeproj_path
-          target = BranchHelper.target_from_project @xcodeproj, options.target
-
-          install_command = "pod install"
-          install_command += " --repo-update" if options.pod_repo_update
-          Dir.chdir(File.dirname(@podfile_path)) do
-            system "pod init"
-            BranchHelper.apply_patch(
-              files: @podfile_path,
-              regexp: /^(\s*)# Pods for #{target.name}$/,
-              mode: :append,
-              text: "\n\\1pod \"Branch\"",
-              global: false
-            )
-            system install_command
-          end
-
-          BranchHelper.add_change @podfile_path
-          BranchHelper.add_change "#{@podfile_path}.lock"
-
-          # For now, add Pods folder to SCM.
-          pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from Pathname.pwd
-          workspace_path = Pathname.new(File.expand_path(@xcodeproj_path.sub(/.xcodeproj$/, ".xcworkspace"))).relative_path_from Pathname.pwd
-          podfile_pathname = Pathname.new(@podfile_path).relative_path_from Pathname.pwd
-          BranchHelper.add_change pods_folder_path
-          BranchHelper.add_change workspace_path
-          `git add #{podfile_pathname} #{podfile_pathname}.lock #{pods_folder_path} #{workspace_path}` if options.commit
-        end
-
-        def add_carthage(options)
-          # TODO: Collapse this and Command::update_cartfile
-
-          # 1. Generate Cartfile
-          @cartfile_path = File.expand_path "../Cartfile", @xcodeproj_path
-          File.open(@cartfile_path, "w") do |file|
-            file.write <<EOF
-github "BranchMetrics/ios-branch-deep-linking"
-EOF
-          end
-
-          # 2. carthage update
-          Dir.chdir(File.dirname(@cartfile_path)) do
-            system "carthage update --platform ios"
-          end
-
-          # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
-          BranchHelper.add_change cartfile_path
-          BranchHelper.add_change "#{cartfile_path}.resolved"
-
-          # 4. Add to target dependencies
-          frameworks_group = @xcodeproj.frameworks_group
-          branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
-          target = BranchHelper.target_from_project @xcodeproj, options.target
-          target.frameworks_build_phase.add_file_reference branch_framework
-
-          # 5. Create a copy-frameworks build phase
-          carthage_build_phase = target.new_shell_script_build_phase "carthage copy-frameworks"
-          carthage_build_phase.shell_script = "/usr/local/bin/carthage copy-frameworks"
-
-          carthage_build_phase.input_paths << "$(SRCROOT)/Carthage/Build/iOS/Branch.framework"
-          carthage_build_phase.output_paths << "$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/Branch.framework"
-
-          @xcodeproj.save
-
-          # For now, add Carthage folder to SCM
-
-          # 6. Add the Carthage folder to the commit (in case :commit param specified)
-          carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from(Pathname.pwd)
-          cartfile_pathname = Pathname.new(@cartfile_path).relative_path_from Pathname.pwd
-          BranchHelper.add_change carthage_folder_path
-          `git add #{cartfile_pathname} #{cartfile_pathname}.resolved #{carthage_folder_path}` if options.commit
-        end
-
-        def add_direct(options)
-          # Put the framework in the path for any existing Frameworks group in the project.
-          frameworks_group = @xcodeproj.frameworks_group
-          framework_path = File.join frameworks_group.real_path, "Branch.framework"
-          raise "#{framework_path} exists." if File.exist? framework_path
-
-          say "Finding current framework release"
-
-          # Find the latest release from GitHub.
-          releases = JSON.parse fetch "https://api.github.com/repos/BranchMetrics/ios-branch-deep-linking/releases"
-          current_release = releases.first
-          # Get the download URL for the framework.
-          framework_asset = current_release["assets"][0]
-          framework_url = framework_asset["browser_download_url"]
-
-          say "Downloading Branch.framework v. #{current_release['tag_name']} (#{framework_asset['size']} bytes zipped)"
-
-          Dir.mktmpdir do |download_folder|
-            zip_path = File.join download_folder, "Branch.framework.zip"
-
-            File.unlink zip_path if File.exist? zip_path
-
-            # Download the framework zip
-            download framework_url, zip_path
-
-            say "Unzipping Branch.framework"
-
-            # Unzip
-            Zip::File.open zip_path do |zip_file|
-              # Start with just the framework and add dSYM, etc., later
-              zip_file.glob "Carthage/Build/iOS/Branch.framework/**/*" do |entry|
-                filename = entry.name.sub %r{^Carthage/Build/iOS}, frameworks_group.real_path.to_s
-                ensure_directory File.dirname filename
-                entry.extract filename
-              end
-            end
-          end
-
-          # Now the current framework is in framework_path
-
-          say "Adding to #{@xcodeproj_path}"
-
-          # Add as a dependency in the Frameworks group
-          framework = frameworks_group.new_file "Branch.framework" # relative to frameworks_group.real_path
-          @target.frameworks_build_phase.add_file_reference framework, true
-
-          # Make sure this is in the FRAMEWORK_SEARCH_PATHS if we just added it.
-          if frameworks_group.files.count == 1
-            @target.build_configurations.each do |config|
-              paths = config.build_settings["FRAMEWORK_SEARCH_PATHS"] || []
-              next if paths.any? { |p| p == '$(SRCROOT)' || p == '$(SRCROOT)/**' }
-              paths << '$(SRCROOT)'
-              config.build_settings["FRAMEWORK_SEARCH_PATHS"] = paths
-            end
-          end
-          # If it already existed, it's almost certainly already in FRAMEWORK_SEARCH_PATHS.
-
-          @xcodeproj.save
-
-          BranchHelper.add_change framework_path
-          `git add #{framework_path}` if options.commit
-
-          say "Done. ✅"
-        end
-
-        def fetch(url)
-          response = Net::HTTP.get_response URI(url)
-
-          case response
-          when Net::HTTPSuccess
-            response.body
-          when Net::HTTPRedirection
-            fetch response['location']
-          else
-            raise "Error fetching #{url}: #{response.code} #{response.message}"
-          end
-        end
-
-        def download(url, dest)
-          uri = URI(url)
-
-          Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
-            request = Net::HTTP::Get.new uri
-
-            http.request request do |response|
-              case response
-              when Net::HTTPSuccess
-                bytes_downloaded = 0
-                dots_reported = 0
-                # report a dot every 100 kB
-                per_dot = 102_400
-
-                File.open dest, 'w' do |io|
-                  response.read_body do |chunk|
-                    io.write chunk
-
-                    # print progress
-                    bytes_downloaded += chunk.length
-                    while (bytes_downloaded - per_dot * dots_reported) >= per_dot
-                      print "."
-                      dots_reported += 1
-                    end
-                    STDOUT.flush
-                  end
-                end
-                say "\n"
-              when Net::HTTPRedirection
-                download response['location'], dest
-              else
-                raise "Error downloading #{url}: #{response.code} #{response.message}"
-              end
-            end
-          end
-        end
-
-        def ensure_directory(path)
-          return if path == "/" || path == "."
-          parent = File.dirname path
-          ensure_directory parent
-          return if Dir.exist? path
-          Dir.mkdir path
         end
 
         SDK_OPTIONS =
@@ -551,5 +353,4 @@ EOF
       end
     end
   end
-  # rubocop enable: Metrics/ClassLength
 end

@@ -1,6 +1,3 @@
-require "pathname"
-require "xcodeproj"
-
 module BranchIOCLI
   module Commands
     class Command

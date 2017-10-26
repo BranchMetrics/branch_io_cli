@@ -1,7 +1,10 @@
 require "json"
 require "net/http"
 require "openssl"
+require "pathname"
 require "plist"
+require "tmpdir"
+require "zip"
 
 module BranchIOCLI
   module Helper
@@ -678,6 +681,227 @@ EOF
         )
 
         true
+      end
+
+      def add_cocoapods(options)
+        podfile_path = ConfigurationHelper.podfile_path
+
+        install_command = "pod install"
+        install_command += " --repo-update" if options.pod_repo_update
+        Dir.chdir(File.dirname(podfile_path)) do
+          system "pod init"
+          apply_patch(
+            files: podfile_path,
+            regexp: /^(\s*)# Pods for #{ConfigurationHelper.target.name}$/,
+            mode: :append,
+            text: "\n\\1pod \"Branch\"",
+            global: false
+          )
+          system install_command
+        end
+
+        add_change podfile_path
+        add_change "#{podfile_path}.lock"
+
+        # For now, add Pods folder to SCM.
+        pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from Pathname.pwd
+        workspace_path = Pathname.new(File.expand_path(ConfigurationHelper.xcodeproj_path.sub(/.xcodeproj$/, ".xcworkspace"))).relative_path_from Pathname.pwd
+        podfile_pathname = Pathname.new(podfile_path).relative_path_from Pathname.pwd
+        add_change pods_folder_path
+        add_change workspace_path
+        `git add #{podfile_pathname} #{podfile_pathname}.lock #{pods_folder_path} #{workspace_path}` if options.commit
+      end
+
+      def add_carthage(options)
+        # TODO: Collapse this and Command::update_cartfile
+
+        # 1. Generate Cartfile
+        cartfile_path = ConfigurationHelper.cartfile_path
+        File.open(cartfile_path, "w") do |file|
+          file.write <<EOF
+github "BranchMetrics/ios-branch-deep-linking"
+EOF
+        end
+
+        # 2. carthage update
+        Dir.chdir(File.dirname(cartfile_path)) do
+          system "carthage update --platform ios"
+        end
+
+        # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
+        add_change cartfile_path
+        add_change "#{cartfile_path}.resolved"
+        add_change ConfigurationHelper.xcodeproj_path
+
+        # 4. Add to target dependencies
+        frameworks_group = ConfigurationHelper.xcodeproj.frameworks_group
+        branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
+        target = ConfigurationHelper.target
+        target.frameworks_build_phase.add_file_reference branch_framework
+
+        # 5. Create a copy-frameworks build phase
+        carthage_build_phase = target.new_shell_script_build_phase "carthage copy-frameworks"
+        carthage_build_phase.shell_script = "/usr/local/bin/carthage copy-frameworks"
+
+        carthage_build_phase.input_paths << "$(SRCROOT)/Carthage/Build/iOS/Branch.framework"
+        carthage_build_phase.output_paths << "$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/Branch.framework"
+
+        ConfigurationHelper.xcodeproj.save
+
+        # For now, add Carthage folder to SCM
+
+        # 6. Add the Carthage folder to the commit (in case :commit param specified)
+        carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from(Pathname.pwd)
+        cartfile_pathname = Pathname.new(cartfile_path).relative_path_from Pathname.pwd
+        add_change carthage_folder_path
+        `git add #{cartfile_pathname} #{cartfile_pathname}.resolved #{carthage_folder_path}` if options.commit
+      end
+
+      def add_direct(options)
+        # Put the framework in the path for any existing Frameworks group in the project.
+        frameworks_group = ConfigurationHelper.xcodeproj.frameworks_group
+        framework_path = File.join frameworks_group.real_path, "Branch.framework"
+        raise "#{framework_path} exists." if File.exist? framework_path
+
+        say "Finding current framework release"
+
+        # Find the latest release from GitHub.
+        releases = JSON.parse fetch "https://api.github.com/repos/BranchMetrics/ios-branch-deep-linking/releases"
+        current_release = releases.first
+        # Get the download URL for the framework.
+        framework_asset = current_release["assets"][0]
+        framework_url = framework_asset["browser_download_url"]
+
+        say "Downloading Branch.framework v. #{current_release['tag_name']} (#{framework_asset['size']} bytes zipped)"
+
+        Dir.mktmpdir do |download_folder|
+          zip_path = File.join download_folder, "Branch.framework.zip"
+
+          File.unlink zip_path if File.exist? zip_path
+
+          # Download the framework zip
+          download framework_url, zip_path
+
+          say "Unzipping Branch.framework"
+
+          # Unzip
+          Zip::File.open zip_path do |zip_file|
+            # Start with just the framework and add dSYM, etc., later
+            zip_file.glob "Carthage/Build/iOS/Branch.framework/**/*" do |entry|
+              filename = entry.name.sub %r{^Carthage/Build/iOS}, frameworks_group.real_path.to_s
+              ensure_directory File.dirname filename
+              entry.extract filename
+            end
+          end
+        end
+
+        # Now the current framework is in framework_path
+
+        say "Adding to #{@xcodeproj_path}"
+
+        # Add as a dependency in the Frameworks group
+        framework = frameworks_group.new_file "Branch.framework" # relative to frameworks_group.real_path
+        ConfigurationHelper.target.frameworks_build_phase.add_file_reference framework, true
+
+        # Make sure this is in the FRAMEWORK_SEARCH_PATHS if we just added it.
+        if frameworks_group.files.count == 1
+          ConfigurationHelper.target.build_configurations.each do |config|
+            paths = config.build_settings["FRAMEWORK_SEARCH_PATHS"] || []
+            next if paths.any? { |p| p == '$(SRCROOT)' || p == '$(SRCROOT)/**' }
+            paths << '$(SRCROOT)'
+            config.build_settings["FRAMEWORK_SEARCH_PATHS"] = paths
+          end
+        end
+        # If it already existed, it's almost certainly already in FRAMEWORK_SEARCH_PATHS.
+
+        ConfigurationHelper.xcodeproj.save
+
+        add_change ConfigurationHelper.xcodeproj_path
+        add_change framework_path
+        `git add #{framework_path}` if options.commit
+
+        say "Done. ✅"
+      end
+
+      def update_podfile(options)
+        podfile_path = ConfigurationHelper.podfile_path
+        return false if podfile_path.nil?
+
+        # 1. Patch Podfile. Return if no change (Branch pod already present).
+        return false unless patch_podfile podfile_path
+
+        # 2. pod install
+        # command = "PATH='#{ENV['PATH']}' pod install"
+        command = 'pod install'
+        command += ' --repo-update' if options.pod_repo_update
+
+        Dir.chdir(File.dirname(podfile_path)) do
+          system command
+        end
+
+        # 3. Add Podfile and Podfile.lock to commit (in case :commit param specified)
+        add_change podfile_path
+        add_change "#{podfile_path}.lock"
+
+        # 4. Check if Pods folder is under SCM
+        pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from Pathname.pwd
+        `git ls-files #{pods_folder_path} --error-unmatch > /dev/null 2>&1`
+        return true unless $?.exitstatus == 0
+
+        # 5. If so, add the Pods folder to the commit (in case :commit param specified)
+        add_change pods_folder_path
+        `git add #{pods_folder_path}` if options.commit
+
+        true
+      end
+
+      def update_cartfile(options, project)
+        cartfile_path = ConfigurationHelper.cartfile_path
+        return false if cartfile_path.nil?
+
+        # 1. Patch Cartfile. Return if no change (Branch already present).
+        return false unless patch_cartfile cartfile_path
+
+        # 2. carthage update
+        Dir.chdir(File.dirname(cartfile_path)) do
+          system "carthage update --platform ios"
+        end
+
+        # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
+        add_change cartfile_path
+        add_change "#{cartfile_path}.resolved"
+        add_change ConfigurationHelper.xcodeproj_path
+
+        # 4. Add to target dependencies
+        frameworks_group = project.frameworks_group
+        branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
+        target = ConfigurationHelper.target
+        target.frameworks_build_phase.add_file_reference branch_framework
+
+        # 5. Add to copy-frameworks build phase
+        carthage_build_phase = target.build_phases.find do |phase|
+          phase.respond_to?(:shell_script) && phase.shell_script =~ /carthage\s+copy-frameworks/
+        end
+
+        if carthage_build_phase
+          carthage_build_phase.input_paths << "$(SRCROOT)/Carthage/Build/iOS/Branch.framework"
+          carthage_build_phase.output_paths << "$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/Branch.framework"
+        end
+
+        # 6. Check if Carthage folder is under SCM
+        carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from Pathname.pwd
+        `git ls-files #{carthage_folder_path} --error-unmatch > /dev/null 2>&1`
+        return true unless $?.exitstatus == 0
+
+        # 7. If so, add the Carthage folder to the commit (in case :commit param specified)
+        add_change carthage_folder_path
+        `git add #{carthage_folder_path}` if options.commit
+
+        true
+      end
+
+      def patch_source(xcodeproj)
+        patch_app_delegate_swift(xcodeproj) || patch_app_delegate_objc(xcodeproj)
       end
     end
   end
