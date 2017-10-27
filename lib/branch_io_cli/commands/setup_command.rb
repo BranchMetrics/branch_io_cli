@@ -30,7 +30,7 @@ module BranchIOCLI
         end
 
         target_name = options.target # may be nil
-        is_app_target = config_helper.target.extension_target_type?
+        is_app_target = !config_helper.target.extension_target_type?
 
         if is_app_target && options.validate &&
            !helper.validate_team_and_bundle_ids_from_aasa_files(xcodeproj, target_name, @domains)
