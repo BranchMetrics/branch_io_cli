@@ -31,13 +31,11 @@ _branch_io_complete()
           ;;
       esac
       COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
-      return 0
     elif [[ ${prev} == branch_io ]] ; then
       COMPREPLY=( $(compgen -W "${commands} ${global_opts}" -- ${cur}) )
-      return 0
-    elif [[ ${prev} == --xcodeproj || ${prev} == --podfile || ${prev} == --cartfile ]] ; then
-      COMPREPLY=( $(compgen -f ${cur}) )
-      return 0
+    else
+      COMPREPLY=( $(compgen -o default ${cur}) )
     fi
+    return 0
 }
 complete -F _branch_io_complete branch_io
