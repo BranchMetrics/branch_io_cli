@@ -41,7 +41,7 @@ any Ruby-related environment variables if using the system Ruby.
 Add to `~/.bash_profile` or `~/.bashrc`:
 
 ```bash
-. `gem which branch_io_cli | sed 's+branch_io_cli.rb$+assets/completions/bash-completion.sh+'`
+. `gem which branch_io_cli | sed 's+branch_io_cli.rb$+assets/completions/completion.bash+'`
 ```
 
 #### Zsh
@@ -49,7 +49,7 @@ Add to `~/.bash_profile` or `~/.bashrc`:
 Add to `~/.zshrc`:
 
 ```zsh
-. `gem which branch_io_cli | sed 's+branch_io_cli.rb$+assets/completions/zsh-completion.zsh+'`
+. `gem which branch_io_cli | sed 's+branch_io_cli.rb$+assets/completions/completion.zsh+'`
 ```
 
 ## Commands
