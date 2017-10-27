@@ -1,11 +1,12 @@
 #!/bin/bash
 
-_branch_io()
+_branch_io_complete()
 {
     local cur prev opts
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
+    command="${COMP_WORDS[1]}"
 
     commands="setup validate"
     global_opts="-h --help -t --trace -v --version"
@@ -18,19 +19,25 @@ _branch_io()
     validate_opts="$global_opts -D --domains --xcodeproj --target"
 
     if [[ ${cur} == -* ]] ; then
-      if [[ ${prev} == setup ]] ; then
-        opts=$setup_opts
-      elif [[ ${prev} == validate ]] ; then
-        opts=$validate_opts
-      else
-        opts=$global_opts
-      fi
-    else
-      opts=`for c in $commands; do echo $c; done | grep "^$cur"`
-      opts="$opts $global_opts"
+      case "${command}" in
+        setup)
+          opts=$setup_opts
+          ;;
+        validate)
+          opts=$validate_opts
+          ;;
+        *)
+          opts=$global_opts
+          ;;
+      esac
+      COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+      return 0
+    elif [[ ${prev} == branch_io ]] ; then
+      COMPREPLY=( $(compgen -W "${commands} ${global_opts}" -- ${cur}) )
+      return 0
+    elif [[ ${prev} == --xcodeproj || ${prev} == --podfile || ${prev} == --cartfile ]] ; then
+      COMPREPLY=( $(compgen -f ${cur}) )
+      return 0
     fi
-
-    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
-    return 0
 }
-complete -F _branch_io branch_io
+complete -F _branch_io_complete branch_io
