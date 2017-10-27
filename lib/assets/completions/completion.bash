@@ -2,7 +2,7 @@
 
 _branch_io_complete()
 {
-    local cur prev opts
+    local cur prev opts global_opts setup_opts validate_opts commands command
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
