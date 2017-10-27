@@ -32,7 +32,7 @@ _branch_io_complete()
       esac
       COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
     elif [[ ${prev} == branch_io ]] ; then
-      COMPREPLY=( $(compgen -W "${commands} ${global_opts}" -- ${cur}) )
+      COMPREPLY=( $(compgen -W "${commands}" -- ${cur}) )
     else
       COMPREPLY=( $(compgen -o default ${cur}) )
     fi
