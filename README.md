@@ -86,6 +86,9 @@ command, respectively, available in your path.
 
 |Option|Description|
 |------|-----------|
+|-h, --help|Prints a list of commands or help for each command|
+|-v, --version|Prints the current version of the CLI|
+|-t, --trace|Prints a stack trace when exceptions are raised|
 |-L, --live-key key_live_xxxx|Branch live key|
 |-T, --test-key key_test_yyyy|Branch test key|
 |--app-link-subdomain myapp|Branch app.link subdomain, e.g. myapp for myapp.app.link|
@@ -154,6 +157,9 @@ targets.
 
 |Option|Description|
 |------|-----------|
+|-h, --help|Prints a list of commands or help for each command|
+|-v, --version|Prints the current version of the CLI|
+|-t, --trace|Prints a stack trace when exceptions are raised|
 |-D, --domains example.com,www.example.com|Comma-separated list of domains. May include app.link subdomains.|
 |--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|
 |--target MyAppTarget|Name of a target to modify in the Xcode project|
