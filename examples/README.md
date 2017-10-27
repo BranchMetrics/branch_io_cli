@@ -23,15 +23,21 @@ This project uses Objective-C and CocoaPods.
 Each project will pass validation if `k272.app.link` is used for the domain. If
 you wish to try them with your own Branch parameters, you must first manually
 change the bundle identifier and signing team in the project. To test basic
-integration without modification:
+integration without modification (using a dummy key), change to each subdirectory:
 
 ```bash
-branch_io setup --app_link_subdomain k272 --live_key key_live_xxxx --test_key key_test_yyyy
+branch_io setup -D k272.app.link -L key_live_xxxx
+```
+
+Validation will fail before setup and pass afterward.
+
+```bash
+branch_io validate -D k272.app.link,k272-alternate.app.link
 ```
 
 To use the command from this repo rather than your PATH, first 'bundle install'
 and then:
 
 ```bash
-bundle exec branch_io setup
+bundle exec branch_io setup # or validate
 ```
