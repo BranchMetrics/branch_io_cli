@@ -2,11 +2,11 @@
 
 _branch_io_complete()
 {
-    local cur prev opts global_opts setup_opts validate_opts commands command
+    local cur prev opts global_opts setup_opts validate_opts commands cmd
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    command="${COMP_WORDS[1]}"
+    cmd="${COMP_WORDS[1]}"
 
     commands="setup validate"
     global_opts="-h --help -t --trace -v --version"
@@ -19,7 +19,7 @@ _branch_io_complete()
     validate_opts="$global_opts -D --domains --xcodeproj --target"
 
     if [[ ${cur} == -* ]] ; then
-      case "${command}" in
+      case "${cmd}" in
         setup)
           opts=$setup_opts
           ;;
