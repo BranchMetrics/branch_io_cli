@@ -30,6 +30,28 @@ branch_io setup -h
 branch_io validate -h
 ```
 
+### Shell completion
+
+You can enable completion of all options in `bash` or `zsh`. The following
+additions should follow initialization of RVM, rbenv or chruby or setting
+any Ruby-related environment variables if using the system Ruby.
+
+#### Bash
+
+Add to `~/.bash_profile` or `~/.bashrc`:
+
+```bash
+. `gem which branch_io_cli | sed 's+lib/branch_io_cli.rb$+completion/bash-completion.sh+'`
+```
+
+#### Zsh
+
+Add to `~/.zshrc`:
+
+```zsh
+. `gem which branch_io_cli | sed 's+lib/branch_io_cli.rb$+completion/zsh-completion.zsh+'`
+```
+
 ## Commands
 
 ### Setup command
