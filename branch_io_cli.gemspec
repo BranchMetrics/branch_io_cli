@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Branch', 'Jimmy Dee']
   spec.email         = ['integrations@branch.io', 'jgvdthree@gmail.com']
 
-  spec.files         = Dir['bin/*', 'lib/**/*', 'completion/*'] + %w{README.md LICENSE}
+  spec.files         = Dir['bin/*', 'lib/**/*'] + %w{README.md LICENSE}
   spec.test_files    = spec.files.grep(/_spec/)
 
   spec.require_paths = ['lib']
