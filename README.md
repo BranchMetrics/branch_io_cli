@@ -32,6 +32,8 @@ branch_io validate -h
 
 ### Shell completion
 
+_Work in progress_
+
 You can enable completion of all options in `bash` or `zsh`. The following
 additions should follow initialization of RVM, rbenv or chruby or setting
 any Ruby-related environment variables if using the system Ruby.
