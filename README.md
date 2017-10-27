@@ -52,6 +52,8 @@ Add to `~/.zshrc`:
 . `gem which branch_io_cli | sed 's+branch_io_cli.rb$+assets/completions/completion.zsh+'`
 ```
 
+Currently command-line completion for bash is much more extensive than for zsh.
+
 ## Commands
 
 ### Setup command
