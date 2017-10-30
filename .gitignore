@@ -8,3 +8,4 @@ Gemfile.lock
 /rdoc/
 coverage
 test-results
+build

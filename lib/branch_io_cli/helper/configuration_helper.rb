@@ -35,6 +35,8 @@ module BranchIOCLI
         attr_reader :commit
         attr_reader :sdk_integration_mode
         attr_reader :clean
+        attr_reader :scheme
+        attr_reader :configuration
 
         def validate_setup_options(options)
           print_identification "setup"
@@ -86,6 +88,9 @@ module BranchIOCLI
           print_identification "report"
 
           @clean = options.clean
+          @scheme = options.scheme
+          @target = options.target
+          @configuration = options.configuration
 
           validate_xcodeproj_and_workspace options
 
@@ -137,8 +142,11 @@ EOF
           say <<EOF
 <%= color('Configuration:', BOLD) %>
 
-<%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
-<%= color('Xcode workspace:', BOLD) %> #{@workspace_path}
+<%= color('Xcode workspace:', BOLD) %> #{@workspace_path || '(none)'}
+<%= color('Xcode project:', BOLD) %> #{@xcodeproj_path || '(none)'}
+<%= color('Scheme:', BOLD) %> #{@scheme || '(none)'}
+<%= color('Target:', BOLD) %> #{@target || '(none)'}
+<%= color('Configuration:', BOLD) %> #{configuration || '(none)'}
 <%= color('Clean:', BOLD) %> #{@clean.inspect}
 EOF
         end

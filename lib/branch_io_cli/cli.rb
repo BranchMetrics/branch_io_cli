@@ -155,6 +155,8 @@ EOF
         c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project"
         c.option "--workspace MyProject.xcworkspace", String, "Path to an Xcode workspace"
         c.option "--scheme MyProjectScheme", String, "A scheme from the project or workspace to build"
+        c.option "--target MyProjectTarget", String, "A target to build"
+        c.option "--configuration Debug|Release|CustomConfigName", String, "The build configuration to use (default: Release)"
         c.option "--[no-]clean", "Clean before attempting to build (default: yes)"
 
         c.action do |args, options|
