@@ -419,40 +419,7 @@ EOF
           mode: :append
         )
 
-        if app_delegate =~ /application:.*continue userActivity:.*restorationHandler:/
-          # Add something to the top of the method
-          continue_user_activity_text = <<-EOF
-        // TODO: Adjust your method as you see fit.
-        if Branch.getInstance.continue(userActivity) {
-            return true
-        }
-
-          EOF
-
-          apply_patch(
-            files: app_delegate_swift_path,
-            regexp: /application:.*continue userActivity:.*restorationHandler:.*?\{.*?\n/m,
-            text: continue_user_activity_text,
-            mode: :append
-          )
-        else
-          # Add the application:continueUserActivity:restorationHandler method if it does not exist
-          continue_user_activity_text = <<-EOF
-
-
-    func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]?) -> Void) -> Bool {
-        return Branch.getInstance().continue(userActivity)
-    }
-          EOF
-
-          apply_patch(
-            files: app_delegate_swift_path,
-            regexp: /\n\s*\}[^{}]*\Z/m,
-            text: continue_user_activity_text,
-            mode: :prepend
-          )
-        end
-
+        patch_continue_user_activity_method app_delegate_swift_path
         patch_open_url_method_swift app_delegate_swift_path
 
         add_change app_delegate_swift_path
@@ -498,40 +465,7 @@ EOF
           mode: :append
         )
 
-        if app_delegate =~ /application:.*continueUserActivity:.*restorationHandler:/
-          continue_user_activity_text = <<-EOF
-    // TODO: Adjust your method as you see fit.
-    if ([[Branch getInstance] continueUserActivity:userActivity]) {
-        return YES;
-    }
-
-EOF
-
-          apply_patch(
-            files: app_delegate_objc_path,
-            regexp: /application:.*continueUserActivity:.*restorationHandler:.*?\{.*?\n/m,
-            text: continue_user_activity_text,
-            mode: :append
-          )
-        else
-          # Add the application:continueUserActivity:restorationHandler method if it does not exist
-          continue_user_activity_text = <<-EOF
-
-
-- (BOOL)application:(UIApplication *)app continueUserActivity:(nonnull NSUserActivity *)userActivity restorationHandler:(nonnull void (^)(NSArray * _Nullable))restorationHandler
-{
-    return [[Branch getInstance] continueUserActivity:userActivity];
-}
-          EOF
-
-          apply_patch(
-            files: app_delegate_objc_path,
-            regexp: /\n\s*@end[^@]*\Z/m,
-            text: continue_user_activity_text,
-            mode: :prepend
-          )
-        end
-
+        patch_continue_user_activity_method app_delegate_objc_path
         patch_open_url_method_objc app_delegate_objc_path
 
         add_change app_delegate_objc_path
@@ -592,6 +526,43 @@ EOF
         end
       end
 
+      def patch_continue_user_activity_method_swift(app_delegate_swift_path)
+        app_delegate = File.read app_delegate_swift_path
+        if app_delegate =~ /application:.*continue userActivity:.*restorationHandler:/
+          # Add something to the top of the method
+          continue_user_activity_text = <<-EOF
+        // TODO: Adjust your method as you see fit.
+        if Branch.getInstance.continue(userActivity) {
+            return true
+        }
+
+          EOF
+
+          apply_patch(
+            files: app_delegate_swift_path,
+            regexp: /application:.*continue userActivity:.*restorationHandler:.*?\{.*?\n/m,
+            text: continue_user_activity_text,
+            mode: :append
+          )
+        else
+          # Add the application:continueUserActivity:restorationHandler method if it does not exist
+          continue_user_activity_text = <<-EOF
+
+
+    func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]?) -> Void) -> Bool {
+        return Branch.getInstance().continue(userActivity)
+    }
+          EOF
+
+          apply_patch(
+            files: app_delegate_swift_path,
+            regexp: /\n\s*\}[^{}]*\Z/m,
+            text: continue_user_activity_text,
+            mode: :prepend
+          )
+        end
+      end
+
       def patch_open_url_method_objc(app_delegate_objc_path)
         app_delegate_objc = File.read app_delegate_objc_path
         if app_delegate_objc =~ /application:.*openURL:.*options/
@@ -641,6 +612,43 @@ EOF
             files: app_delegate_objc_path,
             regexp: /\n\s*@end[^@]*\Z/m,
             text: open_url_text,
+            mode: :prepend
+          )
+        end
+      end
+
+      def patch_continue_user_activity_method_objc(app_delegate_objc_path)
+        app_delegate = File.read app_delegate_objc_path
+        if app_delegate =~ /application:.*continueUserActivity:.*restorationHandler:/
+          continue_user_activity_text = <<-EOF
+    // TODO: Adjust your method as you see fit.
+    if ([[Branch getInstance] continueUserActivity:userActivity]) {
+        return YES;
+    }
+
+EOF
+
+          apply_patch(
+            files: app_delegate_objc_path,
+            regexp: /application:.*continueUserActivity:.*restorationHandler:.*?\{.*?\n/m,
+            text: continue_user_activity_text,
+            mode: :append
+          )
+        else
+          # Add the application:continueUserActivity:restorationHandler method if it does not exist
+          continue_user_activity_text = <<-EOF
+
+
+- (BOOL)application:(UIApplication *)app continueUserActivity:(nonnull NSUserActivity *)userActivity restorationHandler:(nonnull void (^)(NSArray * _Nullable))restorationHandler
+{
+    return [[Branch getInstance] continueUserActivity:userActivity];
+}
+          EOF
+
+          apply_patch(
+            files: app_delegate_objc_path,
+            regexp: /\n\s*@end[^@]*\Z/m,
+            text: continue_user_activity_text,
             mode: :prepend
           )
         end
