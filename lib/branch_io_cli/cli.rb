@@ -158,6 +158,7 @@ EOF
         c.option "--target MyProjectTarget", String, "A target to build"
         c.option "--configuration Debug|Release|CustomConfigName", String, "The build configuration to use (default: Release)"
         c.option "--[no-]clean", "Clean before attempting to build (default: yes)"
+        c.option "--out branch-report.txt", String, "Report output path (default: ./branch-report.txt)"
 
         c.action do |args, options|
           options.default clean: true
