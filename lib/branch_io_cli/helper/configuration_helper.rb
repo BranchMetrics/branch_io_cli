@@ -6,6 +6,7 @@ module BranchIOCLI
     # Processes CLI options.
     # Validates options.
     # Prompts for input in a number of cases.
+    # rubocop: disable Metrics/ClassLength
     class ConfigurationHelper
       APP_LINK_REGEXP = /\.app\.link$|\.test-app\.link$/
       SDK_OPTIONS =
@@ -253,7 +254,7 @@ EOF
           end
 
           # Try to find first a workspace, then a project
-          all_workspace_paths = Dir[File.expand_path(File.join".", "**/*.xcworkspace")]
+          all_workspace_paths = Dir[File.expand_path(File.join(".", "**/*.xcworkspace"))]
           if all_workspace_paths.count == 1
             path = all_workspace_paths.first
           elsif all_workspace_paths.count == 0
@@ -446,5 +447,6 @@ EOF
         end
       end
     end
+    # rubocop: enable Metrics/ClassLength
   end
 end
