@@ -9,10 +9,14 @@ module BranchIOCLI
 
       def run!
         File.open config_helper.report_path, "w" do |report|
+          report.write report_header
+
           say "Cleaning"
           report.write `#{base_xcodebuild_cmd} clean` if config_helper.clean
+
           say "Building"
           report.write `#{base_xcodebuild_cmd}`
+
           say "Done ✅"
         end
         say "Report generated in #{config_helper.report_path}"
@@ -26,6 +30,12 @@ module BranchIOCLI
         cmd = "#{cmd} -target #{config_helper.target} " if config_helper.target
         cmd = "#{cmd} -configuration #{config_helper.configuration} " if config_helper.configuration
         cmd
+      end
+
+      def report_header
+        <<EOF
+#{`xcodebuild -version`}
+EOF
       end
     end
   end
