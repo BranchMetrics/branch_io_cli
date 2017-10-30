@@ -8,7 +8,7 @@ _branch_io_complete()
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     cmd="${COMP_WORDS[1]}"
 
-    commands="setup validate"
+    commands="report setup validate"
     global_opts="-h --help -t --trace -v --version"
 
     setup_opts="$global_opts -L --live-key -T --test-key -D --domains --app-link-subdomain -U --uri-scheme"
@@ -18,8 +18,13 @@ _branch_io_complete()
 
     validate_opts="$global_opts -D --domains --xcodeproj --target"
 
+    report_opts="$global_opts --xcodeproj"
+
     if [[ ${cur} == -* ]] ; then
       case "${cmd}" in
+        report)
+          opts=$report_opts
+          ;;
         setup)
           opts=$setup_opts
           ;;

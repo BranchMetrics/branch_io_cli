@@ -19,6 +19,8 @@ module BranchIOCLI
       class << self
         attr_reader :xcodeproj_path
         attr_reader :xcodeproj
+        attr_reader :workspace_path
+        attr_reader :workspace
         attr_reader :keys
         attr_reader :all_domains
         attr_reader :podfile_path
@@ -79,6 +81,15 @@ module BranchIOCLI
           print_validation_configuration
         end
 
+        def validate_report_options(options)
+          print_identification "report"
+
+          @xcodeproj_path = options.xcodeproj
+          @workspace_path = options.workspace
+
+          print_report_configuration
+        end
+
         def print_identification(command)
           say <<EOF
 
@@ -117,6 +128,15 @@ EOF
 <%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
 <%= color('Target:', BOLD) %> #{@target.name}
 <%= color('Domains:', BOLD) %> #{@all_domains || '(none)'}
+EOF
+        end
+
+        def print_report_configuration
+          say <<EOF
+<%= color('Configuration:', BOLD) %>
+
+<%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
+<%= color('Xcode workspace:', BOLD) %> #{@workspace_path}
 EOF
         end
 

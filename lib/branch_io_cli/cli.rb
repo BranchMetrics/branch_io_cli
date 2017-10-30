@@ -145,6 +145,21 @@ EOF
         end
       end
 
+      command :report do |c|
+        c.syntax = "branch_io report [OPTIONS]"
+        c.summary = "Generate and optionally submit a build diagnostic report."
+        c.description = <<EOF
+More to come.
+EOF
+
+        c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project"
+        c.option "--workspace MyProject.xcworkspace", String, "Path to an Xcode workspace"
+
+        c.action do |args, options|
+          Commands::ReportCommand.new(options).run!
+        end
+      end
+
       run!
     end
   end
