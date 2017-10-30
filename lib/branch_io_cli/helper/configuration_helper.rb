@@ -34,6 +34,7 @@ module BranchIOCLI
         attr_reader :patch_source
         attr_reader :commit
         attr_reader :sdk_integration_mode
+        attr_reader :clean
 
         def validate_setup_options(options)
           print_identification "setup"
@@ -84,8 +85,9 @@ module BranchIOCLI
         def validate_report_options(options)
           print_identification "report"
 
-          @xcodeproj_path = options.xcodeproj
-          @workspace_path = options.workspace
+          @clean = options.clean
+
+          validate_xcodeproj_and_workspace options
 
           print_report_configuration
         end
@@ -137,6 +139,7 @@ EOF
 
 <%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
 <%= color('Xcode workspace:', BOLD) %> #{@workspace_path}
+<%= color('Clean:', BOLD) %> #{@clean.inspect}
 EOF
         end
 
@@ -216,6 +219,64 @@ EOF
             rescue StandardError => e
               say e.message
               path = nil
+            end
+          end
+        end
+
+        def validate_xcodeproj_and_workspace(options)
+          # 1. What was passed in?
+          begin
+            if options.workspace
+              path = options.workspace
+              @workspace = Xcodeproj::Workspace.new options.workspace
+              @workspace_path = options.workspace
+            end
+            if options.xcodeproj
+              path = options.xcodeproj
+              @xcodeproj = Xcodeproj::Project.open options.xcodeproj
+              @xcodeproj_path = options.xcodeproj
+            end
+            return if @workspace || @xcodeproj
+          rescue StandardError => e
+            say e.message
+          end
+
+          # Try to find first a workspace, then a project
+          all_workspace_paths = Dir[File.expand_path(File.join".", "**/*.xcworkspace")]
+          if all_workspace_paths.count == 1
+            path = all_workspace_paths.first
+          elsif all_workspace_paths.count == 0
+            all_xcodeproj_paths = Dir[File.expand_path(File.join(".", "**/*.xcodeproj"))]
+            # find an xcodeproj (ignoring the Pods and Carthage folders)
+            # TODO: Improve this filter
+            xcodeproj_paths = all_xcodeproj_paths.select do |p|
+              valid = true
+              Pathname.new(p).each_filename do |f|
+                valid = false && break if f == "Carthage" || f == "Pods"
+              end
+              valid
+            end
+
+            path = xcodeproj_paths.first if xcodeproj_paths.count == 1
+          end
+          # If more than one workspace. Don't try to find a project. Just prompt.
+
+          loop do
+            path = ask "Please enter a path to your Xcode project or workspace: " if path.nil?
+            begin
+              if path =~ /\.xcworkspace$/
+                @workspace = Xcodeproj::Workspace.new path
+                @workspace_path = path
+                return
+              elsif path =~ /\.xcodeproj$/
+                @xcodeproj = Xcodeproj::Project.new path
+                @xcodeproj_path = path
+                return
+              else
+                say "Path must end with .xcworkspace or .xcodeproj"
+              end
+            rescue StandardError => e
+              say e.message
             end
           end
         end

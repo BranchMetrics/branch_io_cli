@@ -18,7 +18,7 @@ _branch_io_complete()
 
     validate_opts="$global_opts -D --domains --xcodeproj --target"
 
-    report_opts="$global_opts --xcodeproj"
+    report_opts="$global_opts --xcodeproj --workspace --no-clean --scheme"
 
     if [[ ${cur} == -* ]] ; then
       case "${cmd}" in

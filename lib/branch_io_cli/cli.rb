@@ -154,8 +154,11 @@ EOF
 
         c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project"
         c.option "--workspace MyProject.xcworkspace", String, "Path to an Xcode workspace"
+        c.option "--scheme MyProjectScheme", String, "A scheme from the project or workspace to build"
+        c.option "--[no-]clean", "Clean before attempting to build (default: yes)"
 
         c.action do |args, options|
+          options.default clean: true
           Commands::ReportCommand.new(options).run!
         end
       end
