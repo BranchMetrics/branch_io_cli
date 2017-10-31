@@ -145,6 +145,33 @@ EOF
         end
       end
 
+      command :report do |c|
+        c.syntax = "branch_io report [OPTIONS]"
+        c.summary = "Generate and optionally submit a build diagnostic report."
+        c.description = <<EOF
+<%= color('Work in progress', BOLD) %>
+
+This command optionally cleans and then builds a workspace or project, generating a verbose
+report with additional diagnostic information suitable for opening a support ticket.
+EOF
+
+        c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project"
+        c.option "--workspace MyProject.xcworkspace", String, "Path to an Xcode workspace"
+        c.option "--scheme MyProjectScheme", String, "A scheme from the project or workspace to build"
+        c.option "--target MyProjectTarget", String, "A target to build"
+        c.option "--configuration Debug|Release|CustomConfigName", String, "The build configuration to use (default: Release)"
+        c.option "--podfile /path/to/Podfile", String, "Path to the Podfile for the project"
+        c.option "--cartfile /path/to/Cartfile", String, "Path to the Cartfile for the project"
+        c.option "--[no-]clean", "Clean before attempting to build (default: yes)"
+        c.option "--[no-]header-only", "Write a report header to standard output and exit"
+        c.option "--out branch-report.txt", String, "Report output path (default: ./branch-report.txt)"
+
+        c.action do |args, options|
+          options.default clean: true, header_only: false
+          Commands::ReportCommand.new(options).run!
+        end
+      end
+
       run!
     end
   end

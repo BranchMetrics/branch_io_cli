@@ -6,6 +6,7 @@ module BranchIOCLI
     # Processes CLI options.
     # Validates options.
     # Prompts for input in a number of cases.
+    # rubocop: disable Metrics/ClassLength
     class ConfigurationHelper
       APP_LINK_REGEXP = /\.app\.link$|\.test-app\.link$/
       SDK_OPTIONS =
@@ -19,6 +20,8 @@ module BranchIOCLI
       class << self
         attr_reader :xcodeproj_path
         attr_reader :xcodeproj
+        attr_reader :workspace_path
+        attr_reader :workspace
         attr_reader :keys
         attr_reader :all_domains
         attr_reader :podfile_path
@@ -32,6 +35,11 @@ module BranchIOCLI
         attr_reader :patch_source
         attr_reader :commit
         attr_reader :sdk_integration_mode
+        attr_reader :clean
+        attr_reader :header_only
+        attr_reader :scheme
+        attr_reader :configuration
+        attr_reader :report_path
 
         def validate_setup_options(options)
           print_identification "setup"
@@ -60,10 +68,10 @@ module BranchIOCLI
 
           # If --cartfile is present, don't look for a Podfile. Just validate that
           # Cartfile.
-          validate_buildfile_path options, "Podfile" if options.cartfile.nil?
+          validate_buildfile_path options.podfile, "Podfile" if options.cartfile.nil? && options.add_sdk
 
           # If --podfile is present or a Podfile was found, don't look for a Cartfile.
-          validate_buildfile_path options, "Cartfile" if @podfile.nil?
+          validate_buildfile_path options.cartfile, "Cartfile" if @sdk_integration_mode.nil? && options.add_sdk
 
           validate_sdk_addition options
 
@@ -77,6 +85,32 @@ module BranchIOCLI
           validate_target options, false
 
           print_validation_configuration
+        end
+
+        def validate_report_options(options)
+          print_identification "report"
+
+          @clean = options.clean
+          @header_only = options.header_only
+          @scheme = options.scheme
+          @target = options.target
+          @configuration = options.configuration
+          @report_path = options.out || "./report.txt"
+
+          validate_xcodeproj_and_workspace options
+          validate_scheme options
+
+          # If neither --podfile nor --cartfile is present, arbitrarily look for a Podfile
+          # first.
+
+          # If --cartfile is present, don't look for a Podfile. Just validate that
+          # Cartfile.
+          validate_buildfile_path(options.podfile, "Podfile") if options.cartfile.nil?
+
+          # If --podfile is present or a Podfile was found, don't look for a Cartfile.
+          validate_buildfile_path(options.cartfile, "Cartfile") if @sdk_integration_mode.nil?
+
+          print_report_configuration
         end
 
         def print_identification(command)
@@ -117,6 +151,22 @@ EOF
 <%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
 <%= color('Target:', BOLD) %> #{@target.name}
 <%= color('Domains:', BOLD) %> #{@all_domains || '(none)'}
+EOF
+        end
+
+        def print_report_configuration
+          say <<EOF
+<%= color('Configuration:', BOLD) %>
+
+<%= color('Xcode workspace:', BOLD) %> #{@workspace_path || '(none)'}
+<%= color('Xcode project:', BOLD) %> #{@xcodeproj_path || '(none)'}
+<%= color('Scheme:', BOLD) %> #{@scheme || '(none)'}
+<%= color('Target:', BOLD) %> #{@target || '(none)'}
+<%= color('Configuration:', BOLD) %> #{@configuration || '(none)'}
+<%= color('Podfile:', BOLD) %> #{@podfile_path || '(none)'}
+<%= color('Cartfile:', BOLD) %> #{@cartfile_path || '(none)'}
+<%= color('Clean:', BOLD) %> #{@clean.inspect}
+<%= color('Report path:', BOLD) %> #{@report_path}
 EOF
         end
 
@@ -197,6 +247,99 @@ EOF
               say e.message
               path = nil
             end
+          end
+        end
+
+        # rubocop: disable Metrics/PerceivedComplexity
+        def validate_xcodeproj_and_workspace(options)
+          # 1. What was passed in?
+          begin
+            if options.workspace
+              path = options.workspace
+              @workspace = Xcodeproj::Workspace.new_from_xcworkspace options.workspace
+              @workspace_path = options.workspace
+            end
+            if options.xcodeproj
+              path = options.xcodeproj
+              @xcodeproj = Xcodeproj::Project.open options.xcodeproj
+              @xcodeproj_path = options.xcodeproj
+            end
+            return if @workspace || @xcodeproj
+          rescue StandardError => e
+            say e.message
+          end
+
+          # Try to find first a workspace, then a project
+          all_workspace_paths = Dir[File.expand_path(File.join(".", "**/*.xcworkspace"))]
+                                .reject { |w| w =~ %r{/project.pbxproj$} }
+                                .select do |p|
+            valid = true
+            Pathname.new(p).each_filename do |f|
+              valid = false && break if f == "Carthage" || f == "Pods"
+            end
+            valid
+          end
+
+          if all_workspace_paths.count == 1
+            path = all_workspace_paths.first
+          elsif all_workspace_paths.count == 0
+            all_xcodeproj_paths = Dir[File.expand_path(File.join(".", "**/*.xcodeproj"))]
+            xcodeproj_paths = all_xcodeproj_paths.select do |p|
+              valid = true
+              Pathname.new(p).each_filename do |f|
+                valid = false && break if f == "Carthage" || f == "Pods"
+              end
+              valid
+            end
+
+            path = xcodeproj_paths.first if xcodeproj_paths.count == 1
+          end
+          # If more than one workspace. Don't try to find a project. Just prompt.
+
+          loop do
+            path = ask "Please enter a path to your Xcode project or workspace: " if path.nil?
+            begin
+              if path =~ /\.xcworkspace$/
+                @workspace = Xcodeproj::Workspace.new_from_xcworkspace path
+                @workspace_path = path
+                return
+              elsif path =~ /\.xcodeproj$/
+                @xcodeproj = Xcodeproj::Project.open path
+                @xcodeproj_path = path
+                return
+              else
+                say "Path must end with .xcworkspace or .xcodeproj"
+              end
+            rescue StandardError => e
+              say e.message
+            end
+          end
+        end
+        # rubocop: enable Metrics/PerceivedComplexity
+
+        def validate_scheme(options)
+          schemes = all_schemes
+          if options.scheme && schemes.include?(options.scheme)
+            @scheme = options.scheme
+          elsif schemes.count == 1
+            @scheme = schemes.first
+          elsif !schemes.empty?
+            say "Please specify one of the following for the --scheme argument:"
+            schemes.each do |scheme|
+              say " #{scheme}"
+            end
+            exit 1
+          else
+            say "No scheme defined in project."
+            exit(-1)
+          end
+        end
+
+        def all_schemes
+          if @workspace_path
+            @workspace.schemes.keys.reject { |scheme| scheme == "Pods" }
+          else
+            Xcodeproj::Project.schemes @xcodeproj_path
           end
         end
 
@@ -281,11 +424,9 @@ EOF
           scheme.sub %r{://$}, ""
         end
 
-        def validate_buildfile_path(options, filename)
+        def validate_buildfile_path(buildfile_path, filename)
           # Disable Podfile/Cartfile update if --no-add-sdk is present
-          return unless options.add_sdk && @sdk_integration_mode.nil?
-
-          buildfile_path = options.send filename.downcase
+          return unless @sdk_integration_mode.nil?
 
           # Was --podfile/--cartfile used?
           if buildfile_path
@@ -312,8 +453,8 @@ EOF
             end
           end
 
-          # No: Check for Podfile/Cartfile next to @xcodeproj_path
-          buildfile_path = File.expand_path "../#{filename}", @xcodeproj_path
+          # No: Check for Podfile/Cartfile next to workspace or project
+          buildfile_path = File.expand_path "../#{filename}", (@workspace_path || @xcodeproj_path)
           return unless File.exist? buildfile_path
 
           # Exists: Use it (valid if found)
@@ -354,5 +495,6 @@ EOF
         end
       end
     end
+    # rubocop: enable Metrics/ClassLength
   end
 end

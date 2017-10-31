@@ -61,7 +61,7 @@ Currently command-line completion for bash is much more extensive than for zsh.
 ### Setup command
 
 ```bash
-branch_io setup
+branch_io setup [OPTIONS]
 ```
 
 Integrates the Branch SDK into a native app project. This currently supports iOS only.
@@ -165,7 +165,7 @@ branch_io setup --no-pod-repo-update
 ### Validate command
 
 ```bash
-branch_io validate
+branch_io validate [OPTIONS]
 ```
 
 This command validates all Universal Link domains configured in a project without making any modification.
@@ -198,6 +198,35 @@ and no Universal Link domain is present that does not pass validation.
 #### Return value
 
 If validation passes, this command returns 0. If validation fails, it returns 1.
+
+### Report command
+
+```bash
+branch_io report [OPTIONS]
+```
+
+_Work in progress_
+
+This command optionally cleans and then builds a workspace or project, generating a verbose
+report with additional diagnostic information suitable for opening a support ticket.
+
+#### Options
+
+|Option|Description|
+|------|-----------|
+|-h, --help|Prints a list of commands or help for each command|
+|-v, --version|Prints the current version of the CLI|
+|-t, --trace|Prints a stack trace when exceptions are raised|
+|--workspace MyProject.xcworkspace|Path to an Xcode workspace|
+|--xcodeproj MyProject.xcodeproj|Path to an Xcode project|
+|--target MyAppTarget|Name of a target to modify in the Xcode project|
+|--scheme MyAppScheme|Name of a scheme to build|
+|--configuration Debug/Release/CustomConfig|Name of a build configuration|
+|--[no-]clean|Clean before building (default: yes)|
+|--[no-]header-only|Show a diagnostic header and exit without cleaning or building (default: no)|
+|--podfile /path/to/Podfile|Path to the Podfile for the project|
+|--cartfile /path/to/Cartfile|Path to the Cartfile for the project|
+|--out ./report.txt|Path to use for the generated report (default: ./report.txt)|
 
 ## Examples
 
