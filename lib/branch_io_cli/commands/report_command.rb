@@ -54,8 +54,18 @@ module BranchIOCLI
           return podfile_lock.version "Branch"
         elsif config_helper.cartfile_path && File.exist?("#{config_helper.cartfile_path}.resolved")
           cartfile_resolved = File.read "#{config_helper.cartfile_path}.resolved"
-          matches = /ios-branch-deep-linking" "(\d+\.\d+\.\d+)"/m.match cartfile_resolved
-          return matches[1] if matches
+
+          # Matches:
+          # git "https://github.com/BranchMetrics/ios-branch-deep-linking"
+          # git "https://github.com/BranchMetrics/ios-branch-deep-linking/"
+          # git "https://github.com/BranchMetrics/iOS-Deferred-Deep-Linking-SDK"
+          # git "https://github.com/BranchMetrics/iOS-Deferred-Deep-Linking-SDK/"
+          # github "BranchMetrics/ios-branch-deep-linking"
+          # github "BranchMetrics/ios-branch-deep-linking/"
+          # github "BranchMetrics/iOS-Deferred-Deep-Linking-SDK"
+          # github "BranchMetrics/iOS-Deferred-Deep-Linking-SDK/"
+          matches = %r{(ios-branch-deep-linking|iOS-Deferred-Deep-Linking-SDK)/?" "(\d+\.\d+\.\d+)"}m.match cartfile_resolved
+          return matches[2] if matches
         end
         nil
       end
