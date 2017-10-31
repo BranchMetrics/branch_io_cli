@@ -331,7 +331,7 @@ EOF
             exit 1
           else
             say "No scheme defined in project."
-            exit -1
+            exit(-1)
           end
         end
 
