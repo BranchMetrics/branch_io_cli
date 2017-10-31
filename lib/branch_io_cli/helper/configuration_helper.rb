@@ -271,7 +271,7 @@ EOF
 
           # Try to find first a workspace, then a project
           all_workspace_paths = Dir[File.expand_path(File.join(".", "**/*.xcworkspace"))]
-                                .reject { |w| w =~ %r{/project.pbxproj$} }
+                                .reject { |w| w =~ %r{/project.xcworkspace$} }
                                 .select do |p|
             valid = true
             Pathname.new(p).each_filename do |f|

@@ -21,6 +21,8 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'http://github.com/BranchMetrics/branch_io_cli'
   spec.license       = 'MIT'
 
+  spec.add_dependency 'CFPropertyList'
+  spec.add_dependency 'cocoapods-core'
   spec.add_dependency 'commander'
   spec.add_dependency 'pattern_patch'
   spec.add_dependency 'plist'
