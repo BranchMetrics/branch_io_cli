@@ -68,10 +68,10 @@ module BranchIOCLI
 
           # If --cartfile is present, don't look for a Podfile. Just validate that
           # Cartfile.
-          validate_buildfile_path options, "Podfile" if options.cartfile.nil? && options.add_sdk
+          validate_buildfile_path options.podfile, "Podfile" if options.cartfile.nil? && options.add_sdk
 
           # If --podfile is present or a Podfile was found, don't look for a Cartfile.
-          validate_buildfile_path options, "Cartfile" if @podfile_path.nil? && options.add_sdk
+          validate_buildfile_path options.cartfile, "Cartfile" if @sdk_integration_mode.nil? && options.add_sdk
 
           validate_sdk_addition options
 
@@ -104,10 +104,10 @@ module BranchIOCLI
 
           # If --cartfile is present, don't look for a Podfile. Just validate that
           # Cartfile.
-          validate_buildfile_path(options, "Podfile") if options.cartfile.nil?
+          validate_buildfile_path(options.podfile, "Podfile") if options.cartfile.nil?
 
           # If --podfile is present or a Podfile was found, don't look for a Cartfile.
-          validate_buildfile_path(options, "Cartfile") if @sdk_integration_mode.nil?
+          validate_buildfile_path(options.cartfile, "Cartfile") if @sdk_integration_mode.nil?
 
           print_report_configuration
         end
@@ -397,11 +397,9 @@ EOF
           scheme.sub %r{://$}, ""
         end
 
-        def validate_buildfile_path(options, filename)
+        def validate_buildfile_path(buildfile_path, filename)
           # Disable Podfile/Cartfile update if --no-add-sdk is present
           return unless @sdk_integration_mode.nil?
-
-          buildfile_path = filename == "Podfile" ? options.podfile : options.cartfile
 
           # Was --podfile/--cartfile used?
           if buildfile_path
@@ -428,9 +426,8 @@ EOF
             end
           end
 
-          # No: Check for Podfile/Cartfile next to @xcodeproj_path
-          # TODO: Or @workspace_path
-          buildfile_path = File.expand_path "../#{filename}", @xcodeproj_path
+          # No: Check for Podfile/Cartfile next to workspace or project
+          buildfile_path = File.expand_path "../#{filename}", (@workspace_path || @xcodeproj_path)
           return unless File.exist? buildfile_path
 
           # Exists: Use it (valid if found)
