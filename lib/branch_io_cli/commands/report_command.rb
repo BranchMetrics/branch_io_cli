@@ -1,4 +1,5 @@
-require 'cocoapods-core'
+require "cocoapods-core"
+require "cfpropertylist"
 
 module BranchIOCLI
   module Commands
@@ -66,6 +67,14 @@ module BranchIOCLI
           # github "BranchMetrics/iOS-Deferred-Deep-Linking-SDK/"
           matches = %r{(ios-branch-deep-linking|iOS-Deferred-Deep-Linking-SDK)/?" "(\d+\.\d+\.\d+)"}m.match cartfile_resolved
           return matches[2] if matches
+        elsif config_helper.xcodeproj
+          framework = config_helper.xcodeproj.frameworks_group.files.find { |f| f.path =~ /Branch.framework$/ }
+          return nil unless framework
+          framework_path = framework.real_path
+          info_plist_path = File.join framework_path.to_s, "Info.plist"
+          raw_info_plist = CFPropertyList::List.new file: info_plist_path
+          info_plist = CFPropertyList.native_types raw_info_plist.value
+          return info_plist["CFBundleVersion"]
         end
         nil
       end
