@@ -302,6 +302,13 @@ EOF
               if path =~ /\.xcworkspace$/
                 @workspace = Xcodeproj::Workspace.new_from_xcworkspace path
                 @workspace_path = path
+
+                # Pass --workspace and --xcodeproj to override this inference.
+                if @workspace.file_references.count > 0 && @workspace.file_references.first.path =~ /\.xcodeproj$/
+                  @xcodeproj_path = File.expand_path "../#{@workspace.file_references.first.path}", @workspace_path
+                  @xcodeproj = Xcodeproj::Project.open @xcodeproj_path
+                end
+
                 return
               elsif path =~ /\.xcodeproj$/
                 @xcodeproj = Xcodeproj::Project.open path
