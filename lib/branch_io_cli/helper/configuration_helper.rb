@@ -36,6 +36,7 @@ module BranchIOCLI
         attr_reader :commit
         attr_reader :sdk_integration_mode
         attr_reader :clean
+        attr_reader :header_only
         attr_reader :scheme
         attr_reader :configuration
         attr_reader :report_path
@@ -67,10 +68,10 @@ module BranchIOCLI
 
           # If --cartfile is present, don't look for a Podfile. Just validate that
           # Cartfile.
-          validate_buildfile_path options, "Podfile" if options.cartfile.nil?
+          validate_buildfile_path options, "Podfile" if options.cartfile.nil? && options.add_sdk
 
           # If --podfile is present or a Podfile was found, don't look for a Cartfile.
-          validate_buildfile_path options, "Cartfile" if @podfile.nil?
+          validate_buildfile_path options, "Cartfile" if @podfile_path.nil? && options.add_sdk
 
           validate_sdk_addition options
 
@@ -90,12 +91,23 @@ module BranchIOCLI
           print_identification "report"
 
           @clean = options.clean
+          @header_only = options.header_only
           @scheme = options.scheme
           @target = options.target
           @configuration = options.configuration
           @report_path = options.out || "./report.txt"
 
           validate_xcodeproj_and_workspace options
+
+          # If neither --podfile nor --cartfile is present, arbitrarily look for a Podfile
+          # first.
+
+          # If --cartfile is present, don't look for a Podfile. Just validate that
+          # Cartfile.
+          validate_buildfile_path(options, "Podfile") if options.cartfile.nil?
+
+          # If --podfile is present or a Podfile was found, don't look for a Cartfile.
+          validate_buildfile_path(options, "Cartfile") if @sdk_integration_mode.nil?
 
           print_report_configuration
         end
@@ -149,7 +161,9 @@ EOF
 <%= color('Xcode project:', BOLD) %> #{@xcodeproj_path || '(none)'}
 <%= color('Scheme:', BOLD) %> #{@scheme || '(none)'}
 <%= color('Target:', BOLD) %> #{@target || '(none)'}
-<%= color('Configuration:', BOLD) %> #{configuration || '(none)'}
+<%= color('Configuration:', BOLD) %> #{@configuration || '(none)'}
+<%= color('Podfile:', BOLD) %> #{@podfile_path || '(none)'}
+<%= color('Cartfile:', BOLD) %> #{@cartfile_path || '(none)'}
 <%= color('Clean:', BOLD) %> #{@clean.inspect}
 <%= color('Report path:', BOLD) %> #{@report_path}
 EOF
@@ -235,6 +249,7 @@ EOF
           end
         end
 
+        # rubocop: disable Metrics/PerceivedComplexity
         def validate_xcodeproj_and_workspace(options)
           # 1. What was passed in?
           begin
@@ -255,12 +270,19 @@ EOF
 
           # Try to find first a workspace, then a project
           all_workspace_paths = Dir[File.expand_path(File.join(".", "**/*.xcworkspace"))]
+                                .reject { |w| w =~ %r{/project.pbxproj$} }
+                                .select do |p|
+            valid = true
+            Pathname.new(p).each_filename do |f|
+              valid = false && break if f == "Carthage" || f == "Pods"
+            end
+            valid
+          end
+
           if all_workspace_paths.count == 1
             path = all_workspace_paths.first
           elsif all_workspace_paths.count == 0
             all_xcodeproj_paths = Dir[File.expand_path(File.join(".", "**/*.xcodeproj"))]
-            # find an xcodeproj (ignoring the Pods and Carthage folders)
-            # TODO: Improve this filter
             xcodeproj_paths = all_xcodeproj_paths.select do |p|
               valid = true
               Pathname.new(p).each_filename do |f|
@@ -292,6 +314,7 @@ EOF
             end
           end
         end
+        # rubocop: enable Metrics/PerceivedComplexity
 
         def validate_target(options, allow_extensions = true)
           non_test_targets = @xcodeproj.targets.reject(&:test_target_type?)
@@ -376,9 +399,9 @@ EOF
 
         def validate_buildfile_path(options, filename)
           # Disable Podfile/Cartfile update if --no-add-sdk is present
-          return unless options.add_sdk && @sdk_integration_mode.nil?
+          return unless @sdk_integration_mode.nil?
 
-          buildfile_path = options.send filename.downcase
+          buildfile_path = filename == "Podfile" ? options.podfile : options.cartfile
 
           # Was --podfile/--cartfile used?
           if buildfile_path
@@ -406,6 +429,7 @@ EOF
           end
 
           # No: Check for Podfile/Cartfile next to @xcodeproj_path
+          # TODO: Or @workspace_path
           buildfile_path = File.expand_path "../#{filename}", @xcodeproj_path
           return unless File.exist? buildfile_path
 

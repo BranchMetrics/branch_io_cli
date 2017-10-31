@@ -157,11 +157,14 @@ EOF
         c.option "--scheme MyProjectScheme", String, "A scheme from the project or workspace to build"
         c.option "--target MyProjectTarget", String, "A target to build"
         c.option "--configuration Debug|Release|CustomConfigName", String, "The build configuration to use (default: Release)"
+        c.option "--podfile /path/to/Podfile", String, "Path to the Podfile for the project"
+        c.option "--cartfile /path/to/Cartfile", String, "Path to the Cartfile for the project"
         c.option "--[no-]clean", "Clean before attempting to build (default: yes)"
+        c.option "--[no-]header-only", "Write a report header to standard output and exit"
         c.option "--out branch-report.txt", String, "Report output path (default: ./branch-report.txt)"
 
         c.action do |args, options|
-          options.default clean: true
+          options.default clean: true, header_only: false
           Commands::ReportCommand.new(options).run!
         end
       end

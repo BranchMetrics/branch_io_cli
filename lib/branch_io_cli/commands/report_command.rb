@@ -7,6 +7,13 @@ module BranchIOCLI
       end
 
       def run!
+        say "\n"
+
+        if config_helper.header_only
+          say report_header
+          exit 0
+        end
+
         File.open config_helper.report_path, "w" do |report|
           report.write "Branch.io Xcode build report v #{VERSION}\n\n"
           # TODO: Write out command-line options or configuration from helper
@@ -39,10 +46,24 @@ module BranchIOCLI
         cmd
       end
 
+      def branch_version
+        if config_helper.podfile_path && File.exist?("#{config_helper.podfile_path}.lock")
+          podfile_lock = File.read "#{config_helper.podfile_path}.lock"
+          matches = %r{Branch/Core \(= (\d+\.\d+\.\d+)\)}m.match podfile_lock
+          return matches[1] if matches
+        elsif config_helper.cartfile_path && File.exist?("#{config_helper.cartfile_path}.resolved")
+          cartfile_resolved = File.read "#{config_helper.cartfile_path}.resolved"
+          matches = /ios-branch-deep-linking" "(\d+\.\d+\.\d+)"/m.match cartfile_resolved
+          return matches[1] if matches
+        end
+        nil
+      end
+
       def report_header
-        <<EOF
-#{`xcodebuild -version`}
-EOF
+        header = `xcodebuild -version`
+        version = branch_version
+        header = "#{header}\nBranch SDK v. #{version}" if version
+        "#{header}\n"
       end
     end
   end
