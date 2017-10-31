@@ -52,7 +52,8 @@ module BranchIOCLI
       def branch_version
         if config_helper.podfile_path && File.exist?("#{config_helper.podfile_path}.lock")
           podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config_helper.podfile_path}.lock"
-          return podfile_lock.version "Branch"
+          version = podfile_lock.version "Branch"
+          return "#{version} (Podfile.lock)"
         elsif config_helper.cartfile_path && File.exist?("#{config_helper.cartfile_path}.resolved")
           cartfile_resolved = File.read "#{config_helper.cartfile_path}.resolved"
 
@@ -66,7 +67,9 @@ module BranchIOCLI
           # github "BranchMetrics/iOS-Deferred-Deep-Linking-SDK"
           # github "BranchMetrics/iOS-Deferred-Deep-Linking-SDK/"
           matches = %r{(ios-branch-deep-linking|iOS-Deferred-Deep-Linking-SDK)/?" "(\d+\.\d+\.\d+)"}m.match cartfile_resolved
-          return matches[2] if matches
+          return nil unless matches
+          version = matches[2]
+          return "#{version} (Cartfile.resolved)"
         elsif config_helper.xcodeproj
           framework = config_helper.xcodeproj.frameworks_group.files.find { |f| f.path =~ /Branch.framework$/ }
           return nil unless framework
@@ -74,7 +77,8 @@ module BranchIOCLI
           info_plist_path = File.join framework_path.to_s, "Info.plist"
           raw_info_plist = CFPropertyList::List.new file: info_plist_path
           info_plist = CFPropertyList.native_types raw_info_plist.value
-          return info_plist["CFBundleVersion"]
+          version = info_plist["CFBundleVersion"]
+          return version ? "#{version} (Branch.framework/Info.plist)" : nil
         end
         # TODO: Detect if the Branch SDK source is included in the project.
         nil
@@ -83,7 +87,11 @@ module BranchIOCLI
       def report_header
         header = `xcodebuild -version`
         version = branch_version
-        header = "#{header}\nBranch SDK v. #{version}" if version
+        if version
+          header = "#{header}\nBranch SDK v. #{version}"
+        else
+          header = "Branch SDK not found"
+        end
         "#{header}\n"
       end
     end
