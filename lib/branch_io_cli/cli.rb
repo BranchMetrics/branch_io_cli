@@ -149,7 +149,10 @@ EOF
         c.syntax = "branch_io report [OPTIONS]"
         c.summary = "Generate and optionally submit a build diagnostic report."
         c.description = <<EOF
-More to come.
+<%= color('Work in progress', BOLD) %>
+
+This command optionally cleans and then builds a workspace or project, generating a verbose
+report with additional diagnostic information suitable for opening a support ticket.
 EOF
 
         c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project"
