@@ -50,38 +50,60 @@ module BranchIOCLI
       end
 
       def branch_version
-        if config_helper.podfile_path && File.exist?("#{config_helper.podfile_path}.lock")
-          podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config_helper.podfile_path}.lock"
-          version = podfile_lock.version "Branch"
-          return "#{version} (Podfile.lock)"
-        elsif config_helper.cartfile_path && File.exist?("#{config_helper.cartfile_path}.resolved")
-          cartfile_resolved = File.read "#{config_helper.cartfile_path}.resolved"
+        version_from_podfile_lock ||
+          version_from_cartfile_resolved ||
+          version_from_branch_framework ||
+          version_from_bnc_config_m
+      end
 
-          # Matches:
-          # git "https://github.com/BranchMetrics/ios-branch-deep-linking"
-          # git "https://github.com/BranchMetrics/ios-branch-deep-linking/"
-          # git "https://github.com/BranchMetrics/iOS-Deferred-Deep-Linking-SDK"
-          # git "https://github.com/BranchMetrics/iOS-Deferred-Deep-Linking-SDK/"
-          # github "BranchMetrics/ios-branch-deep-linking"
-          # github "BranchMetrics/ios-branch-deep-linking/"
-          # github "BranchMetrics/iOS-Deferred-Deep-Linking-SDK"
-          # github "BranchMetrics/iOS-Deferred-Deep-Linking-SDK/"
-          matches = %r{(ios-branch-deep-linking|iOS-Deferred-Deep-Linking-SDK)/?" "(\d+\.\d+\.\d+)"}m.match cartfile_resolved
-          return nil unless matches
-          version = matches[2]
-          return "#{version} (Cartfile.resolved)"
-        elsif config_helper.xcodeproj
-          framework = config_helper.xcodeproj.frameworks_group.files.find { |f| f.path =~ /Branch.framework$/ }
-          return nil unless framework
-          framework_path = framework.real_path
-          info_plist_path = File.join framework_path.to_s, "Info.plist"
-          raw_info_plist = CFPropertyList::List.new file: info_plist_path
-          info_plist = CFPropertyList.native_types raw_info_plist.value
-          version = info_plist["CFBundleVersion"]
-          return version ? "#{version} (Branch.framework/Info.plist)" : nil
-        end
-        # TODO: Detect if the Branch SDK source is included in the project.
-        nil
+      def version_from_podfile_lock
+        return nil unless config_helper.podfile_path && File.exist?("#{config_helper.podfile_path}.lock")
+        podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config_helper.podfile_path}.lock"
+        version = podfile_lock.version "Branch"
+        version ? "#{version} [Podfile.lock]" : nil
+      end
+
+      def version_from_cartfile_resolved
+        return nil unless config_helper.cartfile_path && File.exist?("#{config_helper.cartfile_path}.resolved")
+        cartfile_resolved = File.read "#{config_helper.cartfile_path}.resolved"
+
+        # Matches:
+        # git "https://github.com/BranchMetrics/ios-branch-deep-linking"
+        # git "https://github.com/BranchMetrics/ios-branch-deep-linking/"
+        # git "https://github.com/BranchMetrics/iOS-Deferred-Deep-Linking-SDK"
+        # git "https://github.com/BranchMetrics/iOS-Deferred-Deep-Linking-SDK/"
+        # github "BranchMetrics/ios-branch-deep-linking"
+        # github "BranchMetrics/ios-branch-deep-linking/"
+        # github "BranchMetrics/iOS-Deferred-Deep-Linking-SDK"
+        # github "BranchMetrics/iOS-Deferred-Deep-Linking-SDK/"
+        matches = %r{(ios-branch-deep-linking|iOS-Deferred-Deep-Linking-SDK)/?" "(\d+\.\d+\.\d+)"}m.match cartfile_resolved
+        return nil unless matches
+        version = matches[2]
+        "#{version} [Cartfile.resolved]"
+      end
+
+      def version_from_branch_framework
+        framework = config_helper.xcodeproj.frameworks_group.files.find { |f| f.path =~ /Branch.framework$/ }
+        return nil unless framework
+        framework_path = framework.real_path
+        info_plist_path = File.join framework_path.to_s, "Info.plist"
+        return nil unless File.exist? info_plist_path
+
+        raw_info_plist = CFPropertyList::List.new file: info_plist_path
+        info_plist = CFPropertyList.native_types raw_info_plist.value
+        version = info_plist["CFBundleVersion"]
+        version ? "#{version} [Branch.framework/Info.plist]" : nil
+      end
+
+      def version_from_bnc_config_m
+        # Look for BNCConfig.m in embedded source
+        bnc_config_m_ref = config_helper.xcodeproj.files.find { |f| f.path =~ /BNCConfig\.m$/ }
+        return nil unless bnc_config_m_ref
+        bnc_config_m = File.read bnc_config_m_ref.real_path
+        matches = /BNC_SDK_VERSION\s+=\s+@"(\d+\.\d+\.\d+)"/m.match bnc_config_m
+        return nil unless matches
+        version = matches[1]
+        "#{version} [BNCConfig.m]"
       end
 
       def report_header
