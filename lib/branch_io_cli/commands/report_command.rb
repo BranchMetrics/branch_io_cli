@@ -43,7 +43,7 @@ module BranchIOCLI
         cmd = "xcodebuild"
         cmd = "#{cmd} -scheme #{config_helper.scheme}" if config_helper.scheme
         cmd = "#{cmd} -workspace #{config_helper.workspace_path}" if config_helper.workspace_path
-        cmd = "#{cmd} -project #{config_helper.xcodeproj_path}" if config_helper.xcodeproj_path
+        cmd = "#{cmd} -project #{config_helper.xcodeproj_path}" if config_helper.xcodeproj_path && !config_helper.workspace_path
         cmd = "#{cmd} -target #{config_helper.target}" if config_helper.target
         cmd = "#{cmd} -configuration #{config_helper.configuration}" if config_helper.configuration
         cmd
@@ -76,6 +76,7 @@ module BranchIOCLI
           info_plist = CFPropertyList.native_types raw_info_plist.value
           return info_plist["CFBundleVersion"]
         end
+        # TODO: Detect if the Branch SDK source is included in the project.
         nil
       end
 
