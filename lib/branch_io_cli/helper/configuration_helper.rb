@@ -98,6 +98,7 @@ module BranchIOCLI
           @report_path = options.out || "./report.txt"
 
           validate_xcodeproj_and_workspace options
+          validate_scheme options
 
           # If neither --podfile nor --cartfile is present, arbitrarily look for a Podfile
           # first.
@@ -255,7 +256,7 @@ EOF
           begin
             if options.workspace
               path = options.workspace
-              @workspace = Xcodeproj::Workspace.new options.workspace
+              @workspace = Xcodeproj::Workspace.new_from_xcworkspace options.workspace
               @workspace_path = options.workspace
             end
             if options.xcodeproj
@@ -299,11 +300,11 @@ EOF
             path = ask "Please enter a path to your Xcode project or workspace: " if path.nil?
             begin
               if path =~ /\.xcworkspace$/
-                @workspace = Xcodeproj::Workspace.new path
+                @workspace = Xcodeproj::Workspace.new_from_xcworkspace path
                 @workspace_path = path
                 return
               elsif path =~ /\.xcodeproj$/
-                @xcodeproj = Xcodeproj::Project.new path
+                @xcodeproj = Xcodeproj::Project.open path
                 @xcodeproj_path = path
                 return
               else
@@ -315,6 +316,32 @@ EOF
           end
         end
         # rubocop: enable Metrics/PerceivedComplexity
+
+        def validate_scheme(options)
+          schemes = all_schemes
+          if options.scheme && schemes.include?(options.scheme)
+            @scheme = options.scheme
+          elsif schemes.count == 1
+            @scheme = schemes.first
+          elsif !schemes.empty?
+            say "Please specify one of the following for the --scheme argument:"
+            schemes.each do |scheme|
+              say " #{scheme}"
+            end
+            exit 1
+          else
+            say "No scheme defined in project."
+            exit -1
+          end
+        end
+
+        def all_schemes
+          if @workspace_path
+            @workspace.schemes.keys.reject { |scheme| scheme == "Pods" }
+          else
+            Xcodeproj::Project.schemes @xcodeproj_path
+          end
+        end
 
         def validate_target(options, allow_extensions = true)
           non_test_targets = @xcodeproj.targets.reject(&:test_target_type?)
