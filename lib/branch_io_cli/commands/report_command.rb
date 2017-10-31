@@ -1,3 +1,5 @@
+require 'cocoapods-core'
+
 module BranchIOCLI
   module Commands
     class ReportCommand < Command
@@ -48,9 +50,8 @@ module BranchIOCLI
 
       def branch_version
         if config_helper.podfile_path && File.exist?("#{config_helper.podfile_path}.lock")
-          podfile_lock = File.read "#{config_helper.podfile_path}.lock"
-          matches = %r{Branch/Core \(= (\d+\.\d+\.\d+)\)}m.match podfile_lock
-          return matches[1] if matches
+          podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config_helper.podfile_path}.lock"
+          return podfile_lock.version "Branch"
         elsif config_helper.cartfile_path && File.exist?("#{config_helper.cartfile_path}.resolved")
           cartfile_resolved = File.read "#{config_helper.cartfile_path}.resolved"
           matches = /ios-branch-deep-linking" "(\d+\.\d+\.\d+)"/m.match cartfile_resolved
