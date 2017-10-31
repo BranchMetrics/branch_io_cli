@@ -28,6 +28,7 @@ Note that this command may require `sudo` access if you are using the system Rub
 branch_io -h
 branch_io setup -h
 branch_io validate -h
+branch_io report -h
 ```
 
 ### Shell completion
