@@ -137,11 +137,12 @@ module BranchIOCLI
 
         version = branch_version
         if version
-          header = "#{header}\nBranch SDK v. #{version}"
+          header = "#{header}\nBranch SDK v. #{version}\n"
         else
-          header = "Branch SDK not found"
+          header = "Branch SDK not found.\n"
         end
-        "#{header}\n"
+
+        header
       end
     end
   end
