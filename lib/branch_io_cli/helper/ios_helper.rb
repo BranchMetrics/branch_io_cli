@@ -1014,17 +1014,23 @@ EOF
         pod_cmd = `which pod`
         return unless pod_cmd.empty?
 
+        gem_cmd = `which gem`
+        if gem_cmd.empty?
+          say "'pod' command not available in PATH and 'gem' command not available in PATH to install cocoapods."
+          exit(-1)
+        end
+
         install = ask "'pod' command not available in PATH. Install cocoapods (may require a sudo password) (Y/n)? "
         if install.downcase =~ /^n/
           say "Please install cocoapods or use --no-add-sdk to continue."
           exit(-1)
         end
 
-        gem_home = ENV["GEM_HOME"] # TODO: If this is not set, something is seriously wrong. What to do?
-        if File.writable? gem_home
+        gem_home = ENV["GEM_HOME"]
+        if gem_home && File.writable? gem_home
           system_command "gem install cocoapods"
         else
-          system_command "sudo gem install cocoapods" # TODO: this will come out bundle exec sudo gem install...
+          system_command "sudo gem install cocoapods"
         end
 
         # Ensure master podspec repo is set up (will update if it exists).
