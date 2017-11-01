@@ -16,25 +16,46 @@ module BranchIOCLI
       PRODUCT_BUNDLE_IDENTIFIER = "PRODUCT_BUNDLE_IDENTIFIER"
       RELEASE_CONFIGURATION = "Release"
 
-      def add_keys_to_info_plist(keys, configuration = RELEASE_CONFIGURATION)
-        update_info_plist_setting configuration do |info_plist|
-          # add/overwrite Branch key(s)
-          if keys.count > 1
-            info_plist["branch_key"] = keys
-          elsif keys[:live]
-            info_plist["branch_key"] = keys[:live]
-          else
-            info_plist["branch_key"] = keys[:test]
+      def has_multiple_info_plists?
+        ConfigurationHelper.xcodeproj.build_configurations.inject([]) do |files, config|
+          files + [expanded_build_setting(ConfigurationHelper.target, "INFOPLIST_FILE", config.name)]
+        end.uniq.count > 1
+      end
+
+      def add_keys_to_info_plist(keys)
+        if has_multiple_info_plists?
+          ConfigurationHelper.xcodeproj.build_configurations.each do |config|
+            update_info_plist_setting config.name do |info_plist|
+              if keys.count > 1
+                # Use test key in debug configs and live key in release configs
+                info_plist["branch_key"] = config.debug? ? keys[:test] : keys[:live]
+              else
+                info_plist["branch_key"] = keys[:live] ? keys[:live] : keys[:test]
+              end
+            end
+          end
+        else
+          update_info_plist_setting RELEASE_CONFIGURATION do |info_plist|
+            # add/overwrite Branch key(s)
+            if keys.count > 1
+              info_plist["branch_key"] = keys
+            elsif keys[:live]
+              info_plist["branch_key"] = keys[:live]
+            else
+              info_plist["branch_key"] = keys[:test]
+            end
           end
         end
       end
 
-      def add_branch_universal_link_domains_to_info_plist(domains, configuration = RELEASE_CONFIGURATION)
+      def add_branch_universal_link_domains_to_info_plist(domains)
         # Add all supplied domains unless all are app.link domains.
         return if domains.all? { |d| d =~ /app\.link$/ }
 
-        update_info_plist_setting configuration do |info_plist|
-          info_plist["branch_universal_link_domains"] = domains
+        ConfigurationHelper.xcodeproj.build_configurations.each do |config|
+          update_info_plist_setting config.name do |info_plist|
+            info_plist["branch_universal_link_domains"] = domains
+          end
         end
       end
 
@@ -44,32 +65,23 @@ module BranchIOCLI
         # No URI scheme specified. Do nothing.
         return if uri_scheme.nil?
 
-        update_info_plist_setting RELEASE_CONFIGURATION do |info_plist|
-          url_types = info_plist["CFBundleURLTypes"] || []
-          uri_schemes = url_types.inject([]) { |schemes, t| schemes + t["CFBundleURLSchemes"] }
+        ConfigurationHelper.xcodeproj.build_configurations.each do |config|
+          update_info_plist_setting config.name do |info_plist|
+            url_types = info_plist["CFBundleURLTypes"] || []
+            uri_schemes = url_types.inject([]) { |schemes, t| schemes + t["CFBundleURLSchemes"] }
 
-          if uri_schemes.empty?
-            say "No URI scheme currently defined in project."
-          else
-            say "Existing URI schemes found in project:"
-            uri_schemes.each do |scheme|
-              say " #{scheme}"
-            end
+            # Already present. Don't mess with the identifier.
+            next if uri_schemes.include? uri_scheme
+
+            # Not found. Add. Don't worry about the CFBundleURLName (reverse-DNS identifier)
+            # TODO: Should we prompt here to add or let them change the Dashboard? If there's already
+            # a URI scheme in the app, seems likely they'd want to use it. They may have just made
+            # a typo at the CLI or in the Dashboard.
+            url_types << {
+              "CFBundleURLSchemes" => [uri_scheme]
+            }
+            info_plist["CFBundleURLTypes"] = url_types
           end
-
-          # Already present. Don't mess with the identifier.
-          return if uri_schemes.include? uri_scheme
-
-          # Not found. Add. Don't worry about the CFBundleURLName (reverse-DNS identifier)
-          # TODO: Should we prompt here to add or let them change the Dashboard? If there's already
-          # a URI scheme in the app, seems likely they'd want to use it. They may have just made
-          # a typo at the CLI or in the Dashboard.
-          url_types << {
-            "CFBundleURLSchemes" => [uri_scheme]
-          }
-          info_plist["CFBundleURLTypes"] = url_types
-
-          say "Added URI scheme #{uri_scheme} to project."
         end
       end
 
