@@ -91,7 +91,7 @@ module BranchIOCLI
 
         raise "Info.plist not found for configuration #{configuration}" if info_plist_path.nil?
 
-        project_parent = File.dirname project.path
+        project_parent = File.dirname ConfigurationHelper.xcodeproj_path
 
         info_plist_path = File.expand_path info_plist_path, project_parent
 
