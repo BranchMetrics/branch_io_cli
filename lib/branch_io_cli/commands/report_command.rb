@@ -74,6 +74,7 @@ module BranchIOCLI
         return nil unless config_helper.podfile_path && File.exist?("#{config_helper.podfile_path}.lock")
         podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config_helper.podfile_path}.lock"
         version = podfile_lock.version "Branch"
+
         version ? "#{version} [Podfile.lock]" : nil
       end
 
@@ -123,6 +124,11 @@ module BranchIOCLI
       def report_header
         header = `xcodebuild -version`
 
+        if config_helper.podfile_path && File.exist?("#{config_helper.podfile_path}.lock")
+          podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config_helper.podfile_path}.lock"
+          header = "#{header}\nUsing CocoaPods v. #{podfile_lock.cocoapods_version}\n"
+        end
+
         podfile_requirement = requirement_from_podfile
         header = "#{header}\nFrom Podfile:\n#{podfile_requirement}\n" if podfile_requirement
 
@@ -131,11 +137,12 @@ module BranchIOCLI
 
         version = branch_version
         if version
-          header = "#{header}\nBranch SDK v. #{version}"
+          header = "#{header}\nBranch SDK v. #{version}\n"
         else
-          header = "Branch SDK not found"
+          header = "Branch SDK not found.\n"
         end
-        "#{header}\n"
+
+        header
       end
     end
   end

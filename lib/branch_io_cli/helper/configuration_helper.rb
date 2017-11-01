@@ -266,6 +266,12 @@ EOF
               path = options.xcodeproj
               @xcodeproj = Xcodeproj::Project.open options.xcodeproj
               @xcodeproj_path = options.xcodeproj
+            else
+              # Pass --workspace and --xcodeproj to override this inference.
+              if @workspace && @workspace.file_references.count > 0 && @workspace.file_references.first.path =~ /\.xcodeproj$/
+                @xcodeproj_path = File.expand_path "../#{@workspace.file_references.first.path}", @workspace_path
+                @xcodeproj = Xcodeproj::Project.open @xcodeproj_path
+              end
             end
             return if @workspace || @xcodeproj
           rescue StandardError => e
