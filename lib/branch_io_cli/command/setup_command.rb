@@ -3,11 +3,13 @@ require "branch_io_cli/helper/methods"
 module BranchIOCLI
   module Command
     class SetupCommand < Command
+      attr_reader :config
+
       def initialize(options)
         super
-        config_helper.validate_setup_options options
-        @keys = config_helper.keys
-        @domains = config_helper.all_domains
+        @config = Configuration::SetupConfiguration.new options
+        @keys = config.keys
+        @domains = config.all_domains
       end
 
       # rubocop: disable Metrics/PerceivedComplexity
@@ -15,17 +17,17 @@ module BranchIOCLI
         # Make sure the user stashes or commits before continuing.
         check_repo_status
 
-        xcodeproj = config_helper.xcodeproj
+        xcodeproj = config.xcodeproj
 
-        case config_helper.sdk_integration_mode
+        case config.sdk_integration_mode
         when :cocoapods
-          if File.exist? config_helper.podfile_path
+          if File.exist? config.podfile_path
             helper.update_podfile options
           else
             helper.add_cocoapods options
           end
         when :carthage
-          if File.exist? config_helper.cartfile_path
+          if File.exist? config.cartfile_path
             helper.update_cartfile options, xcodeproj
           else
             helper.add_carthage options
@@ -34,7 +36,8 @@ module BranchIOCLI
           helper.add_direct options
         end
 
-        is_app_target = !config_helper.target.extension_target_type?
+        target_name = options.target # may be nil
+        is_app_target = !config.target.extension_target_type?
 
         if is_app_target && options.validate &&
            !helper.validate_team_and_bundle_ids_from_aasa_files(@domains)
