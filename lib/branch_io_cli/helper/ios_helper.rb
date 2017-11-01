@@ -397,29 +397,8 @@ module BranchIOCLI
           mode: :prepend
         )
 
-        init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
-        #if DEBUG
-            Branch.setUseTestBranchKey(true)
-        #endif
-
-EOF
-
-        init_session_text += <<-EOF
-        Branch.getInstance().initSession(launchOptions: launchOptions) {
-            universalObject, linkProperties, error in
-
-            // TODO: Route Branch links
-        }
-        EOF
-
-        apply_patch(
-          files: app_delegate_swift_path,
-          regexp: /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m,
-          text: init_session_text,
-          mode: :append
-        )
-
-        patch_continue_user_activity_method app_delegate_swift_path
+        patch_did_finish_launching_method_swift app_delegate_swift_path
+        patch_continue_user_activity_method_swit app_delegate_swift_path
         patch_open_url_method_swift app_delegate_swift_path
 
         add_change app_delegate_swift_path
@@ -444,6 +423,78 @@ EOF
           mode: :prepend
         )
 
+        patch_did_finish_launching_method_objc app_delegate_objc_path
+        patch_continue_user_activity_method_objc app_delegate_objc_path
+        patch_open_url_method_objc app_delegate_objc_path
+
+        add_change app_delegate_objc_path
+        true
+      end
+
+      def patch_did_finish_launching_method_swift(app_delegate_swift_path)
+        app_delegate_swift = File.read app_delegate_swift_path
+
+        if app_delegate_swift =~ /didFinishLaunching[^\n]+?\{/m
+          # method already present
+          init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
+        #if DEBUG
+            Branch.setUseTestBranchKey(true)
+        #endif
+
+EOF
+
+          init_session_text += <<-EOF
+        Branch.getInstance().initSession(launchOptions: launchOptions) {
+            universalObject, linkProperties, error in
+
+            // TODO: Route Branch links
+        }
+        EOF
+
+          apply_patch(
+            files: app_delegate_swift_path,
+            regexp: /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m,
+            text: init_session_text,
+            mode: :append
+          )
+        else
+          # method not present. add entire method
+
+          method_text = <<EOF
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+EOF
+
+          if ConfigurationHelper.keys.count > 1
+            method_text +=<<EOF
+        #if DEBUG
+          Branch.setUseTestBranchKey(true)
+        #endif
+
+EOF
+          end
+
+          method_text += <<-EOF
+        Branch.getInstance().initSession(launchOptions: launchOptions) {
+            universalObject, linkProperties, error in
+
+            // TODO: Route Branch links
+        }
+        return true
+    }
+
+        EOF
+
+        apply_patch(
+          files: app_delegate_swift_path,
+          regexp: /AppDelegate\s*\n?\{.*?\n/m,
+          text: method_text,
+          mode: :append
+        )
+        end
+      end
+
+      def patch_did_finish_launching_method_objc(app_delegate_objc_path)
+        app_delegate_objc = File.read app_delegate_objc_path
         init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
 #ifdef DEBUG
     [Branch setUseTestBranchKey:YES];
@@ -464,12 +515,6 @@ EOF
           text: init_session_text,
           mode: :append
         )
-
-        patch_continue_user_activity_method app_delegate_objc_path
-        patch_open_url_method_objc app_delegate_objc_path
-
-        add_change app_delegate_objc_path
-        true
       end
 
       def patch_open_url_method_swift(app_delegate_swift_path)
