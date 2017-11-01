@@ -1,9 +1,11 @@
 module BranchIOCLI
   module Command
     class ValidateCommand < Command
+      attr_reader :config
+
       def initialize(options)
         super
-        config_helper.validate_validation_options options
+        @config = ValidateConfiguration.new options
       end
 
       def run!
