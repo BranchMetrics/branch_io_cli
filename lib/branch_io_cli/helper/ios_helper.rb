@@ -783,12 +783,14 @@ EOF
       end
 
       def add_cocoapods(options)
+        verify_cocoapods
+
         podfile_path = ConfigurationHelper.podfile_path
 
         install_command = "pod install"
         install_command += " --repo-update" if options.pod_repo_update
         Dir.chdir(File.dirname(podfile_path)) do
-          system "pod init"
+          system_command "pod init"
           apply_patch(
             files: podfile_path,
             regexp: /^(\s*)# Pods for #{ConfigurationHelper.target.name}$/,
@@ -796,7 +798,7 @@ EOF
             text: "\n\\1pod \"Branch\"",
             global: false
           )
-          system install_command
+          system_command install_command
         end
 
         add_change podfile_path
@@ -813,6 +815,7 @@ EOF
 
       def add_carthage(options)
         # TODO: Collapse this and Command::update_cartfile
+        verify_carthage
 
         # 1. Generate Cartfile
         cartfile_path = ConfigurationHelper.cartfile_path
@@ -824,7 +827,7 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          system "carthage #{ConfigurationHelper.carthage_command}"
+          system_command "carthage #{ConfigurationHelper.carthage_command}"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
@@ -923,6 +926,8 @@ EOF
       end
 
       def update_podfile(options)
+        verify_cocoapods
+
         podfile_path = ConfigurationHelper.podfile_path
         return false if podfile_path.nil?
 
@@ -935,7 +940,7 @@ EOF
         command += ' --repo-update' if options.pod_repo_update
 
         Dir.chdir(File.dirname(podfile_path)) do
-          system command
+          system_command command
         end
 
         # 3. Add Podfile and Podfile.lock to commit (in case :commit param specified)
@@ -955,6 +960,8 @@ EOF
       end
 
       def update_cartfile(options, project)
+        verify_carthage
+
         cartfile_path = ConfigurationHelper.cartfile_path
         return false if cartfile_path.nil?
 
@@ -963,7 +970,7 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          system "carthage #{ConfigurationHelper.carthage_command}"
+          system_command "carthage #{ConfigurationHelper.carthage_command}"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
@@ -1001,6 +1008,52 @@ EOF
 
       def patch_source(xcodeproj)
         patch_app_delegate_swift(xcodeproj) || patch_app_delegate_objc(xcodeproj)
+      end
+
+      def verify_cocoapods
+        pod_cmd = `which pod`
+        return unless pod_cmd.empty?
+
+        install = ask "'pod' command not available in PATH. Install cocoapods (may require a sudo password) (Y/n)? "
+        if install.downcase =~ /^n/
+          say "Please install cocoapods or use --no-add-sdk to continue."
+          exit(-1)
+        end
+
+        gem_home = ENV["GEM_HOME"] # TODO: If this is not set, something is seriously wrong. What to do?
+        if File.writable? gem_home
+          system_command "gem install cocoapods"
+        else
+          system_command "sudo gem install cocoapods" # TODO: this will come out bundle exec sudo gem install...
+        end
+
+        # Ensure master podspec repo is set up (will update if it exists).
+        system_command "pod setup"
+      end
+
+      def verify_carthage
+        carthage_cmd = `which carthage`
+        return unless carthage_cmd.empty?
+
+        brew_cmd = `which brew`
+        if brew_cmd.empty?
+          say "'carthage' command not available in PATH and 'brew' command not available in PATH to install 'carthage'."
+          exit(-1)
+        end
+
+        install = ask "'carthage' command not available in PATH. Use Homebrew to install carthage (Y/n)? "
+        if install.downcase =~ /^n/
+          say "Please install carthage or use --no-add-sdk to continue."
+          exit(-1)
+        end
+
+        system_command "brew install carthage"
+      end
+
+      def system_command(command)
+        # TODO: Not working well with bundle exec atm.
+        say "<%= color(\"$ #{command}\", BOLD) %>"
+        system command
       end
     end
   end
