@@ -56,6 +56,20 @@ module BranchIOCLI
           version_from_bnc_config_m
       end
 
+      def requirement_from_podfile
+        return nil unless config_helper.podfile_path
+        podfile = File.read config_helper.podfile_path
+        matches = /\n?\s*pod\s+("Branch"|'Branch').*?\n/m.match podfile
+        matches ? matches[0].strip : nil
+      end
+
+      def requirement_from_cartfile
+        return nil unless config_helper.cartfile_path
+        cartfile = File.read config_helper.cartfile_path
+        matches = %r{\n?[^\n]+?BranchMetrics/(ios-branch-deep-linking|iOS-Deferred-Deep-Linking-SDK.*?).*?\n}m.match cartfile
+        matches ? matches[0].strip : nil
+      end
+
       def version_from_podfile_lock
         return nil unless config_helper.podfile_path && File.exist?("#{config_helper.podfile_path}.lock")
         podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config_helper.podfile_path}.lock"
@@ -108,6 +122,13 @@ module BranchIOCLI
 
       def report_header
         header = `xcodebuild -version`
+
+        podfile_requirement = requirement_from_podfile
+        header = "#{header}\nFrom Podfile:\n#{podfile_requirement}\n" if podfile_requirement
+
+        cartfile_requirement = requirement_from_cartfile
+        header = "#{header}\nFrom Cartfile:\n#{cartfile_requirement}\n" if cartfile_requirement
+
         version = branch_version
         if version
           header = "#{header}\nBranch SDK v. #{version}"
