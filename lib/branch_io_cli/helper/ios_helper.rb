@@ -435,7 +435,7 @@ module BranchIOCLI
 
         if app_delegate_swift =~ /didFinishLaunching[^\n]+?\{/m
           # method already present
-          init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
+          init_session_text = ConfigurationHelper.keys.count <= 1 && !has_multiple_info_plists? ? "" : <<EOF
         #if DEBUG
             Branch.setUseTestBranchKey(true)
         #endif
@@ -464,7 +464,7 @@ EOF
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 EOF
 
-          if ConfigurationHelper.keys.count > 1
+          if ConfigurationHelper.keys.count > 1 && !has_multiple_info_plists?
             method_text += <<EOF
         #if DEBUG
           Branch.setUseTestBranchKey(true)
@@ -497,7 +497,7 @@ EOF
 
         if app_delegate_objc =~ /didFinishLaunchingWithOptions/m
           # method exists. patch it.
-          init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
+          init_session_text = ConfigurationHelper.keys.count <= 1 && !has_multiple_info_plists? ? "" : <<EOF
 #ifdef DEBUG
     [Branch setUseTestBranchKey:YES];
 #endif // DEBUG
@@ -524,7 +524,7 @@ EOF
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 EOF
 
-          if ConfigurationHelper.keys.count > 1
+          if ConfigurationHelper.keys.count > 1 && !has_multiple_info_plists?
             method_text += <<EOF
 #ifdef DEBUG
     [Branch setUseTestBranchKey:YES];

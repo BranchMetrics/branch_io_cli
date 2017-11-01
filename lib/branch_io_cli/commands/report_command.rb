@@ -1,5 +1,4 @@
 require "cocoapods-core"
-require "cfpropertylist"
 
 module BranchIOCLI
   module Commands
@@ -103,6 +102,8 @@ module BranchIOCLI
         framework_path = framework.real_path
         info_plist_path = File.join framework_path.to_s, "Info.plist"
         return nil unless File.exist? info_plist_path
+
+        require "cfpropertylist"
 
         raw_info_plist = CFPropertyList::List.new file: info_plist_path
         info_plist = CFPropertyList.native_types raw_info_plist.value
