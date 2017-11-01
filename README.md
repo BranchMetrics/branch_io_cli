@@ -164,6 +164,12 @@ branch_io setup -D myapp.app.link,example.com,www.example.com
 branch_io setup --no-pod-repo-update
 ```
 
+##### Install using carthage bootstrap
+
+```bash
+branch_io --carthage-command "bootstrap --no-use-binaries"
+```
+
 ### Validate command
 
 ```bash

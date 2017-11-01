@@ -96,6 +96,7 @@ EOF
         c.example "Use both live and test keys", "branch_io setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link"
         c.example "Use custom or non-Branch domains", "branch_io setup -D myapp.app.link,example.com,www.example.com"
         c.example "Avoid pod repo update", "branch_io setup --no-pod-repo-update"
+        c.example "Install using carthage bootstrap", "branch_io --carthage-command \"bootstrap --no-use-binaries\""
 
         c.action do |args, options|
           options.default(
