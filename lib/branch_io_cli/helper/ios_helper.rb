@@ -16,24 +16,24 @@ module BranchIOCLI
       PRODUCT_BUNDLE_IDENTIFIER = "PRODUCT_BUNDLE_IDENTIFIER"
       RELEASE_CONFIGURATION = "Release"
 
-      def add_keys_to_info_plist(project, target_name, keys, configuration = RELEASE_CONFIGURATION)
-        update_info_plist_setting project, target_name, configuration do |info_plist|
+      def add_keys_to_info_plist(keys, configuration = RELEASE_CONFIGURATION)
+        update_info_plist_setting configuration do |info_plist|
           # add/overwrite Branch key(s)
           if keys.count > 1
             info_plist["branch_key"] = keys
           elsif keys[:live]
             info_plist["branch_key"] = keys[:live]
-          else # no need to validate here, which was done by the action
+          else
             info_plist["branch_key"] = keys[:test]
           end
         end
       end
 
-      def add_branch_universal_link_domains_to_info_plist(project, target_name, domains, configuration = RELEASE_CONFIGURATION)
+      def add_branch_universal_link_domains_to_info_plist(domains, configuration = RELEASE_CONFIGURATION)
         # Add all supplied domains unless all are app.link domains.
         return if domains.all? { |d| d =~ /app\.link$/ }
 
-        update_info_plist_setting project, target_name, configuration do |info_plist|
+        update_info_plist_setting configuration do |info_plist|
           info_plist["branch_universal_link_domains"] = domains
         end
       end
@@ -44,9 +44,7 @@ module BranchIOCLI
         # No URI scheme specified. Do nothing.
         return if uri_scheme.nil?
 
-        update_info_plist_setting ConfigurationHelper.xcodeproj,
-                                  ConfigurationHelper.target.name,
-                                  RELEASE_CONFIGURATION do |info_plist|
+        update_info_plist_setting RELEASE_CONFIGURATION do |info_plist|
           url_types = info_plist["CFBundleURLTypes"] || []
           uri_schemes = url_types.inject([]) { |schemes, t| schemes + t["CFBundleURLSchemes"] }
 
@@ -75,12 +73,9 @@ module BranchIOCLI
         end
       end
 
-      def update_info_plist_setting(project, target_name, configuration = RELEASE_CONFIGURATION, &b)
-        # raises
-        target = target_from_project project, target_name
-
+      def update_info_plist_setting(configuration = RELEASE_CONFIGURATION, &b)
         # find the Info.plist paths for this configuration
-        info_plist_path = expanded_build_setting target, "INFOPLIST_FILE", configuration
+        info_plist_path = expanded_build_setting ConfigurationHelper.target, "INFOPLIST_FILE", configuration
 
         raise "Info.plist not found for configuration #{configuration}" if info_plist_path.nil?
 
@@ -98,9 +93,9 @@ module BranchIOCLI
         add_change info_plist_path
       end
 
-      def add_universal_links_to_project(project, target_name, domains, remove_existing, configuration = RELEASE_CONFIGURATION)
-        # raises
-        target = target_from_project project, target_name
+      def add_universal_links_to_project(domains, remove_existing, configuration = RELEASE_CONFIGURATION)
+        project = ConfigurationHelper.xcodeproj
+        target = ConfigurationHelper.target
 
         relative_entitlements_path = expanded_build_setting target, CODE_SIGN_ENTITLEMENTS, configuration
         project_parent = File.dirname project.path
@@ -150,7 +145,7 @@ module BranchIOCLI
         [team, bundle]
       end
 
-      def update_team_and_bundle_ids_from_aasa_file(project, target_name, domain)
+      def update_team_and_bundle_ids_from_aasa_file(domain)
         # raises
         identifiers = app_ids_from_aasa_file domain
         raise "Multiple appIDs found in AASA file" if identifiers.count > 1
@@ -158,11 +153,11 @@ module BranchIOCLI
         identifier = identifiers[0]
         team, bundle = team_and_bundle_from_app_id identifier
 
-        update_team_and_bundle_ids project, target_name, team, bundle
-        add_change project.path.expand_path
+        update_team_and_bundle_ids team, bundle
+        add_change ConfigurationHelper.xcodeproj_path
       end
 
-      def validate_team_and_bundle_ids_from_aasa_files(project, target_name, domains = [], remove_existing = false, configuration = RELEASE_CONFIGURATION)
+      def validate_team_and_bundle_ids_from_aasa_files(domains = [], remove_existing = false, configuration = RELEASE_CONFIGURATION)
         @errors = []
         valid = true
 
@@ -172,7 +167,7 @@ module BranchIOCLI
           # Don't validate domains to be removed (#16)
           all_domains = domains
         else
-          all_domains = (domains + domains_from_project(project, target_name, configuration)).uniq
+          all_domains = (domains + domains_from_project(configuration)).uniq
         end
 
         if all_domains.empty?
@@ -184,7 +179,7 @@ module BranchIOCLI
         end
 
         all_domains.each do |domain|
-          domain_valid = validate_team_and_bundle_ids project, target_name, domain, configuration
+          domain_valid = validate_team_and_bundle_ids domain, configuration
           valid &&= domain_valid
           say "Valid Universal Link configuration for #{domain} ✅" if domain_valid
         end
@@ -272,9 +267,8 @@ module BranchIOCLI
         nil
       end
 
-      def validate_team_and_bundle_ids(project, target_name, domain, configuration)
-        # raises
-        target = target_from_project project, target_name
+      def validate_team_and_bundle_ids(domain, configuration)
+        target = ConfigurationHelper.target
 
         product_bundle_identifier = expanded_build_setting target, PRODUCT_BUNDLE_IDENTIFIER, configuration
         development_team = expanded_build_setting target, DEVELOPMENT_TEAM, configuration
@@ -292,9 +286,9 @@ module BranchIOCLI
         match_found
       end
 
-      def validate_project_domains(expected, project, target, configuration = RELEASE_CONFIGURATION)
+      def validate_project_domains(expected, configuration = RELEASE_CONFIGURATION)
         @errors = []
-        project_domains = domains_from_project project, target, configuration
+        project_domains = domains_from_project configuration
         valid = expected.count == project_domains.count
         if valid
           sorted = expected.sort
@@ -312,9 +306,8 @@ module BranchIOCLI
         valid
       end
 
-      def update_team_and_bundle_ids(project, target_name, team, bundle)
-        # raises
-        target = target_from_project project, target_name
+      def update_team_and_bundle_ids(team, bundle)
+        target = ConfigurationHelper.target
 
         target.build_configuration_list.set_setting PRODUCT_BUNDLE_IDENTIFIER, bundle
         target.build_configuration_list.set_setting DEVELOPMENT_TEAM, team
@@ -338,9 +331,9 @@ module BranchIOCLI
         target
       end
 
-      def domains_from_project(project, target_name, configuration = RELEASE_CONFIGURATION)
-        # Raises. Does not return nil.
-        target = target_from_project project, target_name
+      def domains_from_project(configuration = RELEASE_CONFIGURATION)
+        project = ConfigurationHelper.xcodeproj
+        target = ConfigurationHelper.target
 
         relative_entitlements_path = expanded_build_setting target, CODE_SIGN_ENTITLEMENTS, configuration
         return [] if relative_entitlements_path.nil?
@@ -371,12 +364,6 @@ module BranchIOCLI
           search_position += expanded_macro.length
         end
         setting_value
-      end
-
-      def add_system_frameworks(project, target_name, frameworks)
-        target = target_from_project project, target_name
-
-        target.add_system_framework frameworks
       end
 
       def patch_app_delegate_swift(project)
@@ -1027,7 +1014,7 @@ EOF
         end
 
         gem_home = ENV["GEM_HOME"]
-        if gem_home && File.writable? gem_home
+        if gem_home && File.writable?(gem_home)
           system_command "gem install cocoapods"
         else
           system_command "sudo gem install cocoapods"

@@ -215,54 +215,42 @@ describe BranchIOCLI::Helper::IOSHelper do
 
   describe '#validate_team_and_bundle_ids_from_aasa_files' do
     it 'only succeeds if all domains are valid' do
-      project = double "project"
-
       # No domains in project. Just validating what's passed in.
       expect(instance).to receive(:domains_from_project) { [] }
       # example.com is valid
       expect(instance).to receive(:validate_team_and_bundle_ids)
-        .with(project, nil, "example.com", "Release") { true }
+        .with("example.com", "Release") { true }
       # www.example.com is not valid
       expect(instance).to receive(:validate_team_and_bundle_ids)
-        .with(project, nil, "www.example.com", "Release") { false }
+        .with("www.example.com", "Release") { false }
 
       valid = instance.validate_team_and_bundle_ids_from_aasa_files(
-        project,
-        nil,
         %w{example.com www.example.com}
       )
       expect(valid).to be false
     end
 
     it 'succeeds if all domains are valid' do
-      project = double "project"
-
       # No domains in project. Just validating what's passed in.
       expect(instance).to receive(:domains_from_project) { [] }
       # example.com is valid
       expect(instance).to receive(:validate_team_and_bundle_ids)
-        .with(project, nil, "example.com", "Release") { true }
+        .with("example.com", "Release") { true }
       # www.example.com is not valid
       expect(instance).to receive(:validate_team_and_bundle_ids)
-        .with(project, nil, "www.example.com", "Release") { true }
+        .with("www.example.com", "Release") { true }
 
       valid = instance.validate_team_and_bundle_ids_from_aasa_files(
-        project,
-        nil,
         %w{example.com www.example.com}
       )
       expect(valid).to be true
     end
 
     it 'fails if no domains specified and no domains in project' do
-      project = double "project"
-
       # No domains in project. Just validating what's passed in.
       expect(instance).to receive(:domains_from_project) { [] }
 
       valid = instance.validate_team_and_bundle_ids_from_aasa_files(
-        project,
-        nil,
         []
       )
       expect(valid).to be false
