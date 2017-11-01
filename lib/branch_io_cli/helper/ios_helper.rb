@@ -435,7 +435,7 @@ module BranchIOCLI
 
         if app_delegate_swift =~ /didFinishLaunching[^\n]+?\{/m
           # method already present
-          init_session_text = ConfigurationHelper.keys.count <= 1 && !has_multiple_info_plists? ? "" : <<EOF
+          init_session_text = ConfigurationHelper.keys.count <= 1 || has_multiple_info_plists? ? "" : <<EOF
         #if DEBUG
             Branch.setUseTestBranchKey(true)
         #endif
@@ -497,7 +497,7 @@ EOF
 
         if app_delegate_objc =~ /didFinishLaunchingWithOptions/m
           # method exists. patch it.
-          init_session_text = ConfigurationHelper.keys.count <= 1 && !has_multiple_info_plists? ? "" : <<EOF
+          init_session_text = ConfigurationHelper.keys.count <= 1 || has_multiple_info_plists? ? "" : <<EOF
 #ifdef DEBUG
     [Branch setUseTestBranchKey:YES];
 #endif // DEBUG
