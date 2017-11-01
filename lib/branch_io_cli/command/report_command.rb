@@ -2,7 +2,7 @@ require "cocoapods-core"
 require "branch_io_cli/helper/methods"
 
 module BranchIOCLI
-  module Commands
+  module Command
     class ReportCommand < Command
       def initialize(options)
         super

@@ -1,7 +1,7 @@
 require "branch_io_cli/helper/methods"
 
 module BranchIOCLI
-  module Commands
+  module Command
     class SetupCommand < Command
       def initialize(options)
         super

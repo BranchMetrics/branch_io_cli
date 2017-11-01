@@ -1,5 +1,5 @@
 module BranchIOCLI
-  module Commands
+  module Command
     class ValidateCommand < Command
       def initialize(options)
         super

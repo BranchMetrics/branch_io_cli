@@ -1,5 +1,5 @@
 module BranchIOCLI
-  module Commands
+  module Command
     class Command
       attr_reader :options
 

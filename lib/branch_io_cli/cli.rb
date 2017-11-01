@@ -109,7 +109,7 @@ EOF
             commit: false,
             carthage_command: "update --platform ios"
           )
-          Commands::SetupCommand.new(options).run!
+          Command::SetupCommand.new(options).run!
         end
       end
 
@@ -142,7 +142,7 @@ EOF
         c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"
 
         c.action do |args, options|
-          valid = Commands::ValidateCommand.new(options).run!
+          valid = Command::ValidateCommand.new(options).run!
           exit_code = valid ? 0 : 1
           exit exit_code
         end
@@ -180,7 +180,7 @@ EOF
             out: "./report.txt",
             pod_repo_update: true
           )
-          Commands::ReportCommand.new(options).run!
+          Command::ReportCommand.new(options).run!
         end
       end
 
