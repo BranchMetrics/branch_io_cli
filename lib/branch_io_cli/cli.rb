@@ -58,10 +58,10 @@ for details. To use the <%= color('setup', BOLD) %> command, you need:
 - Domain name(s) used for Branch links
 - Location of your Xcode project (may be inferred in simple projects)
 
-To use the <%= color('--commit', BOLD) %> option, you must have the <%= color('git', BOLD) %> command available in your path.
-
-To add the SDK with CocoaPods or Carthage, you must have the <%= color('pod', BOLD) %> or <%= color('carthage', BOLD) %>
-command, respectively, available in your path.
+If using the <%= color('--commit', BOLD) %> option, <%= color('git', BOLD) %> is required. If not using <%= color('--no-add-sdk', BOLD) %>,
+the <%= color('pod', BOLD) %> or <%= color('carthage', BOLD) %> command may be required. If not found, the CLI will
+offer to install and set up these command-line tools for you. Alternately, you can arrange
+that the relevant commands are available in your <%= color('PATH', BOLD) %>.
 
 All parameters are optional. A live key or test key, or both is required, as well
 as at least one domain. Specify <%= color('--live-key', BOLD) %>, <%= color('--test-key', BOLD) %> or both and <%= color('--app-link-subdomain', BOLD) %>,

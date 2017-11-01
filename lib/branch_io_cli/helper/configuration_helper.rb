@@ -77,6 +77,8 @@ module BranchIOCLI
 
           validate_sdk_addition options
 
+          BranchHelper.verify_git if @commit
+
           print_setup_configuration
         end
 
