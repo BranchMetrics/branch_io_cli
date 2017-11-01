@@ -398,7 +398,7 @@ module BranchIOCLI
         )
 
         patch_did_finish_launching_method_swift app_delegate_swift_path
-        patch_continue_user_activity_method_swit app_delegate_swift_path
+        patch_continue_user_activity_method_swift app_delegate_swift_path
         patch_open_url_method_swift app_delegate_swift_path
 
         add_change app_delegate_swift_path
@@ -461,6 +461,7 @@ EOF
           # method not present. add entire method
 
           method_text = <<EOF
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 EOF
 
@@ -481,12 +482,11 @@ EOF
         }
         return true
     }
-
         EOF
 
         apply_patch(
           files: app_delegate_swift_path,
-          regexp: /AppDelegate\s*\n?\{.*?\n/m,
+          regexp: /var\s+window\s?:\s?UIWindow\?.*?\n/m,
           text: method_text,
           mode: :append
         )
