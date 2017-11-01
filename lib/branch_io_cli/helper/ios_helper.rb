@@ -1050,6 +1050,27 @@ EOF
         system_command "brew install carthage"
       end
 
+      def verify_git
+        return unless ConfigurationHelper.commit
+
+        git_cmd = `which git`
+        return unless git_cmd.empty?
+
+        xcode_select_path = `which xcode-select`
+        if xcode_select_path.empty?
+          say "'git' command not available in PATH and 'xcode-select' command not available in PATH to install 'git'."
+          exit(-1)
+        end
+
+        install = ask "'git' command not available in PATH. Install Xcode command-line tools (requires password) (Y/n)? "
+        if install.downcase =~ /^n/
+          say "Please install Xcode command tools or leave out the --commit option to continue."
+          exit(-1)
+        end
+
+        system_command "xcode-select --install"
+      end
+
       def system_command(command)
         # TODO: Not working well with bundle exec atm.
         say "<%= color(\"$ #{command}\", BOLD) %>"
