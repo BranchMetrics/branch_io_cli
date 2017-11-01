@@ -12,7 +12,7 @@ _branch_io_complete()
     global_opts="-h --help -t --trace -v --version"
 
     setup_opts="$global_opts -L --live-key -T --test-key -D --domains --app-link-subdomain -U --uri-scheme"
-    setup_opts="$setup_opts --xcodeproj --target --frameworks --podfile --cartfile"
+    setup_opts="$setup_opts --xcodeproj --target --frameworks --podfile --cartfile --carthage-command"
     # Don't autocomplete the default values here, e.g. --no-force, --pod-repo-update.
     setup_opts="$setup_opts --no-add-sdk --no-validate --force --no-pod-repo-update --commit --no-patch-source"
 
