@@ -738,17 +738,28 @@ EOF
         podfile = File.read podfile_path
 
         # Podfile already contains the Branch pod
+        # TODO: Allow for adding to multiple targets in the Podfile
         return false if podfile =~ /pod\s+('Branch'|"Branch")/
 
         say "Adding pod \"Branch\" to #{podfile_path}"
 
-        # TODO: Improve this patch. Should work in the majority of cases for now.
-        apply_patch(
-          files: podfile_path,
-          regexp: /^(\s*)pod\s*/,
-          text: "\n\\1pod \"Branch\"\n",
-          mode: :prepend
-        )
+        if podfile =~ /target\s+(["'])#{ConfigurationHelper.target.name}\1\s+do.*?\n/m
+          # if there is a target block for this target:
+          apply_patch(
+            files: podfile_path,
+            regexp: /\n(\s*)target\s+(["'])#{ConfigurationHelper.target.name}\2\s+do.*?\n/m,
+            text: "\\1  pod \"Branch\"\n",
+            mode: :append
+          )
+        else
+          # add to the abstract_target for this target
+          apply_patch(
+            files: podfile_path,
+            regexp: /^(\s*)target\s+["']#{ConfigurationHelper.target.name}/,
+            text: "\\1pod \"Branch\"\n",
+            mode: :prepend
+          )
+        end
 
         true
       end
