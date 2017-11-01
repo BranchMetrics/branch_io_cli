@@ -397,62 +397,8 @@ module BranchIOCLI
           mode: :prepend
         )
 
-        init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
-        #if DEBUG
-            Branch.setUseTestBranchKey(true)
-        #endif
-
-EOF
-
-        init_session_text += <<-EOF
-        Branch.getInstance().initSession(launchOptions: launchOptions) {
-            universalObject, linkProperties, error in
-
-            // TODO: Route Branch links
-        }
-        EOF
-
-        apply_patch(
-          files: app_delegate_swift_path,
-          regexp: /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m,
-          text: init_session_text,
-          mode: :append
-        )
-
-        if app_delegate =~ /application:.*continue userActivity:.*restorationHandler:/
-          # Add something to the top of the method
-          continue_user_activity_text = <<-EOF
-        // TODO: Adjust your method as you see fit.
-        if Branch.getInstance.continue(userActivity) {
-            return true
-        }
-
-          EOF
-
-          apply_patch(
-            files: app_delegate_swift_path,
-            regexp: /application:.*continue userActivity:.*restorationHandler:.*?\{.*?\n/m,
-            text: continue_user_activity_text,
-            mode: :append
-          )
-        else
-          # Add the application:continueUserActivity:restorationHandler method if it does not exist
-          continue_user_activity_text = <<-EOF
-
-
-    func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]?) -> Void) -> Bool {
-        return Branch.getInstance().continue(userActivity)
-    }
-          EOF
-
-          apply_patch(
-            files: app_delegate_swift_path,
-            regexp: /\n\s*\}[^{}]*\Z/m,
-            text: continue_user_activity_text,
-            mode: :prepend
-          )
-        end
-
+        patch_did_finish_launching_method_swift app_delegate_swift_path
+        patch_continue_user_activity_method_swift app_delegate_swift_path
         patch_open_url_method_swift app_delegate_swift_path
 
         add_change app_delegate_swift_path
@@ -477,65 +423,133 @@ EOF
           mode: :prepend
         )
 
-        init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
+        patch_did_finish_launching_method_objc app_delegate_objc_path
+        patch_continue_user_activity_method_objc app_delegate_objc_path
+        patch_open_url_method_objc app_delegate_objc_path
+
+        add_change app_delegate_objc_path
+        true
+      end
+
+      def patch_did_finish_launching_method_swift(app_delegate_swift_path)
+        app_delegate_swift = File.read app_delegate_swift_path
+
+        if app_delegate_swift =~ /didFinishLaunching[^\n]+?\{/m
+          # method already present
+          init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
+        #if DEBUG
+            Branch.setUseTestBranchKey(true)
+        #endif
+
+EOF
+
+          init_session_text += <<-EOF
+        Branch.getInstance().initSession(launchOptions: launchOptions) {
+            universalObject, linkProperties, error in
+
+            // TODO: Route Branch links
+        }
+        EOF
+
+          apply_patch(
+            files: app_delegate_swift_path,
+            regexp: /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m,
+            text: init_session_text,
+            mode: :append
+          )
+        else
+          # method not present. add entire method
+
+          method_text = <<EOF
+
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+EOF
+
+          if ConfigurationHelper.keys.count > 1
+            method_text += <<EOF
+        #if DEBUG
+          Branch.setUseTestBranchKey(true)
+        #endif
+
+EOF
+          end
+
+          method_text += <<-EOF
+        Branch.getInstance().initSession(launchOptions: launchOptions) {
+            universalObject, linkProperties, error in
+
+            // TODO: Route Branch links
+        }
+        return true
+    }
+        EOF
+
+          apply_patch(
+            files: app_delegate_swift_path,
+            regexp: /var\s+window\s?:\s?UIWindow\?.*?\n/m,
+            text: method_text,
+            mode: :append
+          )
+        end
+      end
+
+      def patch_did_finish_launching_method_objc(app_delegate_objc_path)
+        app_delegate_objc = File.read app_delegate_objc_path
+
+        if app_delegate_objc =~ /didFinishLaunchingWithOptions/m
+          # method exists. patch it.
+          init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
 #ifdef DEBUG
     [Branch setUseTestBranchKey:YES];
 #endif // DEBUG
 
 EOF
 
-        init_session_text += <<-EOF
+          init_session_text += <<-EOF
     [[Branch getInstance] initSessionWithLaunchOptions:launchOptions
         andRegisterDeepLinkHandlerUsingBranchUniversalObject:^(BranchUniversalObject *universalObject, BranchLinkProperties *linkProperties, NSError *error){
         // TODO: Route Branch links
     }];
-        EOF
-
-        apply_patch(
-          files: app_delegate_objc_path,
-          regexp: /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m,
-          text: init_session_text,
-          mode: :append
-        )
-
-        if app_delegate =~ /application:.*continueUserActivity:.*restorationHandler:/
-          continue_user_activity_text = <<-EOF
-    // TODO: Adjust your method as you see fit.
-    if ([[Branch getInstance] continueUserActivity:userActivity]) {
-        return YES;
-    }
-
-EOF
+          EOF
 
           apply_patch(
             files: app_delegate_objc_path,
-            regexp: /application:.*continueUserActivity:.*restorationHandler:.*?\{.*?\n/m,
-            text: continue_user_activity_text,
+            regexp: /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m,
+            text: init_session_text,
             mode: :append
           )
         else
-          # Add the application:continueUserActivity:restorationHandler method if it does not exist
-          continue_user_activity_text = <<-EOF
+          # method does not exist. add it.
+          method_text = <<EOF
 
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+EOF
 
-- (BOOL)application:(UIApplication *)app continueUserActivity:(nonnull NSUserActivity *)userActivity restorationHandler:(nonnull void (^)(NSArray * _Nullable))restorationHandler
-{
-    return [[Branch getInstance] continueUserActivity:userActivity];
+          if ConfigurationHelper.keys.count > 1
+            method_text += <<EOF
+#ifdef DEBUG
+    [Branch setUseTestBranchKey:YES];
+#endif // DEBUG
+
+EOF
+          end
+
+          method_text += <<-EOF
+    [[Branch getInstance] initSessionWithLaunchOptions:launchOptions
+        andRegisterDeepLinkHandlerUsingBranchUniversalObject:^(BranchUniversalObject *universalObject, BranchLinkProperties *linkProperties, NSError *error){
+        // TODO: Route Branch links
+    }];
+    return YES;
 }
           EOF
 
           apply_patch(
             files: app_delegate_objc_path,
-            regexp: /\n\s*@end[^@]*\Z/m,
-            text: continue_user_activity_text,
-            mode: :prepend
+            regexp: /^@implementation.*?\n/m,
+            text: method_text,
+            mode: :append
           )
         end
-
-        patch_open_url_method_objc app_delegate_objc_path
-
-        add_change app_delegate_objc_path
-        true
       end
 
       def patch_open_url_method_swift(app_delegate_swift_path)
@@ -587,6 +601,43 @@ EOF
             files: app_delegate_swift_path,
             regexp: /\n\s*\}[^{}]*\Z/m,
             text: open_url_text,
+            mode: :prepend
+          )
+        end
+      end
+
+      def patch_continue_user_activity_method_swift(app_delegate_swift_path)
+        app_delegate = File.read app_delegate_swift_path
+        if app_delegate =~ /application:.*continue userActivity:.*restorationHandler:/
+          # Add something to the top of the method
+          continue_user_activity_text = <<-EOF
+        // TODO: Adjust your method as you see fit.
+        if Branch.getInstance.continue(userActivity) {
+            return true
+        }
+
+          EOF
+
+          apply_patch(
+            files: app_delegate_swift_path,
+            regexp: /application:.*continue userActivity:.*restorationHandler:.*?\{.*?\n/m,
+            text: continue_user_activity_text,
+            mode: :append
+          )
+        else
+          # Add the application:continueUserActivity:restorationHandler method if it does not exist
+          continue_user_activity_text = <<-EOF
+
+
+    func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]?) -> Void) -> Bool {
+        return Branch.getInstance().continue(userActivity)
+    }
+          EOF
+
+          apply_patch(
+            files: app_delegate_swift_path,
+            regexp: /\n\s*\}[^{}]*\Z/m,
+            text: continue_user_activity_text,
             mode: :prepend
           )
         end
@@ -646,21 +697,69 @@ EOF
         end
       end
 
+      def patch_continue_user_activity_method_objc(app_delegate_objc_path)
+        app_delegate = File.read app_delegate_objc_path
+        if app_delegate =~ /application:.*continueUserActivity:.*restorationHandler:/
+          continue_user_activity_text = <<-EOF
+    // TODO: Adjust your method as you see fit.
+    if ([[Branch getInstance] continueUserActivity:userActivity]) {
+        return YES;
+    }
+
+EOF
+
+          apply_patch(
+            files: app_delegate_objc_path,
+            regexp: /application:.*continueUserActivity:.*restorationHandler:.*?\{.*?\n/m,
+            text: continue_user_activity_text,
+            mode: :append
+          )
+        else
+          # Add the application:continueUserActivity:restorationHandler method if it does not exist
+          continue_user_activity_text = <<-EOF
+
+
+- (BOOL)application:(UIApplication *)app continueUserActivity:(nonnull NSUserActivity *)userActivity restorationHandler:(nonnull void (^)(NSArray * _Nullable))restorationHandler
+{
+    return [[Branch getInstance] continueUserActivity:userActivity];
+}
+          EOF
+
+          apply_patch(
+            files: app_delegate_objc_path,
+            regexp: /\n\s*@end[^@]*\Z/m,
+            text: continue_user_activity_text,
+            mode: :prepend
+          )
+        end
+      end
+
       def patch_podfile(podfile_path)
         podfile = File.read podfile_path
 
         # Podfile already contains the Branch pod
+        # TODO: Allow for adding to multiple targets in the Podfile
         return false if podfile =~ /pod\s+('Branch'|"Branch")/
 
         say "Adding pod \"Branch\" to #{podfile_path}"
 
-        # TODO: Improve this patch. Should work in the majority of cases for now.
-        apply_patch(
-          files: podfile_path,
-          regexp: /^(\s*)pod\s*/,
-          text: "\n\\1pod \"Branch\"\n",
-          mode: :prepend
-        )
+        if podfile =~ /target\s+(["'])#{ConfigurationHelper.target.name}\1\s+do.*?\n/m
+          # if there is a target block for this target:
+          apply_patch(
+            files: podfile_path,
+            regexp: /\n(\s*)target\s+(["'])#{ConfigurationHelper.target.name}\2\s+do.*?\n/m,
+            text: "\\1  pod \"Branch\"\n",
+            mode: :append
+          )
+        else
+          # add to the abstract_target for this target
+          apply_patch(
+            files: podfile_path,
+            regexp: /^(\s*)target\s+["']#{ConfigurationHelper.target.name}/,
+            text: "\\1pod \"Branch\"\n",
+            mode: :prepend
+          )
+        end
 
         true
       end
