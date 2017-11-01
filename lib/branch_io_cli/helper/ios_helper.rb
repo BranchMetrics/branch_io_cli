@@ -725,7 +725,7 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          system "carthage update --platform ios"
+          system "carthage #{ConfigurationHelper.carthage_command}"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
@@ -864,7 +864,7 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          system "carthage update --platform ios"
+          system "carthage #{ConfigurationHelper.carthage_command}"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)

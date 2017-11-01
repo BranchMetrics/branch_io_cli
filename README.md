@@ -125,6 +125,7 @@ command, respectively, available in your path.
 |--target MyAppTarget|Name of a target to modify in the Xcode project|
 |--podfile /path/to/Podfile|Path to the Podfile for the project|
 |--cartfile /path/to/Cartfile|Path to the Cartfile for the project|
+|--carthage-command <command>|Command to use when installing from Carthage (default: update --platform ios)|
 |--frameworks AdSupport,CoreSpotlight,SafariServices|Comma-separated list of system frameworks to add to the project|
 |--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|
 |--[no-]validate|Validate Universal Link configuration (default: yes)|
@@ -161,6 +162,12 @@ branch_io setup -D myapp.app.link,example.com,www.example.com
 
 ```bash
 branch_io setup --no-pod-repo-update
+```
+
+##### Install using carthage bootstrap
+
+```bash
+branch_io --carthage-command "bootstrap --no-use-binaries"
 ```
 
 ### Validate command

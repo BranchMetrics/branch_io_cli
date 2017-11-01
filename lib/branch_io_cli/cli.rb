@@ -82,6 +82,7 @@ EOF
         c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"
         c.option "--podfile /path/to/Podfile", String, "Path to the Podfile for the project"
         c.option "--cartfile /path/to/Cartfile", String, "Path to the Cartfile for the project"
+        c.option "--carthage-command <command>", String, "Command to run when installing from Carthage (default: update --platform ios)"
         c.option "--frameworks AdSupport,CoreSpotlight,SafariServices", Array, "Comma-separated list of system frameworks to add to the project"
 
         c.option "--[no-]pod-repo-update", "Update the local podspec repo before installing (default: yes)"
@@ -95,6 +96,7 @@ EOF
         c.example "Use both live and test keys", "branch_io setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link"
         c.example "Use custom or non-Branch domains", "branch_io setup -D myapp.app.link,example.com,www.example.com"
         c.example "Avoid pod repo update", "branch_io setup --no-pod-repo-update"
+        c.example "Install using carthage bootstrap", "branch_io --carthage-command \"bootstrap --no-use-binaries\""
 
         c.action do |args, options|
           options.default(
@@ -104,7 +106,8 @@ EOF
             force: false,
             add_sdk: true,
             patch_source: true,
-            commit: false
+            commit: false,
+            carthage_command: "update --platform ios"
           )
           Commands::SetupCommand.new(options).run!
         end

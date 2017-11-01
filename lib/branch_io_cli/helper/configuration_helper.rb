@@ -26,6 +26,7 @@ module BranchIOCLI
         attr_reader :all_domains
         attr_reader :podfile_path
         attr_reader :cartfile_path
+        attr_reader :carthage_command
         attr_reader :target
         attr_reader :uri_scheme
         attr_reader :pod_repo_update
@@ -72,6 +73,7 @@ module BranchIOCLI
 
           # If --podfile is present or a Podfile was found, don't look for a Cartfile.
           validate_buildfile_path options.cartfile, "Cartfile" if @sdk_integration_mode.nil? && options.add_sdk
+          @carthage_command = options.carthage_command if @sdk_integration_mode == :carthage
 
           validate_sdk_addition options
 
@@ -133,6 +135,7 @@ EOF
 <%= color('URI scheme:', BOLD) %> #{@uri_scheme || '(none)'}
 <%= color('Podfile:', BOLD) %> #{@podfile_path || '(none)'}
 <%= color('Cartfile:', BOLD) %> #{@cartfile_path || '(none)'}
+<%= color('Carthage command:', BOLD) %> #{@carthage_command || '(none)'}
 <%= color('Pod repo update:', BOLD) %> #{@pod_repo_update.inspect}
 <%= color('Validate:', BOLD) %> #{@validate.inspect}
 <%= color('Force:', BOLD) %> #{@force.inspect}
@@ -498,6 +501,7 @@ EOF
             @podfile_path = File.expand_path "../Podfile", @xcodeproj_path
           when :carthage
             @cartfile_path = File.expand_path "../Cartfile", @xcodeproj_path
+            @carthage_command = options.carthage_command
           end
         end
       end
