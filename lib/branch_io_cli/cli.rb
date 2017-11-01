@@ -82,6 +82,7 @@ EOF
         c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"
         c.option "--podfile /path/to/Podfile", String, "Path to the Podfile for the project"
         c.option "--cartfile /path/to/Cartfile", String, "Path to the Cartfile for the project"
+        c.option "--carthage-command <command>", String, "Command to run when installing from Carthage (default: update --platform ios)"
         c.option "--frameworks AdSupport,CoreSpotlight,SafariServices", Array, "Comma-separated list of system frameworks to add to the project"
 
         c.option "--[no-]pod-repo-update", "Update the local podspec repo before installing (default: yes)"
@@ -104,7 +105,8 @@ EOF
             force: false,
             add_sdk: true,
             patch_source: true,
-            commit: false
+            commit: false,
+            carthage_command: "update --platform ios"
           )
           Commands::SetupCommand.new(options).run!
         end
