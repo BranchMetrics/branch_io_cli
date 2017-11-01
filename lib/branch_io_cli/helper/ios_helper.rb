@@ -898,7 +898,7 @@ EOF
 
         # Now the current framework is in framework_path
 
-        say "Adding to #{@xcodeproj_path}"
+        say "Adding to #{ConfigurationHelper.xcodeproj_path}"
 
         # Add as a dependency in the Frameworks group
         framework = frameworks_group.new_file "Branch.framework" # relative to frameworks_group.real_path
