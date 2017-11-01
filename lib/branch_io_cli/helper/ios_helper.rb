@@ -496,7 +496,7 @@ EOF
       def patch_did_finish_launching_method_objc(app_delegate_objc_path)
         app_delegate_objc = File.read app_delegate_objc_path
 
-        if app_delegate_objc =~ //m
+        if app_delegate_objc =~ /didFinishLaunchingWithOptions/m
           # method exists. patch it.
           init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
 #ifdef DEBUG
