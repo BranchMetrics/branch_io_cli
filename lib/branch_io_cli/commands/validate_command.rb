@@ -7,17 +7,10 @@ module BranchIOCLI
       end
 
       def run!
-        # raises
-        xcodeproj = config_helper.xcodeproj
-
         valid = true
 
         unless options.domains.nil? || options.domains.empty?
-          domains_valid = helper.validate_project_domains(
-            options.domains,
-            xcodeproj,
-            options.target
-          )
+          domains_valid = helper.validate_project_domains(options.domains)
 
           if domains_valid
             say "Project domains match :domains parameter: ✅"
@@ -29,7 +22,7 @@ module BranchIOCLI
           valid &&= domains_valid
         end
 
-        configuration_valid = helper.validate_team_and_bundle_ids_from_aasa_files xcodeproj, options.target
+        configuration_valid = helper.validate_team_and_bundle_ids_from_aasa_files
         unless configuration_valid
           say "Universal Link configuration failed validation."
           helper.errors.each { |error| say " #{error}" }

@@ -1,5 +1,4 @@
 require "cocoapods-core"
-require "cfpropertylist"
 
 module BranchIOCLI
   module Commands
@@ -22,6 +21,10 @@ module BranchIOCLI
           # TODO: Write out command-line options or configuration from helper
           report.write "#{report_header}\n"
 
+          show_build_settings_cmd = "#{base_xcodebuild_cmd} -showBuildSettings"
+          report.write "$ #{show_build_settings_cmd}\n\n"
+          report.write `#{show_build_settings_cmd}`
+
           if config_helper.clean
             say "Cleaning"
             clean_cmd = "#{base_xcodebuild_cmd} clean"
@@ -40,7 +43,7 @@ module BranchIOCLI
       end
 
       def base_xcodebuild_cmd
-        cmd = "xcodebuild"
+        cmd = "xcodebuild -sdk iphonesimulator"
         cmd = "#{cmd} -scheme #{config_helper.scheme}" if config_helper.scheme
         cmd = "#{cmd} -workspace #{config_helper.workspace_path}" if config_helper.workspace_path
         cmd = "#{cmd} -project #{config_helper.xcodeproj_path}" if config_helper.xcodeproj_path && !config_helper.workspace_path
@@ -103,6 +106,8 @@ module BranchIOCLI
         framework_path = framework.real_path
         info_plist_path = File.join framework_path.to_s, "Info.plist"
         return nil unless File.exist? info_plist_path
+
+        require "cfpropertylist"
 
         raw_info_plist = CFPropertyList::List.new file: info_plist_path
         info_plist = CFPropertyList.native_types raw_info_plist.value
