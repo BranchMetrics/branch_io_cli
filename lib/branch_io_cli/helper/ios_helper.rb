@@ -466,7 +466,7 @@ EOF
 EOF
 
           if ConfigurationHelper.keys.count > 1
-            method_text +=<<EOF
+            method_text += <<EOF
         #if DEBUG
           Branch.setUseTestBranchKey(true)
         #endif
@@ -484,37 +484,72 @@ EOF
     }
         EOF
 
-        apply_patch(
-          files: app_delegate_swift_path,
-          regexp: /var\s+window\s?:\s?UIWindow\?.*?\n/m,
-          text: method_text,
-          mode: :append
-        )
+          apply_patch(
+            files: app_delegate_swift_path,
+            regexp: /var\s+window\s?:\s?UIWindow\?.*?\n/m,
+            text: method_text,
+            mode: :append
+          )
         end
       end
 
       def patch_did_finish_launching_method_objc(app_delegate_objc_path)
         app_delegate_objc = File.read app_delegate_objc_path
-        init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
+
+        if app_delegate_objc =~ //m
+          # method exists. patch it.
+          init_session_text = ConfigurationHelper.keys.count <= 1 ? "" : <<EOF
 #ifdef DEBUG
     [Branch setUseTestBranchKey:YES];
 #endif // DEBUG
 
 EOF
 
-        init_session_text += <<-EOF
+          init_session_text += <<-EOF
     [[Branch getInstance] initSessionWithLaunchOptions:launchOptions
         andRegisterDeepLinkHandlerUsingBranchUniversalObject:^(BranchUniversalObject *universalObject, BranchLinkProperties *linkProperties, NSError *error){
         // TODO: Route Branch links
     }];
-        EOF
+          EOF
 
-        apply_patch(
-          files: app_delegate_objc_path,
-          regexp: /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m,
-          text: init_session_text,
-          mode: :append
-        )
+          apply_patch(
+            files: app_delegate_objc_path,
+            regexp: /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m,
+            text: init_session_text,
+            mode: :append
+          )
+        else
+          # method does not exist. add it.
+          method_text = <<EOF
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+EOF
+
+          if ConfigurationHelper.keys.count > 1
+            method_text += <<EOF
+#ifdef DEBUG
+    [Branch setUseTestBranchKey:YES];
+#endif // DEBUG
+
+EOF
+          end
+
+          method_text += <<-EOF
+    [[Branch getInstance] initSessionWithLaunchOptions:launchOptions
+        andRegisterDeepLinkHandlerUsingBranchUniversalObject:^(BranchUniversalObject *universalObject, BranchLinkProperties *linkProperties, NSError *error){
+        // TODO: Route Branch links
+    }];
+    return YES;
+}
+          EOF
+
+          apply_patch(
+            files: app_delegate_objc_path,
+            regexp: /^@implementation.*?\n/m,
+            text: method_text,
+            mode: :append
+          )
+        end
       end
 
       def patch_open_url_method_swift(app_delegate_swift_path)
