@@ -11,8 +11,6 @@ require "branch_io_cli/helper/methods"
 module BranchIOCLI
   module Helper
     module IOSHelper
-      include Methods
-
       APPLINKS = "applinks"
       ASSOCIATED_DOMAINS = "com.apple.developer.associated-domains"
       CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS"

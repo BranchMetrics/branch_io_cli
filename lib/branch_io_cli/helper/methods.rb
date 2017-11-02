@@ -21,3 +21,5 @@ module BranchIOCLI
     end
   end
 end
+
+include BranchIOCLI::Helper::Methods

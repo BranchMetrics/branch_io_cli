@@ -3,8 +3,6 @@ require "branch_io_cli/helper/methods"
 module BranchIOCLI
   module Commands
     class SetupCommand < Command
-      include Helper::Methods
-
       def initialize(options)
         super
         config_helper.validate_setup_options options
