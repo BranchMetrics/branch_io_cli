@@ -1,3 +1,5 @@
+require "branch_io_cli/helper/methods"
+
 module BranchIOCLI
   module Commands
     class SetupCommand < Command
@@ -46,7 +48,7 @@ module BranchIOCLI
         helper.ensure_uri_scheme_in_info_plist if is_app_target # does nothing if already present
 
         new_path = helper.add_universal_links_to_project @domains, false if is_app_target
-        `git add #{new_path}` if options.commit && new_path
+        sh "git add #{new_path}" if options.commit && new_path
 
         config_helper.target.add_system_frameworks options.frameworks unless options.frameworks.nil? || options.frameworks.empty?
 
@@ -58,7 +60,7 @@ module BranchIOCLI
 
         changes = helper.changes.to_a.map { |c| Pathname.new(File.expand_path(c)).relative_path_from(Pathname.pwd).to_s }
 
-        `git commit #{changes.join(" ")} -m '[branch_io_cli] Branch SDK integration'`
+        sh "git commit -qm '[branch_io_cli] Branch SDK integration' #{changes.join(' ')}"
       end
       # rubocop: enable Metrics/PerceivedComplexity
     end

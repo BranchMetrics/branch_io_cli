@@ -11,8 +11,6 @@ require "branch_io_cli/helper/methods"
 module BranchIOCLI
   module Helper
     module IOSHelper
-      include Methods
-
       APPLINKS = "applinks"
       ASSOCIATED_DOMAINS = "com.apple.developer.associated-domains"
       CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS"
@@ -793,7 +791,7 @@ EOF
         install_command = "pod install"
         install_command += " --repo-update" if options.pod_repo_update
         Dir.chdir(File.dirname(podfile_path)) do
-          report_command "pod init"
+          sh "pod init"
           apply_patch(
             files: podfile_path,
             regexp: /^(\s*)# Pods for #{ConfigurationHelper.target.name}$/,
@@ -801,7 +799,7 @@ EOF
             text: "\n\\1pod \"Branch\"",
             global: false
           )
-          report_command install_command
+          sh install_command
         end
 
         add_change podfile_path
@@ -813,7 +811,7 @@ EOF
         podfile_pathname = Pathname.new(podfile_path).relative_path_from Pathname.pwd
         add_change pods_folder_path
         add_change workspace_path
-        `git add #{podfile_pathname} #{podfile_pathname}.lock #{pods_folder_path} #{workspace_path}` if options.commit
+        sh "git add #{podfile_pathname} #{podfile_pathname}.lock #{pods_folder_path} #{workspace_path}" if options.commit
       end
 
       def add_carthage(options)
@@ -830,7 +828,7 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          report_command "carthage #{ConfigurationHelper.carthage_command}"
+          sh "carthage #{ConfigurationHelper.carthage_command}"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
@@ -859,7 +857,7 @@ EOF
         carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from(Pathname.pwd)
         cartfile_pathname = Pathname.new(cartfile_path).relative_path_from Pathname.pwd
         add_change carthage_folder_path
-        `git add #{cartfile_pathname} #{cartfile_pathname}.resolved #{carthage_folder_path}` if options.commit
+        sh "git add #{cartfile_pathname} #{cartfile_pathname}.resolved #{carthage_folder_path}" if options.commit
       end
 
       def add_direct(options)
@@ -923,7 +921,7 @@ EOF
 
         add_change ConfigurationHelper.xcodeproj_path
         add_change framework_path
-        `git add #{framework_path}` if options.commit
+        sh "git add #{framework_path}" if options.commit
 
         say "Done. ✅"
       end
@@ -943,7 +941,7 @@ EOF
         command += ' --repo-update' if options.pod_repo_update
 
         Dir.chdir(File.dirname(podfile_path)) do
-          report_command command
+          sh command
         end
 
         # 3. Add Podfile and Podfile.lock to commit (in case :commit param specified)
@@ -957,7 +955,7 @@ EOF
 
         # 5. If so, add the Pods folder to the commit (in case :commit param specified)
         add_change pods_folder_path
-        `git add #{pods_folder_path}` if options.commit
+        sh "git add #{pods_folder_path}" if options.commit
 
         true
       end
@@ -973,7 +971,7 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          report_command "carthage #{ConfigurationHelper.carthage_command}"
+          sh "carthage #{ConfigurationHelper.carthage_command}"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
@@ -1004,7 +1002,7 @@ EOF
 
         # 7. If so, add the Carthage folder to the commit (in case :commit param specified)
         add_change carthage_folder_path
-        `git add #{carthage_folder_path}` if options.commit
+        sh "git add #{carthage_folder_path}" if options.commit
 
         true
       end
@@ -1031,13 +1029,13 @@ EOF
 
         gem_home = ENV["GEM_HOME"]
         if gem_home && File.writable?(gem_home)
-          report_command "gem install cocoapods"
+          sh "gem install cocoapods"
         else
-          report_command "sudo gem install cocoapods"
+          sh "sudo gem install cocoapods"
         end
 
         # Ensure master podspec repo is set up (will update if it exists).
-        report_command "pod setup"
+        sh "pod setup"
       end
 
       def verify_carthage
@@ -1056,7 +1054,7 @@ EOF
           exit(-1)
         end
 
-        report_command "brew install carthage"
+        sh "brew install carthage"
       end
 
       def verify_git
@@ -1077,7 +1075,7 @@ EOF
           exit(-1)
         end
 
-        report_command "xcode-select --install"
+        sh "xcode-select --install"
       end
     end
   end
