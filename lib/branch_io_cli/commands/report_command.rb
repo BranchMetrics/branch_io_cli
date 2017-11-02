@@ -17,28 +17,25 @@ module BranchIOCLI
         end
 
         File.open config_helper.report_path, "w" do |report|
-          report.write "Branch.io Xcode build report v #{VERSION}\n\n"
+          report.write "Branch.io Xcode build report v #{VERSION} #{DateTime.now}\n\n"
           # TODO: Write out command-line options or configuration from helper
           report.write "#{report_header}\n"
 
-          show_build_settings_cmd = "#{base_xcodebuild_cmd} -showBuildSettings"
-          report.write "$ #{show_build_settings_cmd}\n\n"
-          report.write `#{show_build_settings_cmd}`
+          report.report_command "#{base_xcodebuild_cmd} -list"
+          report.report_command "#{base_xcodebuild_cmd} -showBuildSettings"
 
           if config_helper.clean
             say "Cleaning"
-            clean_cmd = "#{base_xcodebuild_cmd} clean"
-            report.write "$ #{clean_cmd}\n\n"
-            report.write `#{clean_cmd}`
+            report.report_command "#{base_xcodebuild_cmd} clean"
           end
 
           say "Building"
-          build_cmd = "#{base_xcodebuild_cmd} -verbose"
-          report.write "$ #{build_cmd}\n\n"
-          report.write `#{build_cmd}`
+          report.report_command "#{base_xcodebuild_cmd} -verbose"
 
           say "Done ✅"
         end
+        @report = nil
+
         say "Report generated in #{config_helper.report_path}"
       end
 

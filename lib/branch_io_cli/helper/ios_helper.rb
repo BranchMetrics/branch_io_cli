@@ -6,9 +6,13 @@ require "plist"
 require "tmpdir"
 require "zip"
 
+require "branch_io_cli/helper/methods"
+
 module BranchIOCLI
   module Helper
     module IOSHelper
+      include Methods
+
       APPLINKS = "applinks"
       ASSOCIATED_DOMAINS = "com.apple.developer.associated-domains"
       CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS"
@@ -789,7 +793,7 @@ EOF
         install_command = "pod install"
         install_command += " --repo-update" if options.pod_repo_update
         Dir.chdir(File.dirname(podfile_path)) do
-          system_command "pod init"
+          report_command "pod init"
           apply_patch(
             files: podfile_path,
             regexp: /^(\s*)# Pods for #{ConfigurationHelper.target.name}$/,
@@ -797,7 +801,7 @@ EOF
             text: "\n\\1pod \"Branch\"",
             global: false
           )
-          system_command install_command
+          report_command install_command
         end
 
         add_change podfile_path
@@ -826,7 +830,7 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          system_command "carthage #{ConfigurationHelper.carthage_command}"
+          report_command "carthage #{ConfigurationHelper.carthage_command}"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
@@ -939,7 +943,7 @@ EOF
         command += ' --repo-update' if options.pod_repo_update
 
         Dir.chdir(File.dirname(podfile_path)) do
-          system_command command
+          report_command command
         end
 
         # 3. Add Podfile and Podfile.lock to commit (in case :commit param specified)
@@ -969,7 +973,7 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          system_command "carthage #{ConfigurationHelper.carthage_command}"
+          report_command "carthage #{ConfigurationHelper.carthage_command}"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
@@ -1027,13 +1031,13 @@ EOF
 
         gem_home = ENV["GEM_HOME"]
         if gem_home && File.writable?(gem_home)
-          system_command "gem install cocoapods"
+          report_command "gem install cocoapods"
         else
-          system_command "sudo gem install cocoapods"
+          report_command "sudo gem install cocoapods"
         end
 
         # Ensure master podspec repo is set up (will update if it exists).
-        system_command "pod setup"
+        report_command "pod setup"
       end
 
       def verify_carthage
@@ -1052,7 +1056,7 @@ EOF
           exit(-1)
         end
 
-        system_command "brew install carthage"
+        report_command "brew install carthage"
       end
 
       def verify_git
@@ -1073,13 +1077,7 @@ EOF
           exit(-1)
         end
 
-        system_command "xcode-select --install"
-      end
-
-      def system_command(command)
-        # TODO: Not working well with bundle exec atm.
-        say "<%= color(\"$ #{command}\", BOLD) %>"
-        system command
+        report_command "xcode-select --install"
       end
     end
   end
