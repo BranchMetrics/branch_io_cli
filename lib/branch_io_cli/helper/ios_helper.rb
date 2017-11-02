@@ -813,7 +813,7 @@ EOF
         podfile_pathname = Pathname.new(podfile_path).relative_path_from Pathname.pwd
         add_change pods_folder_path
         add_change workspace_path
-        `git add #{podfile_pathname} #{podfile_pathname}.lock #{pods_folder_path} #{workspace_path}` if options.commit
+        sh "git add #{podfile_pathname} #{podfile_pathname}.lock #{pods_folder_path} #{workspace_path}" if options.commit
       end
 
       def add_carthage(options)
@@ -859,7 +859,7 @@ EOF
         carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from(Pathname.pwd)
         cartfile_pathname = Pathname.new(cartfile_path).relative_path_from Pathname.pwd
         add_change carthage_folder_path
-        `git add #{cartfile_pathname} #{cartfile_pathname}.resolved #{carthage_folder_path}` if options.commit
+        sh "git add #{cartfile_pathname} #{cartfile_pathname}.resolved #{carthage_folder_path}" if options.commit
       end
 
       def add_direct(options)
@@ -923,7 +923,7 @@ EOF
 
         add_change ConfigurationHelper.xcodeproj_path
         add_change framework_path
-        `git add #{framework_path}` if options.commit
+        sh "git add #{framework_path}" if options.commit
 
         say "Done. ✅"
       end
@@ -957,7 +957,7 @@ EOF
 
         # 5. If so, add the Pods folder to the commit (in case :commit param specified)
         add_change pods_folder_path
-        `git add #{pods_folder_path}` if options.commit
+        sh "git add #{pods_folder_path}" if options.commit
 
         true
       end
@@ -1004,7 +1004,7 @@ EOF
 
         # 7. If so, add the Carthage folder to the commit (in case :commit param specified)
         add_change carthage_folder_path
-        `git add #{carthage_folder_path}` if options.commit
+        sh "git add #{carthage_folder_path}" if options.commit
 
         true
       end
