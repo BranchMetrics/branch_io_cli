@@ -18,7 +18,7 @@ module BranchIOCLI
 
         File.open config_helper.report_path, "w" do |report|
           report.write "Branch.io Xcode build report v #{VERSION} #{DateTime.now}\n\n"
-          # TODO: Write out command-line options or configuration from helper
+          report.write "#{report_configuration}\n"
           report.write "#{report_header}\n"
 
           # run xcodebuild -list
@@ -40,7 +40,7 @@ module BranchIOCLI
           report.report_command "#{base_cmd} -showBuildSettings"
 
           # Add more options for the rest of the commands
-          base_cmd = "#{base_cmd} -configuration #{config_helper.configuration} -sdk iphonesimulator"
+          base_cmd = "#{base_cmd} -configuration #{config_helper.configuration} -sdk #{config_helper.sdk}"
           base_cmd = "#{base_cmd} -target #{config_helper.target}" unless config_helper.workspace_path
 
           if config_helper.clean
@@ -139,6 +139,22 @@ module BranchIOCLI
         return nil unless matches
         version = matches[1]
         "#{version} [BNCConfig.m]"
+      end
+
+      def report_configuration
+        <<EOF
+Configuration:
+
+Xcode workspace: #{config_helper.workspace_path || '(none)'}
+Xcode project: #{config_helper.xcodeproj_path || '(none)'}
+Scheme: #{config_helper.scheme || '(none)'}
+Target: #{config_helper.target || '(none)'}
+Configuration: #{config_helper.configuration || '(none)'}
+SDK: #{config_helper.sdk}
+Podfile: #{config_helper.podfile_path || '(none)'}
+Cartfile: #{config_helper.cartfile_path || '(none)'}
+Clean: #{config_helper.clean.inspect}
+EOF
       end
 
       def report_header

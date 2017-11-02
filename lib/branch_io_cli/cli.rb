@@ -163,6 +163,7 @@ EOF
         c.option "--scheme MyProjectScheme", String, "A scheme from the project or workspace to build"
         c.option "--target MyProjectTarget", String, "A target to build"
         c.option "--configuration Debug|Release|CustomConfigName", String, "The build configuration to use (default: Release)"
+        c.option "--sdk iphonesimulator", String, "Passed as -sdk to xcodebuild (default: iphonesimulator)"
         c.option "--podfile /path/to/Podfile", String, "Path to the Podfile for the project"
         c.option "--cartfile /path/to/Cartfile", String, "Path to the Cartfile for the project"
         c.option "--[no-]clean", "Clean before attempting to build (default: yes)"
@@ -170,7 +171,12 @@ EOF
         c.option "--out branch-report.txt", String, "Report output path (default: ./branch-report.txt)"
 
         c.action do |args, options|
-          options.default clean: true, header_only: false, configuration: "Release"
+          options.default(
+            clean: true,
+            header_only: false,
+            configuration: "Release",
+            sdk: "iphonesimulator"
+          )
           Commands::ReportCommand.new(options).run!
         end
       end

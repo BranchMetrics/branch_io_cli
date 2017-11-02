@@ -41,6 +41,7 @@ module BranchIOCLI
         attr_reader :scheme
         attr_reader :configuration
         attr_reader :report_path
+        attr_reader :sdk
 
         def validate_setup_options(options)
           print_identification "setup"
@@ -100,6 +101,7 @@ module BranchIOCLI
           @target = options.target
           @configuration = options.configuration
           @report_path = options.out || "./report.txt"
+          @sdk = options.sdk
 
           validate_xcodeproj_and_workspace options
           validate_target options
@@ -168,7 +170,8 @@ EOF
 <%= color('Xcode project:', BOLD) %> #{@xcodeproj_path || '(none)'}
 <%= color('Scheme:', BOLD) %> #{@scheme || '(none)'}
 <%= color('Target:', BOLD) %> #{@target || '(none)'}
-<%= color('Configuration:', BOLD) %> #{@configuration || '(none)'}
+<%= color('Configuration:', BOLD) %> #{@configuration}
+<%= color('SDK:', BOLD) %> #{@sdk}
 <%= color('Podfile:', BOLD) %> #{@podfile_path || '(none)'}
 <%= color('Cartfile:', BOLD) %> #{@cartfile_path || '(none)'}
 <%= color('Clean:', BOLD) %> #{@clean.inspect}
