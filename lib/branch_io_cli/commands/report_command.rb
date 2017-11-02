@@ -21,16 +21,35 @@ module BranchIOCLI
           # TODO: Write out command-line options or configuration from helper
           report.write "#{report_header}\n"
 
+          # run xcodebuild -list
           report.report_command "#{base_xcodebuild_cmd} -list"
-          report.report_command "#{base_xcodebuild_cmd} -showBuildSettings"
+
+          # If using a workspace, -list all the projects as well
+          if config_helper.workspace_path
+            config_helper.workspace.file_references.map(&:path).each do |project_path|
+              path = File.join File.dirname(config_helper.workspace_path), project_path
+              report.report_command "xcodebuild -list -project #{path}"
+            end
+          end
+
+          base_cmd = base_xcodebuild_cmd
+          # Add -scheme option for the rest of the commands if using a workspace
+          base_cmd = "#{base_cmd} -scheme #{config_helper.scheme}" if config_helper.workspace_path
+
+          # xcodebuild -showBuildSettings
+          report.report_command "#{base_cmd} -showBuildSettings"
+
+          # Add more options for the rest of the commands
+          base_cmd = "#{base_cmd} -configuration #{config_helper.configuration} -sdk iphonesimulator"
+          base_cmd = "#{base_cmd} -target #{config_helper.target}" unless config_helper.workspace_path
 
           if config_helper.clean
             say "Cleaning"
-            report.report_command "#{base_xcodebuild_cmd} clean"
+            report.report_command "#{base_cmd} clean"
           end
 
           say "Building"
-          report.report_command "#{base_xcodebuild_cmd} -verbose"
+          report.report_command "#{base_cmd} -verbose"
 
           say "Done ✅"
         end
@@ -39,12 +58,12 @@ module BranchIOCLI
       end
 
       def base_xcodebuild_cmd
-        cmd = "xcodebuild -sdk iphonesimulator"
-        cmd = "#{cmd} -scheme #{config_helper.scheme}" if config_helper.scheme
-        cmd = "#{cmd} -workspace #{config_helper.workspace_path}" if config_helper.workspace_path
-        cmd = "#{cmd} -project #{config_helper.xcodeproj_path}" if config_helper.xcodeproj_path && !config_helper.workspace_path
-        cmd = "#{cmd} -target #{config_helper.target}" if config_helper.target
-        cmd = "#{cmd} -configuration #{config_helper.configuration}" if config_helper.configuration
+        cmd = "xcodebuild"
+        if config_helper.workspace_path
+          cmd = "#{cmd} -workspace #{config_helper.workspace_path}"
+        else
+          cmd = "#{cmd} -project #{config_helper.xcodeproj_path}"
+        end
         cmd
       end
 
@@ -97,9 +116,9 @@ module BranchIOCLI
       end
 
       def version_from_branch_framework
-        framework = config_helper.xcodeproj.frameworks_group.files.find { |f| f.path =~ /Branch.framework$/ }
+        framework = config_helper.target.frameworks_build_phase.files.find { |f| f.file_ref.path =~ /Branch.framework$/ }
         return nil unless framework
-        framework_path = framework.real_path
+        framework_path = framework.file_ref.real_path
         info_plist_path = File.join framework_path.to_s, "Info.plist"
         return nil unless File.exist? info_plist_path
 

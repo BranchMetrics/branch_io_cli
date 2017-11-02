@@ -170,7 +170,7 @@ EOF
         c.option "--out branch-report.txt", String, "Report output path (default: ./branch-report.txt)"
 
         c.action do |args, options|
-          options.default clean: true, header_only: false
+          options.default clean: true, header_only: false, configuration: "Release"
           Commands::ReportCommand.new(options).run!
         end
       end

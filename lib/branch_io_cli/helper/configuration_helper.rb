@@ -102,6 +102,7 @@ module BranchIOCLI
           @report_path = options.out || "./report.txt"
 
           validate_xcodeproj_and_workspace options
+          validate_target options
           validate_scheme options
 
           # If neither --podfile nor --cartfile is present, arbitrarily look for a Podfile
@@ -337,11 +338,15 @@ EOF
 
         def validate_scheme(options)
           schemes = all_schemes
+          # TODO: Prompt if --scheme specified but not found.
           if options.scheme && schemes.include?(options.scheme)
             @scheme = options.scheme
           elsif schemes.count == 1
             @scheme = schemes.first
           elsif !schemes.empty?
+            # By default, take a scheme with the same name as the target name.
+            return if (@scheme = schemes.find { |s| s == @target.name })
+
             say "Please specify one of the following for the --scheme argument:"
             schemes.each do |scheme|
               say " #{scheme}"

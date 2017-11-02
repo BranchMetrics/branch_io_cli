@@ -339,7 +339,8 @@ module BranchIOCLI
           raise "Target #{target} not found" if target.nil?
         else
           # find the first application target
-          target = project.targets.find { |t| !t.extension_target_type? && !t.test_target_type? }
+          targets = project.targets.select { |t| !t.extension_target_type? && !t.test_target_type? }
+          target = targets.find { |t| t.name == File.basename(project.path).sub(/\.xcodeproj$/, "") } || targets.first
           raise "No application target found" if target.nil?
         end
         target
