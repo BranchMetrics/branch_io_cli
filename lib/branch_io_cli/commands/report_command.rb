@@ -22,6 +22,7 @@ module BranchIOCLI
           # TODO: Write out command-line options or configuration from helper
           report.write "#{report_header}\n"
 
+          report.report_command "#{base_xcodebuild_cmd} -list"
           report.report_command "#{base_xcodebuild_cmd} -showBuildSettings"
 
           if config_helper.clean
