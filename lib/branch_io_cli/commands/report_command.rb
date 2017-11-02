@@ -202,7 +202,7 @@ EOF
         if version
           header = "#{header}\nBranch SDK v. #{version}\n"
         else
-          header = "Branch SDK not found.\n"
+          header = "#{header}\nBranch SDK not found.\n"
         end
 
         header
