@@ -229,7 +229,8 @@ report with additional diagnostic information suitable for opening a support tic
 |--xcodeproj MyProject.xcodeproj|Path to an Xcode project|
 |--target MyAppTarget|Name of a target to modify in the Xcode project|
 |--scheme MyAppScheme|Name of a scheme to build|
-|--configuration Debug/Release/CustomConfig|Name of a build configuration|
+|--configuration Debug/Release/CustomConfig|Name of a build configuration (default: Release)|
+|--sdk iphonesimulator|Name of an SDK to use with xcodebuild (default: iphonesimulator)|
 |--[no-]clean|Clean before building (default: yes)|
 |--[no-]header-only|Show a diagnostic header and exit without cleaning or building (default: no)|
 |--podfile /path/to/Podfile|Path to the Podfile for the project|
