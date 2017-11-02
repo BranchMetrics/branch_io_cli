@@ -34,7 +34,6 @@ module BranchIOCLI
 
           say "Done ✅"
         end
-        @report = nil
 
         say "Report generated in #{config_helper.report_path}"
       end
