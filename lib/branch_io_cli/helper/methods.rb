@@ -1,8 +1,8 @@
 module BranchIOCLI
   module Helper
     module Methods
-      def report_command(command)
-        STDOUT.report_command command
+      def sh(command, output = STDOUT)
+        output.report_command command
       end
     end
   end

@@ -793,7 +793,7 @@ EOF
         install_command = "pod install"
         install_command += " --repo-update" if options.pod_repo_update
         Dir.chdir(File.dirname(podfile_path)) do
-          report_command "pod init"
+          sh "pod init"
           apply_patch(
             files: podfile_path,
             regexp: /^(\s*)# Pods for #{ConfigurationHelper.target.name}$/,
@@ -801,7 +801,7 @@ EOF
             text: "\n\\1pod \"Branch\"",
             global: false
           )
-          report_command install_command
+          sh install_command
         end
 
         add_change podfile_path
@@ -830,7 +830,7 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          report_command "carthage #{ConfigurationHelper.carthage_command}"
+          sh "carthage #{ConfigurationHelper.carthage_command}"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
@@ -943,7 +943,7 @@ EOF
         command += ' --repo-update' if options.pod_repo_update
 
         Dir.chdir(File.dirname(podfile_path)) do
-          report_command command
+          sh command
         end
 
         # 3. Add Podfile and Podfile.lock to commit (in case :commit param specified)
@@ -973,7 +973,7 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          report_command "carthage #{ConfigurationHelper.carthage_command}"
+          sh "carthage #{ConfigurationHelper.carthage_command}"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
@@ -1031,13 +1031,13 @@ EOF
 
         gem_home = ENV["GEM_HOME"]
         if gem_home && File.writable?(gem_home)
-          report_command "gem install cocoapods"
+          sh "gem install cocoapods"
         else
-          report_command "sudo gem install cocoapods"
+          sh "sudo gem install cocoapods"
         end
 
         # Ensure master podspec repo is set up (will update if it exists).
-        report_command "pod setup"
+        sh "pod setup"
       end
 
       def verify_carthage
@@ -1056,7 +1056,7 @@ EOF
           exit(-1)
         end
 
-        report_command "brew install carthage"
+        sh "brew install carthage"
       end
 
       def verify_git
@@ -1077,7 +1077,7 @@ EOF
           exit(-1)
         end
 
-        report_command "xcode-select --install"
+        sh "xcode-select --install"
       end
     end
   end
