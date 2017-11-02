@@ -1,5 +1,4 @@
 require "cocoapods-core"
-require "open3"
 
 module BranchIOCLI
   module Commands
