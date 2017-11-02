@@ -160,9 +160,36 @@ EOF
       def report_header
         header = `xcodebuild -version`
 
-        if config_helper.podfile_path && File.exist?("#{config_helper.podfile_path}.lock")
-          podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config_helper.podfile_path}.lock"
-          header = "#{header}\nUsing CocoaPods v. #{podfile_lock.cocoapods_version}\n"
+        if config_helper.podfile_path
+          begin
+            cocoapods_version = `pod --version`.chomp
+          rescue Errno::ENOENT
+            header = "#{header}\n(pod command not found)\n"
+          end
+
+          if File.exist?("#{config_helper.podfile_path}.lock")
+            podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config_helper.podfile_path}.lock"
+          end
+
+          if cocoapods_version || podfile_lock
+            header = "#{header}\nUsing CocoaPods v. "
+            if cocoapods_version
+              header = "#{header}#{cocoapods_version} (CLI) "
+            end
+            if podfile_lock
+              header = "#{header}#{podfile_lock.cocoapods_version} (Podfile.lock)"
+            end
+            header = "#{header}\n"
+          end
+        end
+
+        if config_helper.cartfile_path
+          begin
+            carthage_version = `carthage version`.chomp
+            header = "#{header}\nUsing Carthage v. #{carthage_version}\n"
+          rescue Errno::ENOENT
+            header = "#{header}\n(carthage command not found)\n"
+          end
         end
 
         podfile_requirement = requirement_from_podfile
