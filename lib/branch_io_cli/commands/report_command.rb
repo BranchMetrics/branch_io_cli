@@ -28,7 +28,19 @@ module BranchIOCLI
 
           helper.verify_cocoapods
 
-          sh "pod install"
+          install_command = "pod install"
+
+          if config_helper.pod_repo_update
+            install_command += " --repo-update"
+          else
+            say <<EOF
+You have disabled "pod repo update". This can cause "pod install" to fail in
+some cases. If that happens, please rerun without --no-pod-repo-update or run
+"pod install --repo-update" manually.
+EOF
+          end
+
+          sh install_command
         end
 
         File.open config_helper.report_path, "w" do |report|
@@ -168,6 +180,7 @@ Configuration: #{config_helper.configuration || '(none)'}
 SDK: #{config_helper.sdk}
 Podfile: #{config_helper.podfile_path || '(none)'}
 Cartfile: #{config_helper.cartfile_path || '(none)'}
+Pod repo update: #{config_helper.pod_repo_update.inspect}
 Clean: #{config_helper.clean.inspect}
 EOF
       end
