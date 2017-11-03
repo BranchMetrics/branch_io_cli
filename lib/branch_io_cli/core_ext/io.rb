@@ -34,7 +34,7 @@ end
 # :command: [String] a shell command to execute and report
 def STDOUT.report_command(command)
   # TODO: Improve this implementation?
-  say "<%= color(%q{$ #{command}}, BOLD) %>\n\n"
+  say "<%= color(%q{$ #{command}}, [MAGENTA, BOLD]) %>\n\n"
   # May also write to stderr
   # Could try system "#{command} 2>&1", but that might depend on the shell.
   system command
