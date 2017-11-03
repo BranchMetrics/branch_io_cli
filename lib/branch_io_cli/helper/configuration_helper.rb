@@ -100,7 +100,7 @@ module BranchIOCLI
           @scheme = options.scheme
           @target = options.target
           @configuration = options.configuration
-          @report_path = options.out || "./report.txt"
+          @report_path = options.out
           @sdk = options.sdk
 
           validate_xcodeproj_and_workspace options
