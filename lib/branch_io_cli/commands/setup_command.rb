@@ -101,6 +101,7 @@ module BranchIOCLI
           sh "git commit -aqm'#{message}'"
         else
           say "Please stash or commit your changes before continuing."
+          exit(-1)
         end
       end
     end
