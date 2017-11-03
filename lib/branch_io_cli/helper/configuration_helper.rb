@@ -130,7 +130,7 @@ EOF
 
         def print_setup_configuration
           say <<EOF
-<%= color('Configuration:', BOLD) %>
+<%= color('Configuration:', [CYAN, BOLD, UNDERLINE]) %>
 
 <%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
 <%= color('Target:', BOLD) %> #{@target.name}
@@ -154,7 +154,7 @@ EOF
 
         def print_validation_configuration
           say <<EOF
-<%= color('Configuration:', BOLD) %>
+<%= color('Configuration:', [CYAN, BOLD, UNDERLINE]) %>
 
 <%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
 <%= color('Target:', BOLD) %> #{@target.name}
@@ -164,7 +164,7 @@ EOF
 
         def print_report_configuration
           say <<EOF
-<%= color('Configuration:', BOLD) %>
+<%= color('Configuration:', [CYAN, BOLD, UNDERLINE]) %>
 
 <%= color('Xcode workspace:', BOLD) %> #{@workspace_path || '(none)'}
 <%= color('Xcode project:', BOLD) %> #{@xcodeproj_path || '(none)'}
