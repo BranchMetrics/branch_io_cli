@@ -168,14 +168,15 @@ EOF
         c.option "--cartfile /path/to/Cartfile", String, "Path to the Cartfile for the project"
         c.option "--[no-]clean", "Clean before attempting to build (default: yes)"
         c.option "--[no-]header-only", "Write a report header to standard output and exit"
-        c.option "--out branch-report.txt", String, "Report output path (default: ./branch-report.txt)"
+        c.option "--out ./report.txt", String, "Report output path (default: ./report.txt)"
 
         c.action do |args, options|
           options.default(
             clean: true,
             header_only: false,
             configuration: "Release",
-            sdk: "iphonesimulator"
+            sdk: "iphonesimulator",
+            out: "./report.txt"
           )
           Commands::ReportCommand.new(options).run!
         end
