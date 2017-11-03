@@ -12,6 +12,9 @@ module BranchIOCLI
 
       # rubocop: disable Metrics/PerceivedComplexity
       def run!
+        # Make sure the user stashes or commits before continuing.
+        check_repo_status
+
         xcodeproj = config_helper.xcodeproj
 
         case config_helper.sdk_integration_mode
@@ -63,6 +66,43 @@ module BranchIOCLI
         sh "git commit -qm '[branch_io_cli] Branch SDK integration' #{changes.join(' ')}"
       end
       # rubocop: enable Metrics/PerceivedComplexity
+
+      def check_repo_status
+        # If the git command is not installed, there's not much we can do.
+        # Don't want to use verify_git here, which will insist on installing
+        # the command. The logic of that method could change.
+        return if `which git`.empty?
+
+        unless Dir.exist? ".git"
+          `git rev-parse --git-dir > /dev/null 2>&1`
+          # Not a git repo
+          return unless $?.success?
+        end
+
+        `git diff-index --quiet HEAD --`
+        return if $?.success?
+
+        # Show the user
+        sh "git status"
+
+        choice = choose do |menu|
+          menu.header = "There are uncommitted changes in this repo. It's best to stash or commit them before continuing."
+          menu.choice "Stash"
+          menu.choice "Commit (you will be prompted for a commit message)"
+          menu.choice "Quit"
+          menu.prompt = "Please enter one of the options above: "
+        end
+
+        case choice
+        when /^Stash/
+          sh "git stash -q"
+        when /^Commit/
+          message = ask "Please enter a commit message: "
+          sh "git commit -aqm'#{message}'"
+        else
+          say "Please stash or commit your changes before continuing."
+        end
+      end
     end
   end
 end
