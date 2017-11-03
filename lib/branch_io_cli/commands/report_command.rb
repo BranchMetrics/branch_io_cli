@@ -84,7 +84,7 @@ module BranchIOCLI
       def requirement_from_cartfile
         return nil unless config_helper.cartfile_path
         cartfile = File.read config_helper.cartfile_path
-        matches = %r{\n?[^\n]+?BranchMetrics/(ios-branch-deep-linking|iOS-Deferred-Deep-Linking-SDK.*?).*?\n}m.match cartfile
+        matches = %r{^git(hub\s+"|\s+"https://github.com/)BranchMetrics/(ios-branch-deep-linking|iOS-Deferred-Deep-Linking-SDK.*?).*?\n}m.match cartfile
         matches ? matches[0].strip : nil
       end
 
@@ -157,14 +157,17 @@ Clean: #{config_helper.clean.inspect}
 EOF
       end
 
+      # rubocop: disable Metrics/PerceivedComplexity
       def report_header
         header = `xcodebuild -version`
+
+        header += "\nTarget #{config_helper.target.name} deploy target: #{config_helper.target.deployment_target}\n"
 
         if config_helper.podfile_path
           begin
             cocoapods_version = `pod --version`.chomp
           rescue Errno::ENOENT
-            header = "#{header}\n(pod command not found)\n"
+            header += "\n(pod command not found)\n"
           end
 
           if File.exist?("#{config_helper.podfile_path}.lock")
@@ -172,41 +175,57 @@ EOF
           end
 
           if cocoapods_version || podfile_lock
-            header = "#{header}\nUsing CocoaPods v. "
+            header += "\nUsing CocoaPods v. "
             if cocoapods_version
-              header = "#{header}#{cocoapods_version} (CLI) "
+              header += "#{cocoapods_version} (CLI) "
             end
             if podfile_lock
-              header = "#{header}#{podfile_lock.cocoapods_version} (Podfile.lock)"
+              header += "#{podfile_lock.cocoapods_version} (Podfile.lock)"
             end
-            header = "#{header}\n"
+            header += "\n"
           end
+
+          # Already verified existence.
+          podfile = Pod::Podfile.from_file Pathname.new config_helper.podfile_path
+          target_definition = podfile.target_definition_list.find { |t| t.name == config_helper.target.name }
+          if target_definition
+            branch_dep = target_definition.dependencies.find { |p| p.name == "Branch" }
+            header += "Podfile target #{target_definition.name}:"
+            header += "\n use_frameworks!" if target_definition.uses_frameworks?
+            header += "\n platform: #{target_definition.platform}"
+            header += "\n build configurations: #{target_definition.build_configurations}"
+            header += "\n inheritance: #{target_definition.inheritance}"
+            header += "\n pod 'Branch', '#{branch_dep.requirement}'" if branch_dep
+            header += ", #{branch_dep.external_source}" if branch_dep && branch_dep.external_source
+            header += "\n"
+          else
+            header += "Target #{config_helper.target.name.inspect} not found in Podfile.\n"
+          end
+
         end
 
         if config_helper.cartfile_path
           begin
             carthage_version = `carthage version`.chomp
-            header = "#{header}\nUsing Carthage v. #{carthage_version}\n"
+            header += "\nUsing Carthage v. #{carthage_version}\n"
           rescue Errno::ENOENT
-            header = "#{header}\n(carthage command not found)\n"
+            header += "\n(carthage command not found)\n"
           end
         end
 
-        podfile_requirement = requirement_from_podfile
-        header = "#{header}\nFrom Podfile:\n#{podfile_requirement}\n" if podfile_requirement
-
         cartfile_requirement = requirement_from_cartfile
-        header = "#{header}\nFrom Cartfile:\n#{cartfile_requirement}\n" if cartfile_requirement
+        header += "\nFrom Cartfile:\n#{cartfile_requirement}\n" if cartfile_requirement
 
         version = branch_version
         if version
-          header = "#{header}\nBranch SDK v. #{version}\n"
+          header += "\nBranch SDK v. #{version}\n"
         else
-          header = "#{header}\nBranch SDK not found.\n"
+          header += "\nBranch SDK not found.\n"
         end
 
         header
       end
+      # rubocop: enable Metrics/PerceivedComplexity
     end
   end
 end
