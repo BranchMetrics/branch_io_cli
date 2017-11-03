@@ -1,4 +1,5 @@
 require "cocoapods-core"
+require "branch_io_cli/helper/methods"
 
 module BranchIOCLI
   module Commands
@@ -14,6 +15,20 @@ module BranchIOCLI
         if config_helper.header_only
           say report_header
           exit 0
+        end
+
+        # Only if a Podfile is detected/supplied at the command line.
+        if pod_install_required
+          say "pod install required in order to build."
+          install = ask %{Run "pod install" now (Y/n)? }
+          if install.downcase =~ /^n/
+            say %{Please run "pod install" or "pod update" first in order to continue.}
+            exit(-1)
+          end
+
+          helper.verify_cocoapods
+
+          sh "pod install"
         end
 
         File.open config_helper.report_path, "w" do |report|
@@ -157,9 +172,33 @@ Clean: #{config_helper.clean.inspect}
 EOF
       end
 
+      def pod_install_required
+        # If this is set, its existence has been verified.
+        return false unless config_helper.podfile_path
+
+        lockfile_path = "#{config_helper.podfile_path}.lock"
+        manifest_path = File.expand_path "../Pods/Manifest.lock", config_helper.podfile_path
+
+        return true unless File.exist?(lockfile_path) && File.exist?(manifest_path)
+
+        podfile = Pod::Podfile.from_file Pathname.new config_helper.podfile_path
+        lockfile = Pod::Lockfile.from_file Pathname.new lockfile_path
+        manifest = Pod::Lockfile.from_file Pathname.new manifest_path
+
+        # diff the contents of Podfile.lock and Pods/Manifest.lock
+        return true unless lockfile == manifest
+
+        # compare checksum of Podfile with checksum in Podfile.lock
+        return true unless lockfile.internal_data["PODFILE CHECKSUM"] == podfile.checksum
+
+        false
+      end
+
       # rubocop: disable Metrics/PerceivedComplexity
       def report_header
-        header = `xcodebuild -version`
+        header = "cocoapods-core: #{Pod::CORE_VERSION}\n"
+
+        header += `xcodebuild -version`
 
         header += "\nTarget #{config_helper.target.name} deploy target: #{config_helper.target.deployment_target}\n"
 
@@ -202,6 +241,8 @@ EOF
             header += "Target #{config_helper.target.name.inspect} not found in Podfile.\n"
           end
 
+          need_install = pod_install_required
+          header += "\npod install #{need_install ? '' : 'not '}required.\n"
         end
 
         if config_helper.cartfile_path
