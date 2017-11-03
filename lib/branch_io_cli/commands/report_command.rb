@@ -18,7 +18,7 @@ module BranchIOCLI
         end
 
         # Only if a Podfile is detected/supplied at the command line.
-        if pod_install_required
+        if pod_install_required?
           say "pod install required in order to build."
           install = ask %{Run "pod install" now (Y/n)? }
           if install.downcase =~ /^n/
@@ -185,7 +185,7 @@ Clean: #{config_helper.clean.inspect}
 EOF
       end
 
-      def pod_install_required
+      def pod_install_required?
         # If this is set, its existence has been verified.
         return false unless config_helper.podfile_path
 
@@ -199,10 +199,14 @@ EOF
         manifest = Pod::Lockfile.from_file Pathname.new manifest_path
 
         # diff the contents of Podfile.lock and Pods/Manifest.lock
+        # This is just what is done in the "[CP] Check Pods Manifest.lock" script build phase
+        # in a project using CocoaPods.
         return true unless lockfile == manifest
 
         # compare checksum of Podfile with checksum in Podfile.lock
-        return true unless lockfile.internal_data["PODFILE CHECKSUM"] == podfile.checksum
+        # This is a good sanity check, but perhaps unnecessary. It means pod install
+        # has not been run since the Podfile was modified, which is probably an oversight.
+        return true unless lockfile.to_hash["PODFILE CHECKSUM"] == podfile.checksum
 
         false
       end
@@ -254,8 +258,7 @@ EOF
             header += "Target #{config_helper.target.name.inspect} not found in Podfile.\n"
           end
 
-          need_install = pod_install_required
-          header += "\npod install #{need_install ? '' : 'not '}required.\n"
+          header += "\npod install #{pod_install_required? ? '' : 'not '}required.\n"
         end
 
         if config_helper.cartfile_path
