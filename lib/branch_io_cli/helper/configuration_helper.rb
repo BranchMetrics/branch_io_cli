@@ -102,6 +102,7 @@ module BranchIOCLI
           @configuration = options.configuration
           @report_path = options.out
           @sdk = options.sdk
+          @pod_repo_update = options.pod_repo_update
 
           validate_xcodeproj_and_workspace options
           validate_target options
@@ -174,6 +175,7 @@ EOF
 <%= color('SDK:', BOLD) %> #{@sdk}
 <%= color('Podfile:', BOLD) %> #{@podfile_path || '(none)'}
 <%= color('Cartfile:', BOLD) %> #{@cartfile_path || '(none)'}
+<%= color('Pod repo update:', BOLD) %> #{@pod_repo_update.inspect}
 <%= color('Clean:', BOLD) %> #{@clean.inspect}
 <%= color('Report path:', BOLD) %> #{@report_path}
 EOF

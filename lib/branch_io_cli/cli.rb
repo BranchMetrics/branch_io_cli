@@ -168,6 +168,7 @@ EOF
         c.option "--cartfile /path/to/Cartfile", String, "Path to the Cartfile for the project"
         c.option "--[no-]clean", "Clean before attempting to build (default: yes)"
         c.option "--[no-]header-only", "Write a report header to standard output and exit"
+        c.option "--[no-]pod-repo-update", "Update the local podspec repo before installing (default: yes)"
         c.option "--out ./report.txt", String, "Report output path (default: ./report.txt)"
 
         c.action do |args, options|
@@ -176,7 +177,8 @@ EOF
             header_only: false,
             configuration: "Release",
             sdk: "iphonesimulator",
-            out: "./report.txt"
+            out: "./report.txt",
+            pod_repo_update: true
           )
           Commands::ReportCommand.new(options).run!
         end
