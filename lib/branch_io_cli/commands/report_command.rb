@@ -84,7 +84,7 @@ module BranchIOCLI
       def requirement_from_cartfile
         return nil unless config_helper.cartfile_path
         cartfile = File.read config_helper.cartfile_path
-        matches = %r{\n?[^\n]+?BranchMetrics/(ios-branch-deep-linking|iOS-Deferred-Deep-Linking-SDK.*?).*?\n}m.match cartfile
+        matches = %r{^git(hub\s+"|\s+"https://github.com/)BranchMetrics/(ios-branch-deep-linking|iOS-Deferred-Deep-Linking-SDK.*?).*?\n}m.match cartfile
         matches ? matches[0].strip : nil
       end
 
@@ -160,6 +160,8 @@ EOF
       def report_header
         header = `xcodebuild -version`
 
+        header = "#{header}\nTarget #{config_helper.target.name} deploy target: #{config_helper.target.deployment_target}\n"
+
         if config_helper.podfile_path
           begin
             cocoapods_version = `pod --version`.chomp
@@ -181,6 +183,23 @@ EOF
             end
             header = "#{header}\n"
           end
+
+          podfile = Pod::Podfile.from_file Pathname.new config_helper.podfile_path
+          target_definition = podfile.target_definition_list.find { |t| t.name == config_helper.target.name }
+          if target_definition
+            branch_dep = target_definition.dependencies.find { |p| p.name == "Branch" }
+            header = "#{header}Podfile target #{target_definition.name}:"
+            header = "#{header}\n use_frameworks!" if target_definition.uses_frameworks?
+            header = "#{header}\n platform: #{target_definition.platform}"
+            header = "#{header}\n build configurations: #{target_definition.build_configurations}"
+            header = "#{header}\n inheritance: #{target_definition.inheritance}"
+            header = "#{header}\n pod 'Branch', '#{branch_dep.requirement}'" if branch_dep
+            header = "#{header}, #{branch_dep.external_source}" if branch_dep && branch_dep.external_source
+            header = "#{header}\n"
+          else
+            header = "#{header}Target #{config_helper.target.name.inspect} not found in Podfile.\n"
+          end
+
         end
 
         if config_helper.cartfile_path
@@ -191,9 +210,6 @@ EOF
             header = "#{header}\n(carthage command not found)\n"
           end
         end
-
-        podfile_requirement = requirement_from_podfile
-        header = "#{header}\nFrom Podfile:\n#{podfile_requirement}\n" if podfile_requirement
 
         cartfile_requirement = requirement_from_cartfile
         header = "#{header}\nFrom Cartfile:\n#{cartfile_requirement}\n" if cartfile_requirement
