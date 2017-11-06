@@ -5,6 +5,9 @@ module BranchIOCLI
   module Configuration
     class Configuration
       attr_reader :options
+      attr_reader :xcodeproj
+      attr_reader :xcodeproj_path
+      attr_reader :target
 
       def initialize(options)
         @options = options

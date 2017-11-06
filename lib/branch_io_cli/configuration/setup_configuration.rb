@@ -10,14 +10,11 @@ module BranchIOCLI
           "Skip adding the framework to the project." => :skip
         }
 
-      attr_reader :xcodeproj_path
-      attr_reader :xcodeproj
       attr_reader :keys
       attr_reader :all_domains
       attr_reader :podfile_path
       attr_reader :cartfile_path
       attr_reader :carthage_command
-      attr_reader :target
       attr_reader :uri_scheme
       attr_reader :pod_repo_update
       attr_reader :validate

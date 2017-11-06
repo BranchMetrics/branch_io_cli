@@ -1,9 +1,6 @@
 module BranchIOCLI
   module Configuration
     class ValidateConfiguration < Configuration
-      attr_reader :xcodeproj_path
-      attr_reader :xcodeproj
-      attr_reader :target
       attr_reader :domains
 
       def initialize(options)
