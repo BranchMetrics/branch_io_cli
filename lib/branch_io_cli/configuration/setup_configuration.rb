@@ -12,17 +12,13 @@ module BranchIOCLI
 
       attr_reader :keys
       attr_reader :all_domains
-      attr_reader :podfile_path
-      attr_reader :cartfile_path
       attr_reader :carthage_command
       attr_reader :uri_scheme
-      attr_reader :pod_repo_update
       attr_reader :validate
       attr_reader :add_sdk
       attr_reader :force
       attr_reader :patch_source
       attr_reader :commit
-      attr_reader :sdk_integration_mode
 
       def initialize(options)
         super
@@ -32,7 +28,6 @@ module BranchIOCLI
       end
 
       def validate_options
-        @pod_repo_update = options.pod_repo_update
         @validate = options.validate
         @patch_source = options.patch_source
         @add_sdk = options.add_sdk
@@ -48,7 +43,7 @@ module BranchIOCLI
         validate_xcodeproj_path
         validate_target
         validate_keys_from_setup_options options
-        validate_all_domains options, !@target.extension_target_type?
+        validate_all_domains options, !target.extension_target_type?
         validate_uri_scheme options
 
         # If neither --podfile nor --cartfile is present, arbitrarily look for a Podfile
@@ -59,8 +54,8 @@ module BranchIOCLI
         validate_buildfile_path options.podfile, "Podfile" if options.cartfile.nil? && options.add_sdk
 
         # If --podfile is present or a Podfile was found, don't look for a Cartfile.
-        validate_buildfile_path options.cartfile, "Cartfile" if @sdk_integration_mode.nil? && options.add_sdk
-        @carthage_command = options.carthage_command if @sdk_integration_mode == :carthage
+        validate_buildfile_path options.cartfile, "Cartfile" if sdk_integration_mode.nil? && options.add_sdk
+        @carthage_command = options.carthage_command if sdk_integration_mode == :carthage
 
         validate_sdk_addition options
       end
@@ -69,22 +64,22 @@ module BranchIOCLI
         say <<EOF
 <%= color('Configuration:', BOLD) %>
 
-<%= color('Xcode project:', BOLD) %> #{@xcodeproj_path}
-<%= color('Target:', BOLD) %> #{@target.name}
-<%= color('Live key:', BOLD) %> #{@keys[:live] || '(none)'}
-<%= color('Test key:', BOLD) %> #{@keys[:test] || '(none)'}
-<%= color('Domains:', BOLD) %> #{@all_domains}
-<%= color('URI scheme:', BOLD) %> #{@uri_scheme || '(none)'}
-<%= color('Podfile:', BOLD) %> #{@podfile_path || '(none)'}
-<%= color('Cartfile:', BOLD) %> #{@cartfile_path || '(none)'}
-<%= color('Carthage command:', BOLD) %> #{@carthage_command || '(none)'}
-<%= color('Pod repo update:', BOLD) %> #{@pod_repo_update.inspect}
-<%= color('Validate:', BOLD) %> #{@validate.inspect}
-<%= color('Force:', BOLD) %> #{@force.inspect}
-<%= color('Add SDK:', BOLD) %> #{@add_sdk.inspect}
-<%= color('Patch source:', BOLD) %> #{@patch_source.inspect}
-<%= color('Commit:', BOLD) %> #{@commit.inspect}
-<%= color('SDK integration mode:', BOLD) %> #{@sdk_integration_mode || '(none)'}
+<%= color('Xcode project:', BOLD) %> #{xcodeproj_path}
+<%= color('Target:', BOLD) %> #{target.name}
+<%= color('Live key:', BOLD) %> #{keys[:live] || '(none)'}
+<%= color('Test key:', BOLD) %> #{keys[:test] || '(none)'}
+<%= color('Domains:', BOLD) %> #{all_domains}
+<%= color('URI scheme:', BOLD) %> #{uri_scheme || '(none)'}
+<%= color('Podfile:', BOLD) %> #{podfile_path || '(none)'}
+<%= color('Cartfile:', BOLD) %> #{cartfile_path || '(none)'}
+<%= color('Carthage command:', BOLD) %> #{carthage_command || '(none)'}
+<%= color('Pod repo update:', BOLD) %> #{pod_repo_update.inspect}
+<%= color('Validate:', BOLD) %> #{validate.inspect}
+<%= color('Force:', BOLD) %> #{force.inspect}
+<%= color('Add SDK:', BOLD) %> #{add_sdk.inspect}
+<%= color('Patch source:', BOLD) %> #{patch_source.inspect}
+<%= color('Commit:', BOLD) %> #{commit.inspect}
+<%= color('SDK integration mode:', BOLD) %> #{sdk_integration_mode || '(none)'}
 
 EOF
       end
@@ -93,16 +88,16 @@ EOF
         live_key = options.live_key
         test_key = options.test_key
         @keys = {}
-        @keys[:live] = live_key unless live_key.nil?
-        @keys[:test] = test_key unless test_key.nil?
+        keys[:live] = live_key unless live_key.nil?
+        keys[:test] = test_key unless test_key.nil?
 
         while @keys.empty?
           say "A live key, a test key or both is required."
           live_key = ask "Please enter your live Branch key or use --live_key [enter for none]: "
           test_key = ask "Please enter your test Branch key or use --test_key [enter for none]: "
 
-          @keys[:live] = live_key unless live_key == ""
-          @keys[:test] = test_key unless test_key == ""
+          keys[:live] = live_key unless live_key == ""
+          keys[:test] = test_key unless test_key == ""
         end
       end
 
@@ -151,8 +146,8 @@ EOF
         app_link_subdomain = root
         return [] if app_link_subdomain.nil?
 
-        live_key = @keys[:live]
-        test_key = @keys[:test]
+        live_key = keys[:live]
+        test_key = keys[:test]
 
         domains = []
         unless live_key.nil?
@@ -187,54 +182,11 @@ EOF
         scheme.sub %r{://$}, ""
       end
 
-      def validate_buildfile_path(buildfile_path, filename)
-        # Disable Podfile/Cartfile update if --no-add-sdk is present
-        return unless @sdk_integration_mode.nil?
-
-        # Was --podfile/--cartfile used?
-        if buildfile_path
-          # Yes: Validate. Prompt if not valid.
-          loop do
-            valid = buildfile_path =~ %r{/?#{filename}$}
-            say "#{filename} path must end in /#{filename}." unless valid
-
-            if valid
-              valid = File.exist? buildfile_path
-              say "#{buildfile_path} not found." unless valid
-            end
-
-            if valid
-              if filename == "Podfile"
-                @podfile_path = buildfile_path
-              else
-                @cartfile_path = buildfile_path
-              end
-              return
-            end
-
-            buildfile_path = ask "Please enter the path to your #{filename}: "
-          end
-        end
-
-        # No: Check for Podfile/Cartfile next to workspace or project
-        buildfile_path = File.expand_path "../#{filename}", (@workspace_path || @xcodeproj_path)
-        return unless File.exist? buildfile_path
-
-        # Exists: Use it (valid if found)
-        if filename == "Podfile"
-          @podfile_path = buildfile_path
-        else
-          @cartfile_path = buildfile_path
-        end
-
-        @sdk_integration_mode = filename == "Podfile" ? :cocoapods : :carthage
-      end
-
       def validate_sdk_addition(options)
-        return if !options.add_sdk || @sdk_integration_mode
+        return if !options.add_sdk || sdk_integration_mode
 
         # If no CocoaPods or Carthage, check to see if the framework is linked.
-        target = helper.target_from_project @xcodeproj, options.target
+        target = helper.target_from_project xcodeproj, options.target
         return if target.frameworks_build_phase.files.map(&:file_ref).map(&:path).any? { |p| p =~ /Branch.framework$/ }
 
         # --podfile, --cartfile not specified. No Podfile found. No Cartfile found. No Branch.framework in project.
@@ -247,13 +199,13 @@ EOF
           menu.prompt = "What would you like to do?"
         end
 
-        @sdk_integration_mode = SDK_OPTIONS[selected]
+        self.sdk_integration_mode = SDK_OPTIONS[selected]
 
-        case @sdk_integration_mode
+        case sdk_integration_mode
         when :cocoapods
-          @podfile_path = File.expand_path "../Podfile", @xcodeproj_path
+          self.podfile_path = File.expand_path "../Podfile", xcodeproj_path
         when :carthage
-          @cartfile_path = File.expand_path "../Cartfile", @xcodeproj_path
+          self.cartfile_path = File.expand_path "../Cartfile", xcodeproj_path
           @carthage_command = options.carthage_command
         end
       end
