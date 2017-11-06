@@ -69,9 +69,9 @@ module BranchIOCLI
           if app_delegate_swift =~ /didFinishLaunching[^\n]+?\{/m
             # method already present
             init_session_text = config.keys.count <= 1 || has_multiple_info_plists? ? "" : <<EOF
-      #if DEBUG
-          Branch.setUseTestBranchKey(true)
-      #endif
+        #if DEBUG
+            Branch.setUseTestBranchKey(true)
+        #endif
 
 EOF
 
@@ -129,9 +129,9 @@ EOF
           if app_delegate_objc =~ /didFinishLaunchingWithOptions/m
             # method exists. patch it.
             init_session_text = config.keys.count <= 1 || has_multiple_info_plists? ? "" : <<EOF
-  #ifdef DEBUG
-      [Branch setUseTestBranchKey:YES];
-  #endif // DEBUG
+#ifdef DEBUG
+    [Branch setUseTestBranchKey:YES];
+#endif // DEBUG
 
 EOF
 
@@ -156,9 +156,9 @@ EOF
 
             if config.keys.count > 1 && !has_multiple_info_plists?
               method_text += <<EOF
-  #ifdef DEBUG
-      [Branch setUseTestBranchKey:YES];
-  #endif // DEBUG
+#ifdef DEBUG
+    [Branch setUseTestBranchKey:YES];
+#endif // DEBUG
 
 EOF
             end
