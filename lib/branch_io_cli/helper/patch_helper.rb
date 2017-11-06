@@ -13,6 +13,14 @@ module BranchIOCLI
           Configuration::Configuration.current
         end
 
+        def helper
+          BranchHelper
+        end
+
+        def add_change(change)
+          helper.add_change change
+        end
+
         def patch_app_delegate_swift(project)
           app_delegate_swift = project.files.find { |f| f.path =~ /AppDelegate.swift$/ }
           return false if app_delegate_swift.nil?
