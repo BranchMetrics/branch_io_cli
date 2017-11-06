@@ -20,7 +20,7 @@ module BranchIOCLI
       RELEASE_CONFIGURATION = "Release"
 
       def config
-        Configuration::Configuration.config
+        Configuration::Configuration.current
       end
 
       def has_multiple_info_plists?
