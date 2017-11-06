@@ -4,6 +4,11 @@ module BranchIOCLI
   module Helper
     class PatchHelper
       class << self
+        def load_patch(name)
+          path = File.expand_path(File.join('..', '..', '..', 'assets', 'patches'), __FILE__)
+          PatternPatch::Patch.load_yaml path
+        end
+
         def patch_app_delegate_swift(project)
           app_delegate_swift = project.files.find { |f| f.path =~ /AppDelegate.swift$/ }
           return false if app_delegate_swift.nil?
@@ -380,11 +385,7 @@ EOF
 
           say "Adding \"Branch\" to #{cartfile_path}"
 
-          PatternPatch::Patch.new(
-            regexp: /\z/,
-            text: "github \"BranchMetrics/ios-branch-deep-linking\"\n",
-            mode: :append
-          ).apply cartfile_path
+          load_patch('cartfile').apply cartfile_path
 
           true
         end

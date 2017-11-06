@@ -1,0 +1,3 @@
+regexp: '\z'
+text: "github \"BranchMetrics/ios-branch-deep-linking\"\n"
+mode: append
