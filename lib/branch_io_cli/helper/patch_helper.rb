@@ -224,7 +224,7 @@ EOF
 EOF
 
             PatternPatch::Patch.new(
-              regexp: /\n\s*\}.*?\Z/m,
+              regexp: /\n\s*\}[^{}]*\Z/m,
               text: open_url_text,
               mode: :prepend
             ).apply app_delegate_swift_path
