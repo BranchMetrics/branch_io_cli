@@ -59,7 +59,7 @@ module BranchIOCLI
 
         xcodeproj.save
 
-        helper.patch_source xcodeproj if options.patch_source
+        patch_helper.patch_source xcodeproj if options.patch_source
 
         return unless options.commit
 
