@@ -191,13 +191,13 @@ EOF
           menu.prompt = "What would you like to do?"
         end
 
-        self.sdk_integration_mode = SDK_OPTIONS[selected]
+        @sdk_integration_mode = SDK_OPTIONS[selected]
 
         case sdk_integration_mode
         when :cocoapods
-          self.podfile_path = File.expand_path "../Podfile", xcodeproj_path
+          @podfile_path = File.expand_path "../Podfile", xcodeproj_path
         when :carthage
-          self.cartfile_path = File.expand_path "../Cartfile", xcodeproj_path
+          @cartfile_path = File.expand_path "../Cartfile", xcodeproj_path
           @carthage_command = options.carthage_command
         end
       end
