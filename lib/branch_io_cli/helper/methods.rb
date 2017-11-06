@@ -15,7 +15,7 @@ module BranchIOCLI
       # :command: [String] A shell command to execute
       # :output: [IO] An optional IO object to receive stdout and stderr from the command
       def sh(command, output = STDOUT)
-        status = output.report_command command
+        status = output.log_command command
         raise CommandError, %{Error executing "#{command}": #{status}.} unless status.success?
       end
     end

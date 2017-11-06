@@ -7,7 +7,7 @@ class IO
   # object.
   #
   # :command: [String] a shell command to execute and report
-  def report_command(command)
+  def log_command(command)
     write "$ #{command}\n\n"
 
     Open3.popen2e(command) do |stdin, output, thread|
@@ -32,7 +32,7 @@ end
 # Returns a Process::Status object.
 #
 # :command: [String] a shell command to execute and report
-def STDOUT.report_command(command)
+def STDOUT.log_command(command)
   # TODO: Improve this implementation?
   say "<%= color(%q{$ #{command}}, [MAGENTA, BOLD]) %>\n\n"
   # May also write to stderr
