@@ -15,6 +15,10 @@ module BranchIOCLI
       def helper
         Helper::BranchHelper
       end
+
+      def patch_helper
+        Helper::PatchHelper
+      end
     end
   end
 end

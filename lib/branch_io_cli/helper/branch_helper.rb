@@ -19,22 +19,6 @@ module BranchIOCLI
           @changes << change.to_s
         end
 
-        # Shim around PatternPatch for now
-        def apply_patch(options)
-          modified = File.open(options[:files]) do |file|
-            PatternPatch::Utilities.apply_patch file.read,
-                                                options[:regexp],
-                                                options[:text],
-                                                options[:global],
-                                                options[:mode],
-                                                options[:offset] || 0
-          end
-
-          File.open(options[:files], "w") do |file|
-            file.write modified
-          end
-        end
-
         def fetch(url)
           response = Net::HTTP.get_response URI(url)
 
