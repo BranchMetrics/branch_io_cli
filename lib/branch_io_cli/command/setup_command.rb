@@ -36,7 +36,6 @@ module BranchIOCLI
           helper.add_direct options
         end
 
-        target_name = options.target # may be nil
         is_app_target = !config.target.extension_target_type?
 
         if is_app_target && options.validate &&
