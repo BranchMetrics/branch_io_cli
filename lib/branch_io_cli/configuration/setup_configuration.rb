@@ -66,8 +66,6 @@ module BranchIOCLI
         @carthage_command = options.carthage_command if @sdk_integration_mode == :carthage
 
         validate_sdk_addition options
-
-        print_setup_configuration
       end
 
       def log

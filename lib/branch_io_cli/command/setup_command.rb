@@ -1,3 +1,4 @@
+require "branch_io_cli/configuration"
 require "branch_io_cli/helper/methods"
 
 module BranchIOCLI
