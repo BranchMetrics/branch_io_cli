@@ -218,9 +218,9 @@ EOF
             open_url_text = <<EOF
 
 
-        func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
-            return Branch.getInstance().application(app, open: url, options: options)
-        }
+    func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
+        return Branch.getInstance().application(app, open: url, options: options)
+    }
 EOF
 
             PatternPatch::Patch.new(
