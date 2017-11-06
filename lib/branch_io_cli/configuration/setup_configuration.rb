@@ -20,13 +20,6 @@ module BranchIOCLI
       attr_reader :patch_source
       attr_reader :commit
 
-      def initialize(options)
-        super
-        print_identification "setup"
-        validate_options
-        log
-      end
-
       def validate_options
         @validate = options.validate
         @patch_source = options.patch_source
@@ -61,11 +54,9 @@ module BranchIOCLI
       end
 
       def log
+        super
         say <<EOF
-<%= color('Configuration:', BOLD) %>
-
 <%= color('Xcode project:', BOLD) %> #{xcodeproj_path}
-<%= color('Xcode project object:', BOLD) %> #{xcodeproj.inspect}
 <%= color('Target:', BOLD) %> #{target.name}
 <%= color('Live key:', BOLD) %> #{keys[:live] || '(none)'}
 <%= color('Test key:', BOLD) %> #{keys[:test] || '(none)'}

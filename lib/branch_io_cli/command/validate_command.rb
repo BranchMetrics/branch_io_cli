@@ -5,7 +5,7 @@ module BranchIOCLI
 
       def initialize(options)
         super
-        @config = ValidateConfiguration.new options
+        @config = Configuration::ValidateConfiguration.new options
       end
 
       def run!

@@ -6,13 +6,13 @@ module BranchIOCLI
     class ReportCommand < Command
       def initialize(options)
         super
-        config_helper.validate_report_options options
+        @config = Configuration::ReportConfiguration.new options
       end
 
       def run!
         say "\n"
 
-        if config_helper.header_only
+        if config.header_only
           say report_header
           exit 0
         end
@@ -30,7 +30,7 @@ module BranchIOCLI
 
           install_command = "pod install"
 
-          if config_helper.pod_repo_update
+          if config.pod_repo_update
             install_command += " --repo-update"
           else
             say <<EOF
@@ -43,7 +43,7 @@ EOF
           sh install_command
         end
 
-        File.open config_helper.report_path, "w" do |report|
+        File.open config.report_path, "w" do |report|
           report.write "Branch.io Xcode build report v #{VERSION} #{DateTime.now}\n\n"
           report.write "#{report_configuration}\n"
           report.write "#{report_header}\n"
@@ -52,25 +52,25 @@ EOF
           sh "#{base_xcodebuild_cmd} -list", report
 
           # If using a workspace, -list all the projects as well
-          if config_helper.workspace_path
-            config_helper.workspace.file_references.map(&:path).each do |project_path|
-              path = File.join File.dirname(config_helper.workspace_path), project_path
+          if config.workspace_path
+            config.workspace.file_references.map(&:path).each do |project_path|
+              path = File.join File.dirname(config.workspace_path), project_path
               sh "xcodebuild -list -project #{path}", report
             end
           end
 
           base_cmd = base_xcodebuild_cmd
           # Add -scheme option for the rest of the commands if using a workspace
-          base_cmd = "#{base_cmd} -scheme #{config_helper.scheme}" if config_helper.workspace_path
+          base_cmd = "#{base_cmd} -scheme #{config.scheme}" if config.workspace_path
 
           # xcodebuild -showBuildSettings
           sh "#{base_cmd} -showBuildSettings", report
 
           # Add more options for the rest of the commands
-          base_cmd = "#{base_cmd} -configuration #{config_helper.configuration} -sdk #{config_helper.sdk}"
-          base_cmd = "#{base_cmd} -target #{config_helper.target}" unless config_helper.workspace_path
+          base_cmd = "#{base_cmd} -configuration #{config.configuration} -sdk #{config.sdk}"
+          base_cmd = "#{base_cmd} -target #{config.target}" unless config.workspace_path
 
-          if config_helper.clean
+          if config.clean
             say "Cleaning"
             sh "#{base_cmd} clean", report
           end
@@ -81,15 +81,15 @@ EOF
           say "Done ✅"
         end
 
-        say "Report generated in #{config_helper.report_path}"
+        say "Report generated in #{config.report_path}"
       end
 
       def base_xcodebuild_cmd
         cmd = "xcodebuild"
-        if config_helper.workspace_path
-          cmd = "#{cmd} -workspace #{config_helper.workspace_path}"
+        if config.workspace_path
+          cmd = "#{cmd} -workspace #{config.workspace_path}"
         else
-          cmd = "#{cmd} -project #{config_helper.xcodeproj_path}"
+          cmd = "#{cmd} -project #{config.xcodeproj_path}"
         end
         cmd
       end
@@ -102,30 +102,30 @@ EOF
       end
 
       def requirement_from_podfile
-        return nil unless config_helper.podfile_path
-        podfile = File.read config_helper.podfile_path
+        return nil unless config.podfile_path
+        podfile = File.read config.podfile_path
         matches = /\n?\s*pod\s+("Branch"|'Branch').*?\n/m.match podfile
         matches ? matches[0].strip : nil
       end
 
       def requirement_from_cartfile
-        return nil unless config_helper.cartfile_path
-        cartfile = File.read config_helper.cartfile_path
+        return nil unless config.cartfile_path
+        cartfile = File.read config.cartfile_path
         matches = %r{^git(hub\s+"|\s+"https://github.com/)BranchMetrics/(ios-branch-deep-linking|iOS-Deferred-Deep-Linking-SDK.*?).*?\n}m.match cartfile
         matches ? matches[0].strip : nil
       end
 
       def version_from_podfile_lock
-        return nil unless config_helper.podfile_path && File.exist?("#{config_helper.podfile_path}.lock")
-        podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config_helper.podfile_path}.lock"
+        return nil unless config.podfile_path && File.exist?("#{config.podfile_path}.lock")
+        podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config.podfile_path}.lock"
         version = podfile_lock.version "Branch"
 
         version ? "#{version} [Podfile.lock]" : nil
       end
 
       def version_from_cartfile_resolved
-        return nil unless config_helper.cartfile_path && File.exist?("#{config_helper.cartfile_path}.resolved")
-        cartfile_resolved = File.read "#{config_helper.cartfile_path}.resolved"
+        return nil unless config.cartfile_path && File.exist?("#{config.cartfile_path}.resolved")
+        cartfile_resolved = File.read "#{config.cartfile_path}.resolved"
 
         # Matches:
         # git "https://github.com/BranchMetrics/ios-branch-deep-linking"
@@ -143,7 +143,7 @@ EOF
       end
 
       def version_from_branch_framework
-        framework = config_helper.target.frameworks_build_phase.files.find { |f| f.file_ref.path =~ /Branch.framework$/ }
+        framework = config.target.frameworks_build_phase.files.find { |f| f.file_ref.path =~ /Branch.framework$/ }
         return nil unless framework
         framework_path = framework.file_ref.real_path
         info_plist_path = File.join framework_path.to_s, "Info.plist"
@@ -159,7 +159,7 @@ EOF
 
       def version_from_bnc_config_m
         # Look for BNCConfig.m in embedded source
-        bnc_config_m_ref = config_helper.xcodeproj.files.find { |f| f.path =~ /BNCConfig\.m$/ }
+        bnc_config_m_ref = config.xcodeproj.files.find { |f| f.path =~ /BNCConfig\.m$/ }
         return nil unless bnc_config_m_ref
         bnc_config_m = File.read bnc_config_m_ref.real_path
         matches = /BNC_SDK_VERSION\s+=\s+@"(\d+\.\d+\.\d+)"/m.match bnc_config_m
@@ -172,29 +172,29 @@ EOF
         <<EOF
 Configuration:
 
-Xcode workspace: #{config_helper.workspace_path || '(none)'}
-Xcode project: #{config_helper.xcodeproj_path || '(none)'}
-Scheme: #{config_helper.scheme || '(none)'}
-Target: #{config_helper.target || '(none)'}
-Configuration: #{config_helper.configuration || '(none)'}
-SDK: #{config_helper.sdk}
-Podfile: #{config_helper.podfile_path || '(none)'}
-Cartfile: #{config_helper.cartfile_path || '(none)'}
-Pod repo update: #{config_helper.pod_repo_update.inspect}
-Clean: #{config_helper.clean.inspect}
+Xcode workspace: #{config.workspace_path || '(none)'}
+Xcode project: #{config.xcodeproj_path || '(none)'}
+Scheme: #{config.scheme || '(none)'}
+Target: #{config.target || '(none)'}
+Configuration: #{config.configuration || '(none)'}
+SDK: #{config.sdk}
+Podfile: #{config.podfile_path || '(none)'}
+Cartfile: #{config.cartfile_path || '(none)'}
+Pod repo update: #{config.pod_repo_update.inspect}
+Clean: #{config.clean.inspect}
 EOF
       end
 
       def pod_install_required?
         # If this is set, its existence has been verified.
-        return false unless config_helper.podfile_path
+        return false unless config.podfile_path
 
-        lockfile_path = "#{config_helper.podfile_path}.lock"
-        manifest_path = File.expand_path "../Pods/Manifest.lock", config_helper.podfile_path
+        lockfile_path = "#{config.podfile_path}.lock"
+        manifest_path = File.expand_path "../Pods/Manifest.lock", config.podfile_path
 
         return true unless File.exist?(lockfile_path) && File.exist?(manifest_path)
 
-        podfile = Pod::Podfile.from_file Pathname.new config_helper.podfile_path
+        podfile = Pod::Podfile.from_file Pathname.new config.podfile_path
         lockfile = Pod::Lockfile.from_file Pathname.new lockfile_path
         manifest = Pod::Lockfile.from_file Pathname.new manifest_path
 
@@ -217,17 +217,17 @@ EOF
 
         header += `xcodebuild -version`
 
-        header += "\nTarget #{config_helper.target.name} deploy target: #{config_helper.target.deployment_target}\n"
+        header += "\nTarget #{config.target.name} deploy target: #{config.target.deployment_target}\n"
 
-        if config_helper.podfile_path
+        if config.podfile_path
           begin
             cocoapods_version = `pod --version`.chomp
           rescue Errno::ENOENT
             header += "\n(pod command not found)\n"
           end
 
-          if File.exist?("#{config_helper.podfile_path}.lock")
-            podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config_helper.podfile_path}.lock"
+          if File.exist?("#{config.podfile_path}.lock")
+            podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config.podfile_path}.lock"
           end
 
           if cocoapods_version || podfile_lock
@@ -242,8 +242,8 @@ EOF
           end
 
           # Already verified existence.
-          podfile = Pod::Podfile.from_file Pathname.new config_helper.podfile_path
-          target_definition = podfile.target_definition_list.find { |t| t.name == config_helper.target.name }
+          podfile = Pod::Podfile.from_file Pathname.new config.podfile_path
+          target_definition = podfile.target_definition_list.find { |t| t.name == config.target.name }
           if target_definition
             branch_dep = target_definition.dependencies.find { |p| p.name == "Branch" }
             header += "Podfile target #{target_definition.name}:"
@@ -255,13 +255,13 @@ EOF
             header += ", #{branch_dep.external_source}" if branch_dep && branch_dep.external_source
             header += "\n"
           else
-            header += "Target #{config_helper.target.name.inspect} not found in Podfile.\n"
+            header += "Target #{config.target.name.inspect} not found in Podfile.\n"
           end
 
           header += "\npod install #{pod_install_required? ? '' : 'not '}required.\n"
         end
 
-        if config_helper.cartfile_path
+        if config.cartfile_path
           begin
             carthage_version = `carthage version`.chomp
             header += "\nUsing Carthage v. #{carthage_version}\n"

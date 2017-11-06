@@ -22,11 +22,23 @@ module BranchIOCLI
       def initialize(options)
         @options = options
         @pod_repo_update = options.pod_repo_update
-        self.class.current = self
+        Configuration.current = self
+
+        print_identification self.class.name.sub(/^.*::(.*?)Configuration$/, '\1').downcase
+        validate_options
+        log
+      end
+
+      def validate_options
+        # implemented in subclasses
       end
 
       def log
-        # implemented in subclasses
+        say <<EOF
+<%= color('Configuration:', [CYAN, BOLD, UNDERLINE]) %>
+
+EOF
+        # subclass implementation follows
       end
 
       def print_identification(command)

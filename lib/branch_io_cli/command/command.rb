@@ -2,6 +2,7 @@ module BranchIOCLI
   module Command
     class Command
       attr_reader :options
+      attr_reader :config # command-specific configuration object
 
       def initialize(options)
         @options = options

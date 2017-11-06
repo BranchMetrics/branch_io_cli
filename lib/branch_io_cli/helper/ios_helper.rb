@@ -24,18 +24,18 @@ module BranchIOCLI
       end
 
       def has_multiple_info_plists?
-        config.xcodeproj.build_configurations.inject([]) do |files, config|
-          files + [expanded_build_setting(config.target, "INFOPLIST_FILE", config.name)]
+        config.xcodeproj.build_configurations.inject([]) do |files, c|
+          files + [expanded_build_setting(config.target, "INFOPLIST_FILE", c.name)]
         end.uniq.count > 1
       end
 
       def add_keys_to_info_plist(keys)
         if has_multiple_info_plists?
-          config.xcodeproj.build_configurations.each do |config|
-            update_info_plist_setting config.name do |info_plist|
+          config.xcodeproj.build_configurations.each do |c|
+            update_info_plist_setting c.name do |info_plist|
               if keys.count > 1
                 # Use test key in debug configs and live key in release configs
-                info_plist["branch_key"] = config.debug? ? keys[:test] : keys[:live]
+                info_plist["branch_key"] = c.debug? ? keys[:test] : keys[:live]
               else
                 info_plist["branch_key"] = keys[:live] ? keys[:live] : keys[:test]
               end
@@ -59,8 +59,8 @@ module BranchIOCLI
         # Add all supplied domains unless all are app.link domains.
         return if domains.all? { |d| d =~ /app\.link$/ }
 
-        config.xcodeproj.build_configurations.each do |config|
-          update_info_plist_setting config.name do |info_plist|
+        config.xcodeproj.build_configurations.each do |c|
+          update_info_plist_setting c.name do |info_plist|
             info_plist["branch_universal_link_domains"] = domains
           end
         end
@@ -72,8 +72,8 @@ module BranchIOCLI
         # No URI scheme specified. Do nothing.
         return if uri_scheme.nil?
 
-        config.xcodeproj.build_configurations.each do |config|
-          update_info_plist_setting config.name do |info_plist|
+        config.xcodeproj.build_configurations.each do |c|
+          update_info_plist_setting c.name do |info_plist|
             url_types = info_plist["CFBundleURLTypes"] || []
             uri_schemes = url_types.inject([]) { |schemes, t| schemes + t["CFBundleURLSchemes"] }
 
