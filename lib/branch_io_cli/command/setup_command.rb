@@ -18,6 +18,8 @@ module BranchIOCLI
         # Make sure the user stashes or commits before continuing.
         check_repo_status
 
+        say "In run!"
+        config.log
         xcodeproj = config.xcodeproj
 
         case config.sdk_integration_mode
