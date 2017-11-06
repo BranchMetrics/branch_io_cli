@@ -1,0 +1,3 @@
+regexp: '^\s*import .*$'
+text: "\nimport Branch"
+mode: prepend

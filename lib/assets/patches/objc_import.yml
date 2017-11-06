@@ -1,0 +1,3 @@
+regexp: '^\s+@import|^\s+#import.*$'
+text: "\n#import <Branch/Branch.h>"
+mode: prepend

@@ -32,11 +32,7 @@ module BranchIOCLI
 
           say "Patching #{app_delegate_swift_path}"
 
-          PatternPatch::Patch.new(
-            regexp: /^\s*import .*$/,
-            text: "\nimport Branch",
-            mode: :prepend
-          ).apply app_delegate_swift_path
+          load_patch(:swift_import).apply app_delegate_swift_path
 
           patch_did_finish_launching_method_swift app_delegate_swift_path
           patch_continue_user_activity_method_swift app_delegate_swift_path
@@ -57,11 +53,7 @@ module BranchIOCLI
 
           say "Patching #{app_delegate_objc_path}"
 
-          PatternPatch::Patch.new(
-            regexp: /^\s+@import|^\s+#import.*$/,
-            text: "\n#import <Branch/Branch.h>",
-            mode: :prepend
-          ).apply app_delegate_objc_path
+          load_patch(:objc_import).apply app_delegate_objc_path
 
           patch_did_finish_launching_method_objc app_delegate_objc_path
           patch_continue_user_activity_method_objc app_delegate_objc_path
@@ -397,7 +389,7 @@ EOF
 
           say "Adding \"Branch\" to #{cartfile_path}"
 
-          load_patch('cartfile').apply cartfile_path
+          load_patch(:cartfile).apply cartfile_path
 
           true
         end
