@@ -9,6 +9,10 @@ module BranchIOCLI
           PatternPatch::Patch.from_yaml path
         end
 
+        def config
+          Configuration::Configuration.current
+        end
+
         def patch_app_delegate_swift(project)
           app_delegate_swift = project.files.find { |f| f.path =~ /AppDelegate.swift$/ }
           return false if app_delegate_swift.nil?
