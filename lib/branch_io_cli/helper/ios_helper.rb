@@ -6,6 +6,7 @@ require "plist"
 require "tmpdir"
 require "zip"
 
+require "branch_io_cli/configuration"
 require "branch_io_cli/helper/methods"
 
 module BranchIOCLI
@@ -19,14 +20,14 @@ module BranchIOCLI
       RELEASE_CONFIGURATION = "Release"
 
       def has_multiple_info_plists?
-        ConfigurationHelper.xcodeproj.build_configurations.inject([]) do |files, config|
-          files + [expanded_build_setting(ConfigurationHelper.target, "INFOPLIST_FILE", config.name)]
+        Configuration.current.xcodeproj.build_configurations.inject([]) do |files, config|
+          files + [expanded_build_setting(Configuration.currenttarget, "INFOPLIST_FILE", config.name)]
         end.uniq.count > 1
       end
 
       def add_keys_to_info_plist(keys)
         if has_multiple_info_plists?
-          ConfigurationHelper.xcodeproj.build_configurations.each do |config|
+          Configuration.current.xcodeproj.build_configurations.each do |config|
             update_info_plist_setting config.name do |info_plist|
               if keys.count > 1
                 # Use test key in debug configs and live key in release configs
@@ -54,7 +55,7 @@ module BranchIOCLI
         # Add all supplied domains unless all are app.link domains.
         return if domains.all? { |d| d =~ /app\.link$/ }
 
-        ConfigurationHelper.xcodeproj.build_configurations.each do |config|
+        Configuration.current.xcodeproj.build_configurations.each do |config|
           update_info_plist_setting config.name do |info_plist|
             info_plist["branch_universal_link_domains"] = domains
           end
@@ -62,12 +63,12 @@ module BranchIOCLI
       end
 
       def ensure_uri_scheme_in_info_plist
-        uri_scheme = ConfigurationHelper.uri_scheme
+        uri_scheme = Configuration.current.uri_scheme
 
         # No URI scheme specified. Do nothing.
         return if uri_scheme.nil?
 
-        ConfigurationHelper.xcodeproj.build_configurations.each do |config|
+        Configuration.current.xcodeproj.build_configurations.each do |config|
           update_info_plist_setting config.name do |info_plist|
             url_types = info_plist["CFBundleURLTypes"] || []
             uri_schemes = url_types.inject([]) { |schemes, t| schemes + t["CFBundleURLSchemes"] }
@@ -89,11 +90,11 @@ module BranchIOCLI
 
       def update_info_plist_setting(configuration = RELEASE_CONFIGURATION, &b)
         # find the Info.plist paths for this configuration
-        info_plist_path = expanded_build_setting ConfigurationHelper.target, "INFOPLIST_FILE", configuration
+        info_plist_path = expanded_build_setting Configuration.current.target, "INFOPLIST_FILE", configuration
 
         raise "Info.plist not found for configuration #{configuration}" if info_plist_path.nil?
 
-        project_parent = File.dirname ConfigurationHelper.xcodeproj_path
+        project_parent = File.dirname Configuration.current.xcodeproj_path
 
         info_plist_path = File.expand_path info_plist_path, project_parent
 
@@ -108,8 +109,8 @@ module BranchIOCLI
       end
 
       def add_universal_links_to_project(domains, remove_existing, configuration = RELEASE_CONFIGURATION)
-        project = ConfigurationHelper.xcodeproj
-        target = ConfigurationHelper.target
+        project = Configuration.current.xcodeproj
+        target = Configuration.current.target
 
         relative_entitlements_path = expanded_build_setting target, CODE_SIGN_ENTITLEMENTS, configuration
         project_parent = File.dirname project.path
@@ -168,7 +169,7 @@ module BranchIOCLI
         team, bundle = team_and_bundle_from_app_id identifier
 
         update_team_and_bundle_ids team, bundle
-        add_change ConfigurationHelper.xcodeproj_path
+        add_change Configuration.current.xcodeproj_path
       end
 
       def validate_team_and_bundle_ids_from_aasa_files(domains = [], remove_existing = false, configuration = RELEASE_CONFIGURATION)
@@ -282,7 +283,7 @@ module BranchIOCLI
       end
 
       def validate_team_and_bundle_ids(domain, configuration)
-        target = ConfigurationHelper.target
+        target = Configuration.current.target
 
         product_bundle_identifier = expanded_build_setting target, PRODUCT_BUNDLE_IDENTIFIER, configuration
         development_team = expanded_build_setting target, DEVELOPMENT_TEAM, configuration
@@ -321,7 +322,7 @@ module BranchIOCLI
       end
 
       def update_team_and_bundle_ids(team, bundle)
-        target = ConfigurationHelper.target
+        target = Configuration.current.target
 
         target.build_configuration_list.set_setting PRODUCT_BUNDLE_IDENTIFIER, bundle
         target.build_configuration_list.set_setting DEVELOPMENT_TEAM, team
@@ -347,8 +348,8 @@ module BranchIOCLI
       end
 
       def domains_from_project(configuration = RELEASE_CONFIGURATION)
-        project = ConfigurationHelper.xcodeproj
-        target = ConfigurationHelper.target
+        project = Configuration.current.xcodeproj
+        target = Configuration.current.target
 
         relative_entitlements_path = expanded_build_setting target, CODE_SIGN_ENTITLEMENTS, configuration
         return [] if relative_entitlements_path.nil?
@@ -438,7 +439,7 @@ module BranchIOCLI
 
         if app_delegate_swift =~ /didFinishLaunching[^\n]+?\{/m
           # method already present
-          init_session_text = ConfigurationHelper.keys.count <= 1 || has_multiple_info_plists? ? "" : <<EOF
+          init_session_text = Configuration.current.keys.count <= 1 || has_multiple_info_plists? ? "" : <<EOF
         #if DEBUG
             Branch.setUseTestBranchKey(true)
         #endif
@@ -467,7 +468,7 @@ EOF
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 EOF
 
-          if ConfigurationHelper.keys.count > 1 && !has_multiple_info_plists?
+          if Configuration.current.keys.count > 1 && !has_multiple_info_plists?
             method_text += <<EOF
         #if DEBUG
           Branch.setUseTestBranchKey(true)
@@ -500,7 +501,7 @@ EOF
 
         if app_delegate_objc =~ /didFinishLaunchingWithOptions/m
           # method exists. patch it.
-          init_session_text = ConfigurationHelper.keys.count <= 1 || has_multiple_info_plists? ? "" : <<EOF
+          init_session_text = Configuration.current.keys.count <= 1 || has_multiple_info_plists? ? "" : <<EOF
 #ifdef DEBUG
     [Branch setUseTestBranchKey:YES];
 #endif // DEBUG
@@ -527,7 +528,7 @@ EOF
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 EOF
 
-          if ConfigurationHelper.keys.count > 1 && !has_multiple_info_plists?
+          if Configuration.current.keys.count > 1 && !has_multiple_info_plists?
             method_text += <<EOF
 #ifdef DEBUG
     [Branch setUseTestBranchKey:YES];
@@ -745,11 +746,11 @@ EOF
 
         say "Adding pod \"Branch\" to #{podfile_path}"
 
-        if podfile =~ /target\s+(["'])#{ConfigurationHelper.target.name}\1\s+do.*?\n/m
+        if podfile =~ /target\s+(["'])#{Configuration.current.target.name}\1\s+do.*?\n/m
           # if there is a target block for this target:
           apply_patch(
             files: podfile_path,
-            regexp: /\n(\s*)target\s+(["'])#{ConfigurationHelper.target.name}\2\s+do.*?\n/m,
+            regexp: /\n(\s*)target\s+(["'])#{Configuration.current.target.name}\2\s+do.*?\n/m,
             text: "\\1  pod \"Branch\"\n",
             mode: :append
           )
@@ -757,7 +758,7 @@ EOF
           # add to the abstract_target for this target
           apply_patch(
             files: podfile_path,
-            regexp: /^(\s*)target\s+["']#{ConfigurationHelper.target.name}/,
+            regexp: /^(\s*)target\s+["']#{Configuration.current.target.name}/,
             text: "\\1pod \"Branch\"\n",
             mode: :prepend
           )
@@ -787,7 +788,7 @@ EOF
       def add_cocoapods(options)
         verify_cocoapods
 
-        podfile_path = ConfigurationHelper.podfile_path
+        podfile_path = Configuration.current.podfile_path
 
         install_command = "pod install"
         install_command += " --repo-update" if options.pod_repo_update
@@ -795,7 +796,7 @@ EOF
           sh "pod init"
           apply_patch(
             files: podfile_path,
-            regexp: /^(\s*)# Pods for #{ConfigurationHelper.target.name}$/,
+            regexp: /^(\s*)# Pods for #{Configuration.current.target.name}$/,
             mode: :append,
             text: "\n\\1pod \"Branch\"",
             global: false
@@ -808,7 +809,7 @@ EOF
 
         # For now, add Pods folder to SCM.
         pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from Pathname.pwd
-        workspace_path = Pathname.new(File.expand_path(ConfigurationHelper.xcodeproj_path.sub(/.xcodeproj$/, ".xcworkspace"))).relative_path_from Pathname.pwd
+        workspace_path = Pathname.new(File.expand_path(Configuration.current.xcodeproj_path.sub(/.xcodeproj$/, ".xcworkspace"))).relative_path_from Pathname.pwd
         podfile_pathname = Pathname.new(podfile_path).relative_path_from Pathname.pwd
         add_change pods_folder_path
         add_change workspace_path
@@ -820,7 +821,7 @@ EOF
         verify_carthage
 
         # 1. Generate Cartfile
-        cartfile_path = ConfigurationHelper.cartfile_path
+        cartfile_path = Configuration.current.cartfile_path
         File.open(cartfile_path, "w") do |file|
           file.write <<EOF
 github "BranchMetrics/ios-branch-deep-linking"
@@ -829,18 +830,18 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          sh "carthage #{ConfigurationHelper.carthage_command}"
+          sh "carthage #{Configuration.current.carthage_command}"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
         add_change cartfile_path
         add_change "#{cartfile_path}.resolved"
-        add_change ConfigurationHelper.xcodeproj_path
+        add_change Configuration.current.xcodeproj_path
 
         # 4. Add to target dependencies
-        frameworks_group = ConfigurationHelper.xcodeproj.frameworks_group
+        frameworks_group = Configuration.current.xcodeproj.frameworks_group
         branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
-        target = ConfigurationHelper.target
+        target = Configuration.current.target
         target.frameworks_build_phase.add_file_reference branch_framework
 
         # 5. Create a copy-frameworks build phase
@@ -850,7 +851,7 @@ EOF
         carthage_build_phase.input_paths << "$(SRCROOT)/Carthage/Build/iOS/Branch.framework"
         carthage_build_phase.output_paths << "$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/Branch.framework"
 
-        ConfigurationHelper.xcodeproj.save
+        Configuration.current.xcodeproj.save
 
         # For now, add Carthage folder to SCM
 
@@ -863,7 +864,7 @@ EOF
 
       def add_direct(options)
         # Put the framework in the path for any existing Frameworks group in the project.
-        frameworks_group = ConfigurationHelper.xcodeproj.frameworks_group
+        frameworks_group = Configuration.current.xcodeproj.frameworks_group
         framework_path = File.join frameworks_group.real_path, "Branch.framework"
         raise "#{framework_path} exists." if File.exist? framework_path
 
@@ -901,15 +902,15 @@ EOF
 
         # Now the current framework is in framework_path
 
-        say "Adding to #{ConfigurationHelper.xcodeproj_path}"
+        say "Adding to #{Configuration.current.xcodeproj_path}"
 
         # Add as a dependency in the Frameworks group
         framework = frameworks_group.new_file "Branch.framework" # relative to frameworks_group.real_path
-        ConfigurationHelper.target.frameworks_build_phase.add_file_reference framework, true
+        Configuration.current.target.frameworks_build_phase.add_file_reference framework, true
 
         # Make sure this is in the FRAMEWORK_SEARCH_PATHS if we just added it.
         if frameworks_group.files.count == 1
-          ConfigurationHelper.target.build_configurations.each do |config|
+          Configuration.current.target.build_configurations.each do |config|
             paths = config.build_settings["FRAMEWORK_SEARCH_PATHS"] || []
             next if paths.any? { |p| p == '$(SRCROOT)' || p == '$(SRCROOT)/**' }
             paths << '$(SRCROOT)'
@@ -918,9 +919,9 @@ EOF
         end
         # If it already existed, it's almost certainly already in FRAMEWORK_SEARCH_PATHS.
 
-        ConfigurationHelper.xcodeproj.save
+        Configuration.current.xcodeproj.save
 
-        add_change ConfigurationHelper.xcodeproj_path
+        add_change Configuration.current.xcodeproj_path
         add_change framework_path
         sh "git add #{framework_path}" if options.commit
 
@@ -930,7 +931,7 @@ EOF
       def update_podfile(options)
         verify_cocoapods
 
-        podfile_path = ConfigurationHelper.podfile_path
+        podfile_path = Configuration.current.podfile_path
         return false if podfile_path.nil?
 
         # 1. Patch Podfile. Return if no change (Branch pod already present).
@@ -964,7 +965,7 @@ EOF
       def update_cartfile(options, project)
         verify_carthage
 
-        cartfile_path = ConfigurationHelper.cartfile_path
+        cartfile_path = Configuration.current.cartfile_path
         return false if cartfile_path.nil?
 
         # 1. Patch Cartfile. Return if no change (Branch already present).
@@ -972,18 +973,18 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          sh "carthage #{ConfigurationHelper.carthage_command}"
+          sh "carthage #{Configuration.current.carthage_command}"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
         add_change cartfile_path
         add_change "#{cartfile_path}.resolved"
-        add_change ConfigurationHelper.xcodeproj_path
+        add_change Configuration.current.xcodeproj_path
 
         # 4. Add to target dependencies
         frameworks_group = project.frameworks_group
         branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
-        target = ConfigurationHelper.target
+        target = Configuration.current.target
         target.frameworks_build_phase.add_file_reference branch_framework
 
         # 5. Add to copy-frameworks build phase
@@ -1059,7 +1060,7 @@ EOF
       end
 
       def verify_git
-        return unless ConfigurationHelper.commit
+        return unless Configuration.current.commit
 
         git_cmd = `which git`
         return unless git_cmd.empty?

@@ -4,6 +4,10 @@ require "xcodeproj"
 module BranchIOCLI
   module Configuration
     class Configuration
+      class << self
+        attr_accessor :current
+      end
+
       attr_reader :options
       attr_reader :xcodeproj
       attr_reader :xcodeproj_path
@@ -18,6 +22,7 @@ module BranchIOCLI
       def initialize(options)
         @options = options
         @pod_repo_update = options.pod_repo_update
+        self.class.current = self
       end
 
       def log
