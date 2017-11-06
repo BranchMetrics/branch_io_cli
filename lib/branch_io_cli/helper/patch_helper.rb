@@ -6,7 +6,7 @@ module BranchIOCLI
       class << self
         def load_patch(name)
           path = File.expand_path(File.join('..', '..', '..', 'assets', 'patches'), __FILE__)
-          PatternPatch::Patch.load_yaml path
+          PatternPatch::Patch.from_yaml path
         end
 
         def patch_app_delegate_swift(project)
