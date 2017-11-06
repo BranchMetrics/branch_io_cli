@@ -15,10 +15,6 @@ module BranchIOCLI
       def helper
         Helper::BranchHelper
       end
-
-      def config_helper
-        Helper::ConfigurationHelper
-      end
     end
   end
 end
