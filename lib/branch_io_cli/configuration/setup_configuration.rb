@@ -65,6 +65,7 @@ module BranchIOCLI
 <%= color('Configuration:', BOLD) %>
 
 <%= color('Xcode project:', BOLD) %> #{xcodeproj_path}
+<%= color('Xcode project object:', BOLD) %> #{xcodeproj.inspect}
 <%= color('Target:', BOLD) %> #{target.name}
 <%= color('Live key:', BOLD) %> #{keys[:live] || '(none)'}
 <%= color('Test key:', BOLD) %> #{keys[:test] || '(none)'}
