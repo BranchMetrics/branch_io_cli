@@ -4,6 +4,7 @@ require "openssl"
 require "pathname"
 require "pattern_patch"
 require "plist"
+require "shellwords"
 require "tmpdir"
 require "zip"
 
@@ -404,6 +405,8 @@ module BranchIOCLI
           sh install_command
         end
 
+        return unless config.commit
+
         add_change podfile_path
         add_change "#{podfile_path}.lock"
 
@@ -413,7 +416,12 @@ module BranchIOCLI
         podfile_pathname = Pathname.new(podfile_path).relative_path_from Pathname.pwd
         add_change pods_folder_path
         add_change workspace_path
-        sh "git add #{podfile_pathname} #{podfile_pathname}.lock #{pods_folder_path} #{workspace_path}" if options.commit
+
+        cmd = "git add #{Shellwords.escape(podfile_pathname)} " \
+          "#{Shellwords.escape(podfile_pathname)}.lock " \
+          "#{Shellwords.escape(pods_folder_path)} " \
+          "#{Shellwords.escape(workspace_path)}"
+        sh cmd
       end
 
       def add_carthage(options)
@@ -453,13 +461,18 @@ EOF
 
         config.xcodeproj.save
 
+        return unless config.commit
+
         # For now, add Carthage folder to SCM
 
         # 6. Add the Carthage folder to the commit (in case :commit param specified)
         carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from(Pathname.pwd)
         cartfile_pathname = Pathname.new(cartfile_path).relative_path_from Pathname.pwd
         add_change carthage_folder_path
-        sh "git add #{cartfile_pathname} #{cartfile_pathname}.resolved #{carthage_folder_path}" if options.commit
+        cmd = "git add #{Shellwords.escape(cartfile_pathname)} " \
+          "#{Shellwords.escape(cartfile_pathname)}.resolved " \
+          "#{Shellwords.escape(carthage_folder_path)}"
+        sh cmd
       end
 
       def add_direct(options)
@@ -523,7 +536,7 @@ EOF
 
         add_change config.xcodeproj_path
         add_change framework_path
-        sh "git add #{framework_path}" if options.commit
+        sh "git add #{Shellwords.escape(framework_path)}" if options.commit
 
         say "Done. ✅"
       end
@@ -557,7 +570,7 @@ EOF
 
         # 5. If so, add the Pods folder to the commit (in case :commit param specified)
         add_change pods_folder_path
-        sh "git add #{pods_folder_path}" if options.commit
+        sh "git add #{Shellwords.escape(pods_folder_path)}" if options.commit
 
         true
       end
@@ -604,7 +617,7 @@ EOF
 
         # 7. If so, add the Carthage folder to the commit (in case :commit param specified)
         add_change carthage_folder_path
-        sh "git add #{carthage_folder_path}" if options.commit
+        sh "git add #{Shellwords.escape(carthage_folder_path)}" if options.commit
 
         true
       end
