@@ -43,10 +43,11 @@ module BranchIOCLI
               say "Modules not available and bridging header not found. Cannot import Branch."
               say "Please add use_frameworks! to your Podfile and/or enable modules in your project or use --no-patch-source."
               exit(-1)
-              # TODO: Handle exceptions here.
-              bridging_header = File.read bridging_header_path
-              return false if bridging_header =~ %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}
             end
+
+            # TODO: Handle exceptions here.
+            bridging_header = File.read bridging_header_path
+            return false if bridging_header =~ %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}
 
             say "Patching #{bridging_header_path}"
 
