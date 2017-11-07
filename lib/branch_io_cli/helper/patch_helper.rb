@@ -130,37 +130,19 @@ module BranchIOCLI
 
         def patch_continue_user_activity_method_swift(app_delegate_swift_path)
           app_delegate = File.read app_delegate_swift_path
+          patch_name = "continue_user_activity_"
           if app_delegate =~ /application:.*continue userActivity:.*restorationHandler:/
             # Add something to the top of the method
-            continue_user_activity_text = <<-EOF
-        // TODO: Adjust your method as you see fit.
-        if Branch.getInstance.continue(userActivity) {
-            return true
-        }
-
-            EOF
-
-            PatternPatch::Patch.new(
-              regexp: /application:.*continue userActivity:.*restorationHandler:.*?\{.*?\n/m,
-              text: continue_user_activity_text,
-              mode: :append
-            ).apply app_delegate_swift_path
+            patch_name += "swift"
+            patch = load_patch patch_name
+            patch.regexp = /application:.*continue userActivity:.*restorationHandler:.*?\{.*?\n/m
           else
             # Add the application:continueUserActivity:restorationHandler method if it does not exist
-            continue_user_activity_text = <<-EOF
-
-
-    func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]?) -> Void) -> Bool {
-        return Branch.getInstance().continue(userActivity)
-    }
-            EOF
-
-            PatternPatch::Patch.new(
-              regexp: /\n\s*\}[^{}]*\Z/m,
-              text: continue_user_activity_text,
-              mode: :prepend
-            ).apply app_delegate_swift_path
+            patch_name += "new_swift"
+            patch = load_patch patch_name
+            patch.regexp = /\n\s*\}[^{}]*\Z/m
           end
+          patch.apply app_delegate_swift_path
         end
 
         def patch_open_url_method_objc(app_delegate_objc_path)
@@ -187,37 +169,18 @@ module BranchIOCLI
 
         def patch_continue_user_activity_method_objc(app_delegate_objc_path)
           app_delegate = File.read app_delegate_objc_path
+          patch_name = "continue_user_activity_"
           if app_delegate =~ /application:.*continueUserActivity:.*restorationHandler:/
-            continue_user_activity_text = <<-EOF
-    // TODO: Adjust your method as you see fit.
-    if ([[Branch getInstance] continueUserActivity:userActivity]) {
-        return YES;
-    }
-
-            EOF
-
-            PatternPatch::Patch.new(
-              regexp: /application:.*continueUserActivity:.*restorationHandler:.*?\{.*?\n/m,
-              text: continue_user_activity_text,
-              mode: :append
-            ).apply app_delegate_objc_path
+            patch_name += "objc"
+            patch = load_patch patch_name
+            patch.regexp = /application:.*continueUserActivity:.*restorationHandler:.*?\{.*?\n/m
           else
             # Add the application:continueUserActivity:restorationHandler method if it does not exist
-            continue_user_activity_text = <<-EOF
-
-
-- (BOOL)application:(UIApplication *)app continueUserActivity:(nonnull NSUserActivity *)userActivity restorationHandler:(nonnull void (^)(NSArray * _Nullable))restorationHandler
-{
-    return [[Branch getInstance] continueUserActivity:userActivity];
-}
-            EOF
-
-            PatternPatch::Patch.new(
-              regexp: /\n\s*@end[^@]*\Z/m,
-              text: continue_user_activity_text,
-              mode: :prepend
-            ).apply app_delegate_objc_path
+            patch_name += "new_objc"
+            patch = load_patch patch_name
+            patch.regexp = /\n\s*@end[^@]*\Z/m
           end
+          patch.apply app_delegate_objc_path
         end
 
         def patch_podfile(podfile_path)
