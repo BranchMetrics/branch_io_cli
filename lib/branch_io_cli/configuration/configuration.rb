@@ -1,3 +1,4 @@
+require "cocoapods-core"
 require "pathname"
 require "xcodeproj"
 
@@ -12,6 +13,7 @@ module BranchIOCLI
       attr_reader :xcodeproj
       attr_reader :xcodeproj_path
       attr_reader :target
+      attr_reader :podfile
       attr_reader :podfile_path
       attr_reader :cartfile_path
       attr_reader :sdk_integration_mode
@@ -120,43 +122,46 @@ EOF
         # Disable Podfile/Cartfile update if --no-add-sdk is present
         return unless sdk_integration_mode.nil?
 
-        # Was --podfile/--cartfile used?
-        if buildfile_path
-          # Yes: Validate. Prompt if not valid.
-          loop do
-            valid = buildfile_path =~ %r{/?#{filename}$}
-            say "#{filename} path must end in /#{filename}." unless valid
-
-            if valid
-              valid = File.exist? buildfile_path
-              say "#{buildfile_path} not found." unless valid
-            end
-
-            if valid
-              if filename == "Podfile"
-                @podfile_path = buildfile_path
-              else
-                @cartfile_path = buildfile_path
-              end
-              return
-            end
-
-            buildfile_path = ask "Please enter the path to your #{filename}: "
-          end
+        # No --podfile or --cartfile option
+        if buildfile_path.nil?
+          # Check for Podfile/Cartfile next to workspace or project
+          buildfile_path = File.expand_path "../#{filename}", (workspace_path || xcodeproj_path)
+          buildfile_path = nil unless File.exist? buildfile_path
         end
 
-        # No: Check for Podfile/Cartfile next to workspace or project
-        buildfile_path = File.expand_path "../#{filename}", (workspace_path || xcodeproj_path)
-        return unless File.exist? buildfile_path
-
-        # Exists: Use it (valid if found)
-        if filename == "Podfile"
-          @podfile_path = buildfile_path
-        else
-          @cartfile_path = buildfile_path
+        # Validate. Prompt if not valid.
+        while !buildfile_path || !validate_buildfile_at_path(buildfile_path, filename)
+          buildfile_path = ask "Please enter the path to your #{filename}: "
         end
 
         @sdk_integration_mode = filename == "Podfile" ? :cocoapods : :carthage
+      end
+
+      def open_podfile(path)
+        @podfile = Pod::Podfile.from_file path
+        @podfile_path = path
+        true
+      rescue RuntimeError => e
+        say e.message
+        false
+      end
+
+      def validate_buildfile_at_path(buildfile_path, filename)
+        valid = buildfile_path =~ %r{/?#{filename}$}
+        say "#{filename} path must end in /#{filename}." unless valid
+
+        if valid
+          valid = File.exist? buildfile_path
+          say "#{buildfile_path} not found." unless valid
+        end
+
+        if filename == "Podfile" && open_podfile(buildfile_path)
+          true
+        elsif filename == "Cartfile"
+          @cartfile_path = buildfile_path
+          true
+        end
+        false
       end
     end
   end

@@ -194,7 +194,6 @@ EOF
 
         return true unless File.exist?(lockfile_path) && File.exist?(manifest_path)
 
-        podfile = Pod::Podfile.from_file Pathname.new config.podfile_path
         lockfile = Pod::Lockfile.from_file Pathname.new lockfile_path
         manifest = Pod::Lockfile.from_file Pathname.new manifest_path
 
@@ -206,7 +205,7 @@ EOF
         # compare checksum of Podfile with checksum in Podfile.lock
         # This is a good sanity check, but perhaps unnecessary. It means pod install
         # has not been run since the Podfile was modified, which is probably an oversight.
-        return true unless lockfile.to_hash["PODFILE CHECKSUM"] == podfile.checksum
+        return true unless lockfile.to_hash["PODFILE CHECKSUM"] == config.podfile.checksum
 
         false
       end
