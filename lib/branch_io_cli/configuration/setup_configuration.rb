@@ -55,7 +55,7 @@ module BranchIOCLI
 
       def log
         super
-        say <<EOF
+        message = <<-EOF
 <%= color('Xcode project:', BOLD) %> #{xcodeproj_path}
 <%= color('Target:', BOLD) %> #{target.name}
 <%= color('Live key:', BOLD) %> #{keys[:live] || '(none)'}
@@ -72,11 +72,17 @@ module BranchIOCLI
 <%= color('Patch source:', BOLD) %> #{patch_source.inspect}
 <%= color('Commit:', BOLD) %> #{commit.inspect}
 <%= color('SDK integration mode:', BOLD) %> #{sdk_integration_mode || '(none)'}
-<% if swift_version %>
-  <%= color('Swift version: ', BOLD) %> #{swift_version}
-<% end %>
+        EOF
 
-EOF
+        if swift_version
+          message += <<-EOF
+<%= color('Swift version:', BOLD) %> #{swift_version}
+          EOF
+        end
+
+        message += "\n"
+
+        say message
       end
 
       def validate_keys_from_setup_options(options)
