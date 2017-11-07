@@ -68,59 +68,20 @@ module BranchIOCLI
 
           if app_delegate_swift =~ /didFinishLaunching[^\n]+?\{/m
             # method already present
-            init_session_text = config.keys.count <= 1 || has_multiple_info_plists? ? "" : <<EOF
-        #if DEBUG
-            Branch.setUseTestBranchKey(true)
-        #endif
-
-EOF
-
-            init_session_text += <<-EOF
-        Branch.getInstance().initSession(launchOptions: launchOptions) {
-            universalObject, linkProperties, error in
-
-            // TODO: Route Branch links
-        }
-            EOF
-
-            PatternPatch::Patch.new(
-              regexp: /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m,
-              text: init_session_text,
-              mode: :append
-            ).apply app_delegate_swift_path
+            patch_name = "did_finish_launching_"
+            patch_name += "test_" if config.keys.count <= 1 || has_multiple_info_plists?
+            patch_name += "swift"
+            patch = load_patch(patch_name)
+            patch.regexp = /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m
           else
             # method not present. add entire method
-
-            method_text = <<EOF
-
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-EOF
-
-            if config.keys.count > 1 && !has_multiple_info_plists?
-              method_text += <<EOF
-        #if DEBUG
-            Branch.setUseTestBranchKey(true)
-        #endif
-
-EOF
-            end
-
-            method_text += <<-EOF
-        Branch.getInstance().initSession(launchOptions: launchOptions) {
-            universalObject, linkProperties, error in
-
-            // TODO: Route Branch links
-        }
-        return true
-    }
-            EOF
-
-            PatternPatch::Patch.new(
-              regexp: /var\s+window\s?:\s?UIWindow\?.*?\n/m,
-              text: method_text,
-              mode: :append
-            ).apply app_delegate_swift_path
+            patch_name = "did_finish_launching_new_"
+            patch_name += "test_" if config.keys.count <= 1 || has_multiple_info_plists?
+            patch_name += "swift"
+            patch = load_patch(patch_name)
+            patch.regexp = /var\s+window\s?:\s?UIWindow\?.*?\n/m
           end
+          patch.apply app_delegate_swift_path
         end
 
         def patch_did_finish_launching_method_objc(app_delegate_objc_path)
@@ -128,56 +89,20 @@ EOF
 
           if app_delegate_objc =~ /didFinishLaunchingWithOptions/m
             # method exists. patch it.
-            init_session_text = config.keys.count <= 1 || has_multiple_info_plists? ? "" : <<EOF
-#ifdef DEBUG
-    [Branch setUseTestBranchKey:YES];
-#endif // DEBUG
-
-EOF
-
-            init_session_text += <<-EOF
-    [[Branch getInstance] initSessionWithLaunchOptions:launchOptions
-        andRegisterDeepLinkHandlerUsingBranchUniversalObject:^(BranchUniversalObject *universalObject, BranchLinkProperties *linkProperties, NSError *error){
-        // TODO: Route Branch links
-    }];
-            EOF
-
-            PatternPatch::Patch.new(
-              regexp: /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m,
-              text: init_session_text,
-              mode: :append
-            ).apply app_delegate_objc_path
+            patch_name = "did_finish_launching_"
+            patch_name += "test_" if config.keys.count <= 1 || has_multiple_info_plists?
+            patch_name += "objc"
+            patch = load_patch(patch_name)
+            patch.regexp = /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m
           else
             # method does not exist. add it.
-            method_text = <<EOF
-
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-EOF
-
-            if config.keys.count > 1 && !has_multiple_info_plists?
-              method_text += <<EOF
-#ifdef DEBUG
-    [Branch setUseTestBranchKey:YES];
-#endif // DEBUG
-
-EOF
-            end
-
-            method_text += <<-EOF
-    [[Branch getInstance] initSessionWithLaunchOptions:launchOptions
-        andRegisterDeepLinkHandlerUsingBranchUniversalObject:^(BranchUniversalObject *universalObject, BranchLinkProperties *linkProperties, NSError *error){
-        // TODO: Route Branch links
-    }];
-    return YES;
-}
-            EOF
-
-            PatternPatch::Patch.new(
-              regexp: /^@implementation.*?\n/m,
-              text: method_text,
-              mode: :append
-            ).apply app_delegate_objc_path
+            patch_name = "did_finish_launching_new_"
+            patch_name += "test_" if config.keys.count <= 1 || has_multiple_info_plists?
+            patch_name += "swift"
+            patch = load_patch(patch_name)
+            patch.regexp = /^@implementation.*?\n/m
           end
+          patch.apply app_delegate_objc_path
         end
 
         def patch_open_url_method_swift(app_delegate_swift_path)
