@@ -98,7 +98,7 @@ module BranchIOCLI
             # method does not exist. add it.
             patch_name += "new_"
             patch_name += "test_" if config.keys.count <= 1 || has_multiple_info_plists?
-            patch_name += "swift"
+            patch_name += "objc"
             patch = load_patch patch_name
             patch.regexp = /^@implementation.*?\n/m
           end
