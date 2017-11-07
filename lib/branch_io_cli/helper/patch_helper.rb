@@ -22,6 +22,8 @@ module BranchIOCLI
         end
 
         def patch_app_delegate_swift(project)
+          return unless config.swift_version
+
           app_delegate_swift = project.files.find { |f| f.path =~ /AppDelegate.swift$/ }
           return false if app_delegate_swift.nil?
 
@@ -32,7 +34,14 @@ module BranchIOCLI
 
           say "Patching #{app_delegate_swift_path}"
 
-          load_patch(:swift_import).apply app_delegate_swift_path
+          if !config.modules_enabled? && config.bridging_header_path
+            load_patch(:objc_import).apply config.bridging_header_path
+          elsif config.modules_enabled?
+            load_patch(:swift_import).apply app_delegate_swift_path
+          else
+            # TODO: Or should we fail? And what about config.uses_frameworks? (from Podfile)
+            say "Modules not enabled and no bridging header found. You will have to import Branch manually."
+          end
 
           patch_did_finish_launching_method_swift app_delegate_swift_path
           patch_continue_user_activity_method_swift app_delegate_swift_path

@@ -172,6 +172,15 @@ EOF
         target_definition.uses_frameworks?
       end
 
+      # TODO: How many of these can vary by configuration?
+
+      def modules_enabled?
+        return nil unless target
+        setting = target.resolved_build_setting("CLANG_ENABLE_MODULES")["Release"]
+        return nil unless setting
+        setting == "YES"
+      end
+
       def bridging_header_path
         return nil unless target
         path = helper.expanded_build_setting target, "SWIFT_OBJC_BRIDGING_HEADER", "Release"
