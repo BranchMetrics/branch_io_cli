@@ -1,11 +1,2 @@
 mode: append
-text: >+
-        #if DEBUG
-            Branch.setUseTestBranchKey(true)
-        #endif
-
-        Branch.getInstance().initSession(launchOptions: launchOptions) {
-            universalObject, linkProperties, error in
-
-            // TODO: Route Branch links
-        }
+text_file: DidFinishLaunchingTest.swift
