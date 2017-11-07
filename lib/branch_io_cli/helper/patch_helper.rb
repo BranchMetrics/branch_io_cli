@@ -112,7 +112,7 @@ module BranchIOCLI
             # Has application:openURL:options:
             patch_name += "swift"
             patch = load_patch patch_name
-            patch.regexp = /application.*open\s+url.*options:.*?\{.*?\n/m,
+            patch.regexp = /application.*open\s+url.*options:.*?\{.*?\n/m
           elsif app_delegate_swift =~ /application.*open\s+url.*sourceApplication/
             # Has application:openURL:sourceApplication:annotation:
             # TODO: This method is deprecated.
