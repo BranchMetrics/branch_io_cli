@@ -1,5 +1,5 @@
 mode: append
-text: |
+text: >+
         #if DEBUG
             Branch.setUseTestBranchKey(true)
         #endif
