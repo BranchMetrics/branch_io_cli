@@ -176,8 +176,7 @@ EOF
         return false unless swift_version
         # If there is a Podfile and use_frameworks! is not present for this
         # target, we need a bridging header.
-        return true if podfile && !uses_frameworks?
-        !modules_enabled?
+        podfile && !uses_frameworks?
       end
 
       # TODO: How many of these can vary by configuration?
