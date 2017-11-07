@@ -160,8 +160,9 @@ EOF
         elsif filename == "Cartfile"
           @cartfile_path = buildfile_path
           true
+        else
+          false
         end
-        false
       end
     end
   end
