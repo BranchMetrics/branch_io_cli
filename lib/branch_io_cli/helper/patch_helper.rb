@@ -66,19 +66,19 @@ module BranchIOCLI
         def patch_did_finish_launching_method_swift(app_delegate_swift_path)
           app_delegate_swift = File.read app_delegate_swift_path
 
+          patch_name = "did_finish_launching_"
           if app_delegate_swift =~ /didFinishLaunching[^\n]+?\{/m
             # method already present
-            patch_name = "did_finish_launching_"
             patch_name += "test_" if config.keys.count <= 1 || has_multiple_info_plists?
             patch_name += "swift"
-            patch = load_patch(patch_name)
+            patch = load_patch patch_name
             patch.regexp = /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m
           else
             # method not present. add entire method
-            patch_name = "did_finish_launching_new_"
+            patch_name += "new_"
             patch_name += "test_" if config.keys.count <= 1 || has_multiple_info_plists?
             patch_name += "swift"
-            patch = load_patch(patch_name)
+            patch = load_patch patch_name
             patch.regexp = /var\s+window\s?:\s?UIWindow\?.*?\n/m
           end
           patch.apply app_delegate_swift_path
@@ -87,19 +87,19 @@ module BranchIOCLI
         def patch_did_finish_launching_method_objc(app_delegate_objc_path)
           app_delegate_objc = File.read app_delegate_objc_path
 
+          patch_name = "did_finish_launching_"
           if app_delegate_objc =~ /didFinishLaunchingWithOptions/m
             # method exists. patch it.
-            patch_name = "did_finish_launching_"
             patch_name += "test_" if config.keys.count <= 1 || has_multiple_info_plists?
             patch_name += "objc"
-            patch = load_patch(patch_name)
+            patch = load_patch patch_name
             patch.regexp = /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m
           else
             # method does not exist. add it.
-            patch_name = "did_finish_launching_new_"
+            patch_name += "new_"
             patch_name += "test_" if config.keys.count <= 1 || has_multiple_info_plists?
             patch_name += "swift"
-            patch = load_patch(patch_name)
+            patch = load_patch patch_name
             patch.regexp = /^@implementation.*?\n/m
           end
           patch.apply app_delegate_objc_path
@@ -107,53 +107,25 @@ module BranchIOCLI
 
         def patch_open_url_method_swift(app_delegate_swift_path)
           app_delegate_swift = File.read app_delegate_swift_path
+          patch_name = "open_url_"
           if app_delegate_swift =~ /application.*open\s+url.*options/
             # Has application:openURL:options:
-            open_url_text = <<-EOF
-        // TODO: Adjust your method as you see fit.
-        if Branch.getInstance().application(app, open: url, options: options) {
-            return true
-        }
-
-            EOF
-
-            PatternPatch::Patch.new(
-              regexp: /application.*open\s+url.*options:.*?\{.*?\n/m,
-              text: open_url_text,
-              mode: :append
-            ).apply app_delegate_swift_path
+            patch_name += "swift"
+            patch = load_patch patch_name
+            patch.regexp = /application.*open\s+url.*options:.*?\{.*?\n/m,
           elsif app_delegate_swift =~ /application.*open\s+url.*sourceApplication/
             # Has application:openURL:sourceApplication:annotation:
             # TODO: This method is deprecated.
-            open_url_text = <<-EOF
-              // TODO: Adjust your method as you see fit.
-              if Branch.getInstance().application(application, open: url, sourceApplication: sourceApplication, annotation: annotation) {
-                  return true
-              }
-
-            EOF
-
-            PatternPatch::Patch.new(
-              regexp: /application.*open\s+url.*sourceApplication:.*?\{.*?\n/m,
-              text: open_url_text,
-              mode: :append
-            ).apply app_delegate_swift_path
+            patch_name += "source_application_swift"
+            patch = load_patch patch_name
+            patch.regexp = /application.*open\s+url.*sourceApplication:.*?\{.*?\n/m
           else
             # Has neither
-            open_url_text = <<EOF
-
-
-    func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
-        return Branch.getInstance().application(app, open: url, options: options)
-    }
-EOF
-
-            PatternPatch::Patch.new(
-              regexp: /\n\s*\}[^{}]*\Z/m,
-              text: open_url_text,
-              mode: :prepend
-            ).apply app_delegate_swift_path
+            patch_name += "new_swift"
+            patch = load_patch patch_name
+            patch.regexp = /\n\s*\}[^{}]*\Z/m
           end
+          patch.apply app_delegate_swift_path
         end
 
         def patch_continue_user_activity_method_swift(app_delegate_swift_path)
@@ -193,53 +165,24 @@ EOF
 
         def patch_open_url_method_objc(app_delegate_objc_path)
           app_delegate_objc = File.read app_delegate_objc_path
+          patch_name = "open_url_"
           if app_delegate_objc =~ /application:.*openURL:.*options/
             # Has application:openURL:options:
-            open_url_text = <<-EOF
-    // TODO: Adjust your method as you see fit.
-    if ([[Branch getInstance] application:app openURL:url options:options]) {
-        return YES;
-    }
-
-            EOF
-
-            PatternPatch::Patch.new(
-              regexp: /application:.*openURL:.*options:.*?\{.*?\n/m,
-              text: open_url_text,
-              mode: :append
-            ).apply app_delegate_objc_path
+            patch_name += "objc"
+            patch = load_patch patch_name
+            patch.regexp = /application:.*openURL:.*options:.*?\{.*?\n/m
           elsif app_delegate_objc =~ /application:.*openURL:.*sourceApplication/
             # Has application:openURL:sourceApplication:annotation:
-            open_url_text = <<-EOF
-    // TODO: Adjust your method as you see fit.
-    if ([[Branch getInstance] application:application openURL:url sourceApplication:sourceApplication annotation:annotation]) {
-        return YES;
-    }
-
-            EOF
-
-            PatternPatch::Patch.new(
-              regexp: /application:.*openURL:.*sourceApplication:.*?\{.*?\n/m,
-              text: open_url_text,
-              mode: :append
-            ).apply app_delegate_objc_path
+            patch_name += "source_application_objc"
+            patch = load_patch patch_name
+            patch.regexp = /application:.*openURL:.*sourceApplication:.*?\{.*?\n/m
           else
             # Has neither
-            open_url_text = <<-EOF
-
-
-- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options
-{
-    return [[Branch getInstance] application:app openURL:url options:options];
-}
-            EOF
-
-            PatternPatch::Patch.new(
-              regexp: /\n\s*@end[^@]*\Z/m,
-              text: open_url_text,
-              mode: :prepend
-            ).apply app_delegate_objc_path
+            patch_name += "new_objc"
+            patch = load_patch patch_name
+            patch.regexp = /\n\s*@end[^@]*\Z/m
           end
+          patch.apply app_delegate_objc_path
         end
 
         def patch_continue_user_activity_method_objc(app_delegate_objc_path)
