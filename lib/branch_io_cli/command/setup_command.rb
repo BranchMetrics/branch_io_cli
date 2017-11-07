@@ -1,4 +1,5 @@
 require "branch_io_cli/helper/methods"
+require "shellwords"
 
 module BranchIOCLI
   module Command
@@ -53,7 +54,7 @@ module BranchIOCLI
         helper.ensure_uri_scheme_in_info_plist if is_app_target # does nothing if already present
 
         new_path = helper.add_universal_links_to_project @domains, false if is_app_target
-        sh "git add #{new_path}" if options.commit && new_path
+        sh "git add #{Shellwords.escape(new_path)}" if options.commit && new_path
 
         config_helper.target.add_system_frameworks options.frameworks unless options.frameworks.nil? || options.frameworks.empty?
 
@@ -100,7 +101,7 @@ module BranchIOCLI
           sh "git stash -q"
         when /^Commit/
           message = ask "Please enter a commit message: "
-          sh "git commit -aqm'#{message}'"
+          sh "git commit -aqm #{Shellwords.escape(message)}"
         else
           say "Please stash or commit your changes before continuing."
           exit(-1)
