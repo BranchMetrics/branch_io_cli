@@ -72,6 +72,9 @@ module BranchIOCLI
 <%= color('Patch source:', BOLD) %> #{patch_source.inspect}
 <%= color('Commit:', BOLD) %> #{commit.inspect}
 <%= color('SDK integration mode:', BOLD) %> #{sdk_integration_mode || '(none)'}
+<% if swift_version %>
+  <%= color('Swift version: ', BOLD) %> #{swift_version}
+<% end %>
 
 EOF
       end
