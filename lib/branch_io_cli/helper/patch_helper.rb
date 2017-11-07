@@ -21,11 +21,27 @@ module BranchIOCLI
           helper.add_change change
         end
 
-        def bridging_header_required?
-          # If there is a Podfile and use_frameworks! is not present for this
-          # target, we need a bridging header.
-          return true if config.podfile && !config.uses_frameworks?
-          !config.modules_enabled?
+        def patch_bridging_header
+          unless config.bridging_header_path
+            say "Modules not available and bridging header not found. Cannot import Branch."
+            say "Please add use_frameworks! to your Podfile and/or enable modules in your project or use --no-patch-source."
+            exit(-1)
+          end
+
+          begin
+            bridging_header = File.read config.bridging_header_path
+            return false if bridging_header =~ %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}
+          rescue RuntimeError => e
+            say e.message
+            say "Cannot read #{config.bridging_header_path}."
+            say "Please correct this setting or use --no-patch-source."
+            exit(-1)
+          end
+
+          say "Patching #{config.bridging_header_path}"
+
+          load_patch(:objc_import).apply config.bridging_header_path
+          helper.add_change config.bridging_header_path
         end
 
         def patch_app_delegate_swift(project)
@@ -38,23 +54,10 @@ module BranchIOCLI
 
           app_delegate = File.read app_delegate_swift_path
 
-          if bridging_header_required?
-            unless bridging_header_path
-              say "Modules not available and bridging header not found. Cannot import Branch."
-              say "Please add use_frameworks! to your Podfile and/or enable modules in your project or use --no-patch-source."
-              exit(-1)
-            end
+          # Can't check for the import here, since there may be a bridging header.
+          return false if app_delegate =~ /Branch\.initSession/
 
-            # TODO: Handle exceptions here.
-            bridging_header = File.read bridging_header_path
-            return false if bridging_header =~ %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}
-
-            say "Patching #{bridging_header_path}"
-
-            load_patch(:objc_import).apply bridging_header_path
-            helper.add_change bridging_header_path
-          else
-            return false if app_delegate =~ /^\s*import\s+Branch/
+          unless config.bridging_header_required?
             load_patch(:swift_import).apply app_delegate_swift_path
           end
 
@@ -252,6 +255,10 @@ module BranchIOCLI
         end
 
         def patch_source(xcodeproj)
+          # Patch the bridging header any time Swift imports are not available,
+          # to make Branch available throughout the app, whether the AppDelegate
+          # is in Swift or Objective-C.
+          patch_bridging_header if config.bridging_header_required?
           patch_app_delegate_swift(xcodeproj) || patch_app_delegate_objc(xcodeproj)
         end
       end
