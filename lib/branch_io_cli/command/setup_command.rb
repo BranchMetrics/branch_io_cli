@@ -20,23 +20,6 @@ module BranchIOCLI
 
         xcodeproj = config.xcodeproj
 
-        case config.sdk_integration_mode
-        when :cocoapods
-          if File.exist? config.podfile_path
-            helper.update_podfile options
-          else
-            helper.add_cocoapods options
-          end
-        when :carthage
-          if File.exist? config.cartfile_path
-            helper.update_cartfile options, xcodeproj
-          else
-            helper.add_carthage options
-          end
-        when :direct
-          helper.add_direct options
-        end
-
         is_app_target = !config.target.extension_target_type?
 
         if is_app_target && options.validate &&
@@ -59,6 +42,23 @@ module BranchIOCLI
         config_helper.target.add_system_frameworks options.frameworks unless options.frameworks.nil? || options.frameworks.empty?
 
         xcodeproj.save
+
+        case config.sdk_integration_mode
+        when :cocoapods
+          if File.exist? config.podfile_path
+            helper.update_podfile options
+          else
+            helper.add_cocoapods options
+          end
+        when :carthage
+          if File.exist? config.cartfile_path
+            helper.update_cartfile options, xcodeproj
+          else
+            helper.add_carthage options
+          end
+        when :direct
+          helper.add_direct options
+        end
 
         patch_helper.patch_source xcodeproj if options.patch_source
 
