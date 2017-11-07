@@ -49,13 +49,13 @@ EOF
           report.write "#{report_header}\n"
 
           # run xcodebuild -list
-          sh "#{base_xcodebuild_cmd} -list", report
+          report.log_command "#{base_xcodebuild_cmd} -list"
 
           # If using a workspace, -list all the projects as well
           if config.workspace_path
             config.workspace.file_references.map(&:path).each do |project_path|
               path = File.join File.dirname(config.workspace_path), project_path
-              sh "xcodebuild -list -project #{path}", report
+              report.log_command "xcodebuild -list -project #{path}"
             end
           end
 
@@ -64,7 +64,7 @@ EOF
           base_cmd = "#{base_cmd} -scheme #{config.scheme}" if config.workspace_path
 
           # xcodebuild -showBuildSettings
-          sh "#{base_cmd} -showBuildSettings", report
+          report.log_command "#{base_cmd} -showBuildSettings"
 
           # Add more options for the rest of the commands
           base_cmd = "#{base_cmd} -configuration #{config.configuration} -sdk #{config.sdk}"
@@ -72,11 +72,11 @@ EOF
 
           if config.clean
             say "Cleaning"
-            sh "#{base_cmd} clean", report
+            report.log_command "#{base_cmd} clean"
           end
 
           say "Building"
-          sh "#{base_cmd} -verbose", report
+          report.log_command "#{base_cmd} -verbose"
 
           say "Done ✅"
         end
