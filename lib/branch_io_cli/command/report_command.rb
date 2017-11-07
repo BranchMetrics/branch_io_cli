@@ -218,7 +218,7 @@ EOF
 
         header += "\nTarget #{config.target.name}:\n"
         header += " Deployment target: #{config.target.deployment_target}\n"
-        header += " Modules #{config.modules_enabled? ? '' : 'not '}enabled"
+        header += " Modules #{config.modules_enabled? ? '' : 'not '}enabled\n"
         header += " Swift #{config.swift_version}\n" if config.swift_version
         header += " Bridging header: #{config.bridging_header_path}\n" if config.bridging_header_path
 

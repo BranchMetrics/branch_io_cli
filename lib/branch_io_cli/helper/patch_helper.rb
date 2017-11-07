@@ -21,8 +21,15 @@ module BranchIOCLI
           helper.add_change change
         end
 
+        def bridging_header_required?
+          # If there is a Podfile and use_frameworks! is not present for this
+          # target, we need a bridging header.
+          return true if config.podfile && !config.uses_frameworks?
+          !config.modules_enabled?
+        end
+
         def patch_app_delegate_swift(project)
-          return unless config.swift_version
+          return false unless config.swift_version
 
           app_delegate_swift = project.files.find { |f| f.path =~ /AppDelegate.swift$/ }
           return false if app_delegate_swift.nil?
@@ -30,18 +37,25 @@ module BranchIOCLI
           app_delegate_swift_path = app_delegate_swift.real_path.to_s
 
           app_delegate = File.read app_delegate_swift_path
-          return false if app_delegate =~ /import\s+Branch/
+
+          if bridging_header_required?
+            unless config.bridging_header_path
+              say "Modules not available and bridging header not found. Cannot import Branch."
+              say "Please add use_frameworks! to your Podfile and/or enable modules in your project or use --no-add-sdk."
+              exit(-1)
+              return false if app_delegate =~ %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}
+            end
+
+            say "Patching #{config.bridging_header_path}"
+
+            load_patch(:objc_import).apply config.bridging_header_path
+            helper.add_change config.bridging_header_path
+          else
+            return false if app_delegate =~ /^\s*import\s+Branch/
+            load_patch(:swift_import).apply app_delegate_swift_path
+          end
 
           say "Patching #{app_delegate_swift_path}"
-
-          if !config.modules_enabled? && config.bridging_header_path
-            load_patch(:objc_import).apply config.bridging_header_path
-          elsif config.modules_enabled?
-            load_patch(:swift_import).apply app_delegate_swift_path
-          else
-            # TODO: Or should we fail? And what about config.uses_frameworks? (from Podfile)
-            say "Modules not enabled and no bridging header found. You will have to import Branch manually."
-          end
 
           patch_did_finish_launching_method_swift app_delegate_swift_path
           patch_continue_user_activity_method_swift app_delegate_swift_path
@@ -58,7 +72,7 @@ module BranchIOCLI
           app_delegate_objc_path = app_delegate_objc.real_path.to_s
 
           app_delegate = File.read app_delegate_objc_path
-          return false if app_delegate =~ %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch;}
+          return false if app_delegate =~ %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}
 
           say "Patching #{app_delegate_objc_path}"
 
