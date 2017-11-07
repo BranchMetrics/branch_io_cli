@@ -41,7 +41,7 @@ module BranchIOCLI
           if bridging_header_required?
             unless config.bridging_header_path
               say "Modules not available and bridging header not found. Cannot import Branch."
-              say "Please add use_frameworks! to your Podfile and/or enable modules in your project or use --no-add-sdk."
+              say "Please add use_frameworks! to your Podfile and/or enable modules in your project or use --no-patch-source."
               exit(-1)
               return false if app_delegate =~ %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}
             end
