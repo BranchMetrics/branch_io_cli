@@ -216,7 +216,10 @@ EOF
 
         header += `xcodebuild -version`
 
-        header += "\nTarget #{config.target.name} deploy target: #{config.target.deployment_target}\n"
+        header += "\nTarget #{config.target.name}:\n"
+        header += " Deployment target: #{config.target.deployment_target}\n"
+        header += " Swift #{config.swift_version}\n" if config.swift_version
+        header += " Bridging header: #{config.bridging_header_path}\n" if config.bridging_header_path
 
         if config.podfile_path
           begin

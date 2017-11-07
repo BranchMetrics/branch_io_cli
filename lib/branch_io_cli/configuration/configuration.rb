@@ -164,6 +164,25 @@ EOF
           false
         end
       end
+
+      def uses_frameworks?
+        return nil unless podfile
+        target_definition = podfile.target_definition_list.find { |t| t.name == config.target.name }
+        return nil unless target_definition
+        target_definition.uses_frameworks?
+      end
+
+      def bridging_header_path
+        return nil unless target
+        path = helper.expanded_build_setting target, "SWIFT_OBJC_BRIDGING_HEADER", "Release"
+        return nil unless path
+        File.expand_path path, File.dirname(xcodeproj_path)
+      end
+
+      def swift_version
+        return nil unless target
+        target.resolved_build_setting("SWIFT_VERSION")["Release"]
+      end
     end
   end
 end
