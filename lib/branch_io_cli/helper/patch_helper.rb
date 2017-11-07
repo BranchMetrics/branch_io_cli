@@ -28,6 +28,29 @@ module BranchIOCLI
           !config.modules_enabled?
         end
 
+        def patch_bridging_header
+          unless bridging_header_path
+            say "Modules not available and bridging header not found. Cannot import Branch."
+            say "Please add use_frameworks! to your Podfile and/or enable modules in your project or use --no-patch-source."
+            exit(-1)
+          end
+
+          begin
+            bridging_header = File.read bridging_header_path
+            return false if bridging_header =~ %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}
+          rescue RuntimeError => e
+            say e.message
+            say "Cannot read #{bridging_header_path}."
+            say "Please correct this setting or use --no-patch-source."
+            exit(-1)
+          end
+
+          say "Patching #{bridging_header_path}"
+
+          load_patch(:objc_import).apply bridging_header_path
+          helper.add_change bridging_header_path
+        end
+
         def patch_app_delegate_swift(project)
           return false unless config.swift_version
 
@@ -39,20 +62,7 @@ module BranchIOCLI
           app_delegate = File.read app_delegate_swift_path
 
           if bridging_header_required?
-            unless bridging_header_path
-              say "Modules not available and bridging header not found. Cannot import Branch."
-              say "Please add use_frameworks! to your Podfile and/or enable modules in your project or use --no-patch-source."
-              exit(-1)
-            end
-
-            # TODO: Handle exceptions here.
-            bridging_header = File.read bridging_header_path
-            return false if bridging_header =~ %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}
-
-            say "Patching #{bridging_header_path}"
-
-            load_patch(:objc_import).apply bridging_header_path
-            helper.add_change bridging_header_path
+            patch_bridging_header
           else
             return false if app_delegate =~ /^\s*import\s+Branch/
             load_patch(:swift_import).apply app_delegate_swift_path
