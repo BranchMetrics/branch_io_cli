@@ -126,7 +126,7 @@ EOF
         if buildfile_path.nil?
           # Check for Podfile/Cartfile next to workspace or project
           buildfile_path = File.expand_path "../#{filename}", (workspace_path || xcodeproj_path)
-          buildfile_path = nil unless File.exist? buildfile_path
+          return unless File.exist? buildfile_path
         end
 
         # Validate. Prompt if not valid.
