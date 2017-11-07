@@ -459,6 +459,8 @@ EOF
         carthage_build_phase.input_paths << "$(SRCROOT)/Carthage/Build/iOS/Branch.framework"
         carthage_build_phase.output_paths << "$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/Branch.framework"
 
+        update_framework_search_paths "$(SRCROOT)/Carthage/Build/iOS"
+
         config.xcodeproj.save
 
         return unless config.commit
@@ -521,16 +523,7 @@ EOF
         framework = frameworks_group.new_file "Branch.framework" # relative to frameworks_group.real_path
         config.target.frameworks_build_phase.add_file_reference framework, true
 
-        # Make sure this is in the FRAMEWORK_SEARCH_PATHS if we just added it.
-        if frameworks_group.files.count == 1
-          config.target.build_configurations.each do |config|
-            paths = config.build_settings["FRAMEWORK_SEARCH_PATHS"] || []
-            next if paths.any? { |p| p == '$(SRCROOT)' || p == '$(SRCROOT)/**' }
-            paths << '$(SRCROOT)'
-            config.build_settings["FRAMEWORK_SEARCH_PATHS"] = paths
-          end
-        end
-        # If it already existed, it's almost certainly already in FRAMEWORK_SEARCH_PATHS.
+        update_framework_search_paths "$(SRCROOT)"
 
         config.xcodeproj.save
 
@@ -539,6 +532,22 @@ EOF
         sh "git add #{Shellwords.escape(framework_path)}" if options.commit
 
         say "Done. ✅"
+      end
+
+      def update_framework_search_paths(path)
+        # Make sure this is in the FRAMEWORK_SEARCH_PATHS if we just added it.
+        if config.xcodeproj.frameworks_group.files.count == 1
+          target = config.target
+          target.build_configurations.each do |c|
+            # this accounts for project-level settings as well
+            setting = target.resolved_build_setting("FRAMEWORK_SEARCH_PATHS")[c.name] || []
+            next if setting.include?(path) || setting.include?("#{path}/**")
+            setting << path
+
+            c.build_settings["FRAMEWORK_SEARCH_PATHS"] = setting
+          end
+        end
+        # If it already existed, it's almost certainly already in FRAMEWORK_SEARCH_PATHS.
       end
 
       def update_podfile(options)
