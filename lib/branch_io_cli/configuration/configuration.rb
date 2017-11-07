@@ -172,6 +172,14 @@ EOF
         target_definition.uses_frameworks?
       end
 
+      def bridging_header_required?
+        return false unless swift_version
+        # If there is a Podfile and use_frameworks! is not present for this
+        # target, we need a bridging header.
+        return true if podfile && !uses_frameworks?
+        !modules_enabled?
+      end
+
       # TODO: How many of these can vary by configuration?
 
       def modules_enabled?
@@ -182,15 +190,22 @@ EOF
       end
 
       def bridging_header_path
+        return @bridging_header_path if @bridging_header_path
+
         return nil unless target
         path = helper.expanded_build_setting target, "SWIFT_OBJC_BRIDGING_HEADER", "Release"
         return nil unless path
-        File.expand_path path, File.dirname(xcodeproj_path)
+
+        @bridging_header_path = File.expand_path path, File.dirname(xcodeproj_path)
+        @bridging_header_path
       end
 
       def swift_version
+        return @swift_version if @swift_version
+
         return nil unless target
-        target.resolved_build_setting("SWIFT_VERSION")["Release"]
+        @swift_version = target.resolved_build_setting("SWIFT_VERSION")["Release"]
+        @swift_version
       end
     end
   end
