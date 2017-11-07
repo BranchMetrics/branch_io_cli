@@ -69,14 +69,14 @@ module BranchIOCLI
           patch_name = "did_finish_launching_"
           if app_delegate_swift =~ /didFinishLaunching[^\n]+?\{/m
             # method already present
-            patch_name += "test_" if config.keys.count <= 1 || has_multiple_info_plists?
+            patch_name += "test_" unless config.keys.count <= 1 || has_multiple_info_plists?
             patch_name += "swift"
             patch = load_patch patch_name
             patch.regexp = /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m
           else
             # method not present. add entire method
             patch_name += "new_"
-            patch_name += "test_" if config.keys.count <= 1 || has_multiple_info_plists?
+            patch_name += "test_" unless config.keys.count <= 1 || has_multiple_info_plists?
             patch_name += "swift"
             patch = load_patch patch_name
             patch.regexp = /var\s+window\s?:\s?UIWindow\?.*?\n/m
@@ -90,14 +90,14 @@ module BranchIOCLI
           patch_name = "did_finish_launching_"
           if app_delegate_objc =~ /didFinishLaunchingWithOptions/m
             # method exists. patch it.
-            patch_name += "test_" if config.keys.count <= 1 || has_multiple_info_plists?
+            patch_name += "test_" unless config.keys.count <= 1 || has_multiple_info_plists?
             patch_name += "objc"
             patch = load_patch patch_name
             patch.regexp = /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m
           else
             # method does not exist. add it.
             patch_name += "new_"
-            patch_name += "test_" if config.keys.count <= 1 || has_multiple_info_plists?
+            patch_name += "test_" unless config.keys.count <= 1 || has_multiple_info_plists?
             patch_name += "objc"
             patch = load_patch patch_name
             patch.regexp = /^@implementation.*?\n/m
