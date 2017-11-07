@@ -39,17 +39,17 @@ module BranchIOCLI
           app_delegate = File.read app_delegate_swift_path
 
           if bridging_header_required?
-            unless config.bridging_header_path
+            unless bridging_header_path
               say "Modules not available and bridging header not found. Cannot import Branch."
               say "Please add use_frameworks! to your Podfile and/or enable modules in your project or use --no-patch-source."
               exit(-1)
               return false if app_delegate =~ %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}
             end
 
-            say "Patching #{config.bridging_header_path}"
+            say "Patching #{bridging_header_path}"
 
-            load_patch(:objc_import).apply config.bridging_header_path
-            helper.add_change config.bridging_header_path
+            load_patch(:objc_import).apply bridging_header_path
+            helper.add_change bridging_header_path
           else
             return false if app_delegate =~ /^\s*import\s+Branch/
             load_patch(:swift_import).apply app_delegate_swift_path

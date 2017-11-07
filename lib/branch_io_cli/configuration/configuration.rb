@@ -167,7 +167,7 @@ EOF
 
       def uses_frameworks?
         return nil unless podfile
-        target_definition = podfile.target_definition_list.find { |t| t.name == config.target.name }
+        target_definition = podfile.target_definition_list.find { |t| t.name == target.name }
         return nil unless target_definition
         target_definition.uses_frameworks?
       end
