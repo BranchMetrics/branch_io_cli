@@ -101,7 +101,7 @@ module BranchIOCLI
           sh "git stash -q"
         when /^Commit/
           message = ask "Please enter a commit message: "
-          sh "git commit -aqm'#{Shellwords.escape(message)}'"
+          sh "git commit -aqm #{Shellwords.escape(message)}"
         else
           say "Please stash or commit your changes before continuing."
           exit(-1)
