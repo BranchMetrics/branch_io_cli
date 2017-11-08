@@ -177,12 +177,11 @@ module BranchIOCLI
         end
 
         def patch_podfile(podfile_path)
-          target_definition = config.podfile.target_definition_list.find { |d| d.name == config.target.name }
+          target_definition = config.podfile.target_definitions[config.target.name]
           raise "Target #{config.target.name} not found in Podfile" unless target_definition
 
-          # Podfile already contains the Branch pod
-          # TODO: Allow for adding to multiple targets in the Podfile
-          return false if target_definition.dependencies.any? { |d| d.name == "Branch" }
+          # Podfile already contains the Branch pod, possibly just a subspec
+          return false if target_definition.dependencies.any? { |d| d.name =~ %r{^Branch(/?|$)} }
 
           say "Adding pod \"Branch\" to #{podfile_path}"
 

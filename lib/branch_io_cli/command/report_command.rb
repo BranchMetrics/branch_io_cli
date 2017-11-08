@@ -246,9 +246,9 @@ EOF
 
           # Already verified existence.
           podfile = Pod::Podfile.from_file Pathname.new config.podfile_path
-          target_definition = podfile.target_definition_list.find { |t| t.name == config.target.name }
+          target_definition = podfile.target_definitions[config.target.name]
           if target_definition
-            branch_dep = target_definition.dependencies.find { |p| p.name == "Branch" }
+            branch_dep = target_definition.dependencies.find { |p| p.name =~ %r{^Branch(/?|$)} }
             header += "Podfile target #{target_definition.name}:"
             header += "\n use_frameworks!" if target_definition.uses_frameworks?
             header += "\n platform: #{target_definition.platform}"
