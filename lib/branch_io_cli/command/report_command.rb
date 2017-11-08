@@ -244,9 +244,7 @@ EOF
             header += "\n"
           end
 
-          # Already verified existence.
-          podfile = Pod::Podfile.from_file Pathname.new config.podfile_path
-          target_definition = podfile.target_definitions[config.target.name]
+          target_definition = config.podfile.target_definitions[config.target.name]
           if target_definition
             branch_deps = target_definition.dependencies.select { |p| p.name =~ %r{^(Branch|Branch-SDK)(/.*)?$} }
             header += "Podfile target #{target_definition.name}:"
