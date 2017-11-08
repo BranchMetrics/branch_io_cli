@@ -1,4 +1,4 @@
-<% unless config.keys.count <= 1 || has_multiple_info_plists? %>
+<% unless config.keys.count <= 1 || helper.has_multiple_info_plists? %>
         #if DEBUG
             Branch.setUseTestBranchKey(true)
         #endif
