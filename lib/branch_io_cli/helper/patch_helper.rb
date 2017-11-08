@@ -181,7 +181,7 @@ module BranchIOCLI
           raise "Target #{config.target.name} not found in Podfile" unless target_definition
 
           # Podfile already contains the Branch pod, possibly just a subspec
-          return false if target_definition.dependencies.any? { |d| d.name =~ %r{^Branch{-SDK}?(/|$)} }
+          return false if target_definition.dependencies.any? { |d| d.name =~ %r{^(Branch|Branch-SDK)(/.*)?$} }
 
           say "Adding pod \"Branch\" to #{podfile_path}"
 
