@@ -118,7 +118,7 @@ EOF
       def version_from_podfile_lock
         return nil unless config.podfile_path && File.exist?("#{config.podfile_path}.lock")
         podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config.podfile_path}.lock"
-        version = podfile_lock.version "Branch"
+        version = podfile_lock.version("Branch") || podfile_lock.version("Branch-SDK")
 
         version ? "#{version} [Podfile.lock]" : nil
       end
@@ -246,17 +246,19 @@ EOF
 
           # Already verified existence.
           podfile = Pod::Podfile.from_file Pathname.new config.podfile_path
-          target_definition = podfile.target_definition_list.find { |t| t.name == config.target.name }
+          target_definition = podfile.target_definitions[config.target.name]
           if target_definition
-            branch_dep = target_definition.dependencies.find { |p| p.name == "Branch" }
+            branch_deps = target_definition.dependencies.select { |p| p.name =~ %r{^(Branch|Branch-SDK)(/.*)?$} }
             header += "Podfile target #{target_definition.name}:"
             header += "\n use_frameworks!" if target_definition.uses_frameworks?
             header += "\n platform: #{target_definition.platform}"
             header += "\n build configurations: #{target_definition.build_configurations}"
             header += "\n inheritance: #{target_definition.inheritance}"
-            header += "\n pod 'Branch', '#{branch_dep.requirement}'" if branch_dep
-            header += ", #{branch_dep.external_source}" if branch_dep && branch_dep.external_source
-            header += "\n"
+            branch_deps.each do |dep|
+              header += "\n pod '#{dep.name}', '#{dep.requirement}'"
+              header += ", #{dep.external_source}" if dep.external_source
+              header += "\n"
+            end
           else
             header += "Target #{config.target.name.inspect} not found in Podfile.\n"
           end

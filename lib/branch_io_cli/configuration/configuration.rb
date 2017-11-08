@@ -13,7 +13,7 @@ module BranchIOCLI
       attr_reader :xcodeproj
       attr_reader :xcodeproj_path
       attr_reader :target
-      attr_reader :podfile
+      attr_accessor :podfile
       attr_reader :podfile_path
       attr_reader :cartfile_path
       attr_reader :sdk_integration_mode

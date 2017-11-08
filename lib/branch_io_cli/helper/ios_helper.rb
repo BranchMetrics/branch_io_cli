@@ -1,3 +1,4 @@
+require "cocoapods-core"
 require "json"
 require "net/http"
 require "openssl"
@@ -402,6 +403,9 @@ module BranchIOCLI
             mode: :append,
             text: "\n\\1pod \"Branch\""
           ).apply podfile_path
+          # Store a Pod::Podfile representation of this file.
+          # TODO: Might want to move this to Configuration.
+          config.podfile = Pod::Podfile.from_file Pathname.new "Podfile"
           sh install_command
         end
 
