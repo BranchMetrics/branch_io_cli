@@ -58,8 +58,10 @@ module BranchIOCLI
 
           app_delegate = File.read app_delegate_swift_path
 
-          # Can't check for the import here, since there may be a bridging header.
-          return false if app_delegate =~ /Branch\.initSession/
+          # Can't just check for the import here, since there may be a bridging header.
+          # This may match branch.initSession (if the Branch instance is stored) or
+          # Branch.getInstance().initSession, etc.
+          return false if app_delegate =~ /(import\s+branch|branch\.*initsession)/i
 
           unless config.bridging_header_required?
             load_patch(:swift_import).apply app_delegate_swift_path
