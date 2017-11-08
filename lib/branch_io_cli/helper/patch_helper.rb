@@ -99,14 +99,11 @@ module BranchIOCLI
         def patch_did_finish_launching_method_swift(app_delegate_swift_path)
           app_delegate_swift = File.read app_delegate_swift_path
 
-          patch = load_patch(:did_finish_launching_swift)
           is_new_method = app_delegate_swift !~ /didFinishLaunching[^\n]+?\{/m
           if is_new_method
-            # method not present. add entire method
-            patch.regexp = /var\s+window\s?:\s?UIWindow\?.*?\n/m
+            patch = load_patch(:did_finish_launching_new_swift)
           else
-            # method already present
-            patch.regexp = /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m
+            patch = load_patch(:did_finish_launching_swift)
           end
           patch.apply app_delegate_swift_path, binding: binding
         end
