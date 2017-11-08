@@ -98,19 +98,17 @@ module BranchIOCLI
           patch_name = "did_finish_launching_"
           if app_delegate_swift =~ /didFinishLaunching[^\n]+?\{/m
             # method already present
-            patch_name += "test_" unless config.keys.count <= 1 || has_multiple_info_plists?
             patch_name += "swift"
             patch = load_patch patch_name
             patch.regexp = /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m
           else
             # method not present. add entire method
             patch_name += "new_"
-            patch_name += "test_" unless config.keys.count <= 1 || has_multiple_info_plists?
             patch_name += "swift"
             patch = load_patch patch_name
             patch.regexp = /var\s+window\s?:\s?UIWindow\?.*?\n/m
           end
-          patch.apply app_delegate_swift_path
+          patch.apply app_delegate_swift_path, binding: binding
         end
 
         def patch_did_finish_launching_method_objc(app_delegate_objc_path)
