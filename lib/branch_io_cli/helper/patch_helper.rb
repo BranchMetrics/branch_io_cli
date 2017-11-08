@@ -101,9 +101,9 @@ module BranchIOCLI
 
           is_new_method = app_delegate_swift !~ /didFinishLaunching[^\n]+?\{/m
           if is_new_method
-            patch = load_patch(:did_finish_launching_new_swift)
+            patch = load_patch :did_finish_launching_new_swift
           else
-            patch = load_patch(:did_finish_launching_swift)
+            patch = load_patch :did_finish_launching_swift
           end
           patch.apply app_delegate_swift_path, binding: binding
         end
@@ -111,92 +111,67 @@ module BranchIOCLI
         def patch_did_finish_launching_method_objc(app_delegate_objc_path)
           app_delegate_objc = File.read app_delegate_objc_path
 
-          patch = load_patch(:did_finish_launching_objc)
           is_new_method = app_delegate_objc !~ /didFinishLaunchingWithOptions/m
           if is_new_method
-            # method does not exist. add it.
-            patch.regexp = /^@implementation.*?\n/m
+            patch = load_patch :did_finish_launching_new_objc
           else
-            # method exists. patch it.
-            patch.regexp = /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m
+            patch = load_patch :did_finish_launching_objc
           end
           patch.apply app_delegate_objc_path, binding: binding
         end
 
         def patch_open_url_method_swift(app_delegate_swift_path)
           app_delegate_swift = File.read app_delegate_swift_path
-          patch_name = "open_url_"
+
           if app_delegate_swift =~ /application.*open\s+url.*options/
             # Has application:openURL:options:
-            patch_name += "swift"
-            patch = load_patch patch_name
-            patch.regexp = /application.*open\s+url.*options:.*?\{.*?\n/m
+            patch = load_patch :open_url_swift
           elsif app_delegate_swift =~ /application.*open\s+url.*sourceApplication/
             # Has application:openURL:sourceApplication:annotation:
             # TODO: This method is deprecated.
-            patch_name += "source_application_swift"
-            patch = load_patch patch_name
-            patch.regexp = /application.*open\s+url.*sourceApplication:.*?\{.*?\n/m
+            patch = load_patch :open_url_source_application_swift
           else
             # Has neither
-            patch_name += "new_swift"
-            patch = load_patch patch_name
-            patch.regexp = /\n\s*\}[^{}]*\Z/m
+            patch = load_patch :open_url_new_swift
           end
           patch.apply app_delegate_swift_path
         end
 
         def patch_continue_user_activity_method_swift(app_delegate_swift_path)
-          app_delegate = File.read app_delegate_swift_path
-          patch_name = "continue_user_activity_"
-          if app_delegate =~ /application:.*continue userActivity:.*restorationHandler:/
-            # Add something to the top of the method
-            patch_name += "swift"
-            patch = load_patch patch_name
-            patch.regexp = /application:.*continue userActivity:.*restorationHandler:.*?\{.*?\n/m
+          app_delegate_swift = File.read app_delegate_swift_path
+
+          if app_delegate_swift =~ /application:.*continue userActivity:.*restorationHandler:/
+            patch = load_patch :continue_user_activity_swift
           else
-            # Add the application:continueUserActivity:restorationHandler method if it does not exist
-            patch_name += "new_swift"
-            patch = load_patch patch_name
-            patch.regexp = /\n\s*\}[^{}]*\Z/m
+            patch = load_patch :continue_user_activity_new_swift
           end
           patch.apply app_delegate_swift_path
         end
 
         def patch_open_url_method_objc(app_delegate_objc_path)
           app_delegate_objc = File.read app_delegate_objc_path
-          patch_name = "open_url_"
+
           if app_delegate_objc =~ /application:.*openURL:.*options/
             # Has application:openURL:options:
-            patch_name += "objc"
-            patch = load_patch patch_name
-            patch.regexp = /application:.*openURL:.*options:.*?\{.*?\n/m
+            patch = load_patch :open_url_objc
           elsif app_delegate_objc =~ /application:.*openURL:.*sourceApplication/
             # Has application:openURL:sourceApplication:annotation:
-            patch_name += "source_application_objc"
-            patch = load_patch patch_name
-            patch.regexp = /application:.*openURL:.*sourceApplication:.*?\{.*?\n/m
+            patch = load_patch :open_url_source_annotation_objc
+            # TODO: This method is deprecated.
           else
             # Has neither
-            patch_name += "new_objc"
-            patch = load_patch patch_name
-            patch.regexp = /\n\s*@end[^@]*\Z/m
+            patch = load_patch :open_url_new_objc
           end
           patch.apply app_delegate_objc_path
         end
 
         def patch_continue_user_activity_method_objc(app_delegate_objc_path)
-          app_delegate = File.read app_delegate_objc_path
-          patch_name = "continue_user_activity_"
-          if app_delegate =~ /application:.*continueUserActivity:.*restorationHandler:/
-            patch_name += "objc"
-            patch = load_patch patch_name
-            patch.regexp = /application:.*continueUserActivity:.*restorationHandler:.*?\{.*?\n/m
+          app_delegate_swift = File.read app_delegate_objc_path
+
+          if app_delegate_swift =~ /application:.*continueUserActivity:.*restorationHandler:/
+            patch = load_patch :continue_user_activity_objc
           else
-            # Add the application:continueUserActivity:restorationHandler method if it does not exist
-            patch_name += "new_objc"
-            patch = load_patch patch_name
-            patch.regexp = /\n\s*@end[^@]*\Z/m
+            patch = load_patch :continue_user_activity_new_objc
           end
           patch.apply app_delegate_objc_path
         end
