@@ -248,7 +248,7 @@ EOF
           podfile = Pod::Podfile.from_file Pathname.new config.podfile_path
           target_definition = podfile.target_definitions[config.target.name]
           if target_definition
-            branch_deps = target_definition.dependencies.select { |p| p.name =~ %r{^Branch(/?|$)} }
+            branch_deps = target_definition.dependencies.select { |p| p.name =~ %r{^Branch{-SDK}?(/|$)} }
             header += "Podfile target #{target_definition.name}:"
             header += "\n use_frameworks!" if target_definition.uses_frameworks?
             header += "\n platform: #{target_definition.platform}"
