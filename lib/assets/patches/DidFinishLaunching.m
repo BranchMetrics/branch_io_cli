@@ -1,6 +1,5 @@
 <% if is_new_method %>
 
-
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 <% end %>
 <% if use_conditional_test_key? %>

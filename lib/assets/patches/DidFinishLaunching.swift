@@ -1,5 +1,4 @@
 <% if is_new_method %>
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 <% end %>
 <% if use_conditional_test_key? %>
