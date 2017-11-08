@@ -1,2 +1,3 @@
+regexp: '/application:.*openURL:.*sourceApplication:.*?\{.*?\n/m'
 mode: append
 text_file: OpenUrlSourceApplication.m

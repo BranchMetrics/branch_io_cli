@@ -1,2 +1,3 @@
+regexp: '/application:.*continue userActivity:.*restorationHandler:.*?\{.*?\n/m'
 mode: append
 text_file: ContinueUserActivity.swift

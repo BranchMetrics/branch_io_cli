@@ -1,2 +1,3 @@
+regexp: '/didFinishLaunchingWithOptions.*?\{[^\n]*\n/m'
 mode: append
 text_file: DidFinishLaunching.m

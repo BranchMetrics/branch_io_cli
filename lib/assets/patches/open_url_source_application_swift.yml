@@ -1,2 +1,3 @@
+regexp: '/application.*open\s+url.*sourceApplication:.*?\{.*?\n/m'
 mode: append
 text_file: OpenUrlSourceApplication.swift
