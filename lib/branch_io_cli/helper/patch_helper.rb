@@ -21,6 +21,10 @@ module BranchIOCLI
           helper.add_change change
         end
 
+        def use_conditional_test_key?
+          config.keys.count > 1 && !helper.has_multiple_info_plists?
+        end
+
         def patch_bridging_header
           unless config.bridging_header_path
             say "Modules not available and bridging header not found. Cannot import Branch."
@@ -117,14 +121,12 @@ module BranchIOCLI
           patch_name = "did_finish_launching_"
           if app_delegate_objc =~ /didFinishLaunchingWithOptions/m
             # method exists. patch it.
-            patch_name += "test_" unless config.keys.count <= 1 || has_multiple_info_plists?
             patch_name += "objc"
             patch = load_patch patch_name
             patch.regexp = /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m
           else
             # method does not exist. add it.
             patch_name += "new_"
-            patch_name += "test_" unless config.keys.count <= 1 || has_multiple_info_plists?
             patch_name += "objc"
             patch = load_patch patch_name
             patch.regexp = /^@implementation.*?\n/m

@@ -1,11 +1,10 @@
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        <% unless config.keys.count <= 1 || has_multiple_info_plists? %>
+<% if use_conditional_test_key? %>
         #if DEBUG
             Branch.setUseTestBranchKey(true)
         #endif
-
-        <% end %>
+<% end %>
         Branch.getInstance().initSession(launchOptions: launchOptions) {
             universalObject, linkProperties, error in
 
