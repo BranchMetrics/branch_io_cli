@@ -21,6 +21,10 @@ module BranchIOCLI
           helper.add_change change
         end
 
+        def use_conditional_test_key?
+          config.keys.count > 1 && !helper.has_multiple_info_plists?
+        end
+
         def patch_bridging_header
           unless config.bridging_header_path
             say "Modules not available and bridging header not found. Cannot import Branch."
@@ -95,43 +99,31 @@ module BranchIOCLI
         def patch_did_finish_launching_method_swift(app_delegate_swift_path)
           app_delegate_swift = File.read app_delegate_swift_path
 
-          patch_name = "did_finish_launching_"
-          if app_delegate_swift =~ /didFinishLaunching[^\n]+?\{/m
-            # method already present
-            patch_name += "test_" unless config.keys.count <= 1 || has_multiple_info_plists?
-            patch_name += "swift"
-            patch = load_patch patch_name
-            patch.regexp = /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m
-          else
+          patch = load_patch(:did_finish_launching_swift)
+          is_new_method = app_delegate_swift !~ /didFinishLaunching[^\n]+?\{/m
+          if is_new_method
             # method not present. add entire method
-            patch_name += "new_"
-            patch_name += "test_" unless config.keys.count <= 1 || has_multiple_info_plists?
-            patch_name += "swift"
-            patch = load_patch patch_name
             patch.regexp = /var\s+window\s?:\s?UIWindow\?.*?\n/m
+          else
+            # method already present
+            patch.regexp = /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m
           end
-          patch.apply app_delegate_swift_path
+          patch.apply app_delegate_swift_path, binding: binding
         end
 
         def patch_did_finish_launching_method_objc(app_delegate_objc_path)
           app_delegate_objc = File.read app_delegate_objc_path
 
-          patch_name = "did_finish_launching_"
-          if app_delegate_objc =~ /didFinishLaunchingWithOptions/m
-            # method exists. patch it.
-            patch_name += "test_" unless config.keys.count <= 1 || has_multiple_info_plists?
-            patch_name += "objc"
-            patch = load_patch patch_name
-            patch.regexp = /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m
-          else
+          patch = load_patch(:did_finish_launching_objc)
+          is_new_method = app_delegate_objc !~ /didFinishLaunchingWithOptions/m
+          if is_new_method
             # method does not exist. add it.
-            patch_name += "new_"
-            patch_name += "test_" unless config.keys.count <= 1 || has_multiple_info_plists?
-            patch_name += "objc"
-            patch = load_patch patch_name
             patch.regexp = /^@implementation.*?\n/m
+          else
+            # method exists. patch it.
+            patch.regexp = /didFinishLaunchingWithOptions.*?\{[^\n]*\n/m
           end
-          patch.apply app_delegate_objc_path
+          patch.apply app_delegate_objc_path, binding: binding
         end
 
         def patch_open_url_method_swift(app_delegate_swift_path)
