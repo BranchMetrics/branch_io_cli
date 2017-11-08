@@ -118,7 +118,7 @@ EOF
       def version_from_podfile_lock
         return nil unless config.podfile_path && File.exist?("#{config.podfile_path}.lock")
         podfile_lock = Pod::Lockfile.from_file Pathname.new "#{config.podfile_path}.lock"
-        version = podfile_lock.version "Branch"
+        version = podfile_lock.version("Branch") || podfile_lock.version("Branch-SDK")
 
         version ? "#{version} [Podfile.lock]" : nil
       end
