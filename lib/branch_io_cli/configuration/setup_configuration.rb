@@ -187,7 +187,6 @@ module BranchIOCLI
         return if !options.add_sdk || sdk_integration_mode
 
         # If no CocoaPods or Carthage, check to see if the framework is linked.
-        target = helper.target_from_project xcodeproj, options.target
         return if target.frameworks_build_phase.files.map(&:file_ref).map(&:path).any? { |p| p =~ /Branch.framework$/ }
 
         # --podfile, --cartfile not specified. No Podfile found. No Cartfile found. No Branch.framework in project.

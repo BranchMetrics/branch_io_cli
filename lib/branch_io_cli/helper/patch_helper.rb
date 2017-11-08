@@ -177,13 +177,19 @@ module BranchIOCLI
         end
 
         def patch_podfile(podfile_path)
-          podfile = File.read podfile_path
+          target_definition = config.podfile.target_definition_list.find { |d| d.name == config.target.name }
+          raise "Target #{config.target.name} not found in Podfile" unless target_definition
 
           # Podfile already contains the Branch pod
           # TODO: Allow for adding to multiple targets in the Podfile
-          return false if podfile =~ /pod\s+('Branch'|"Branch")/
+          return false if target_definition.dependencies.any? { |d| d.name == "Branch" }
 
           say "Adding pod \"Branch\" to #{podfile_path}"
+
+          # It may not be clear from the Pod::Podfile whether the target has a do block.
+          # It doesn't seem to be possible to update the Podfile object and write it out.
+          # So we patch.
+          podfile = File.read config.podfile_path
 
           if podfile =~ /target\s+(["'])#{config.target.name}\1\s+do.*?\n/m
             # if there is a target block for this target:
