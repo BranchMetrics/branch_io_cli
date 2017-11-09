@@ -67,8 +67,8 @@ EOF
           end
 
           base_cmd = base_xcodebuild_cmd
-          # Add -scheme option for the rest of the commands if using a workspace
-          base_cmd = "#{base_cmd} -scheme #{config.scheme}" if config.workspace_path
+          # Add -scheme option for the rest of the commands
+          base_cmd = "#{base_cmd} -scheme #{config.scheme}"
 
           # xcodebuild -showBuildSettings
           report.write "$ #{base_cmd} -showBuildSettings\n\n"
@@ -81,7 +81,6 @@ EOF
 
           # Add more options for the rest of the commands
           base_cmd = "#{base_cmd} -configuration #{config.configuration} -sdk #{config.sdk}"
-          base_cmd = "#{base_cmd} -target #{config.target}" unless config.workspace_path
 
           if config.clean
             say "Cleaning"
@@ -374,14 +373,9 @@ EOF
         report
       end
 
-      def built_products_dir
-        @xcode_settings["BUILT_PRODUCTS_DIR"]
-      end
-
       def load_settings_from_xcode
-        cmd = base_xcodebuild_cmd
-        cmd = "#{cmd} -scheme #{config.scheme}" if config.workspace_path
-        cmd = "#{cmd} -sdk #{config.sdk} -configuration #{config.configuration} -showBuildSettings"
+        cmd = "#{base_xcodebuild_cmd} -scheme #{config.scheme}"
+        cmd += " -configuration #{config.configuration} -sdk #{config.sdk} -showBuildSettings"
         @xcodebuild_showbuildsettings_output = ""
         @xcode_settings = {}
         Open3.popen2e(cmd) do |stdin, output, thread|
