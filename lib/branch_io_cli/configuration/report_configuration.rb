@@ -174,10 +174,19 @@ EOF
 
         # Look for a shared scheme.
         xcshareddata_path = File.join project_path, "xcshareddata", "xcschemes", "#{@scheme}.xcscheme"
-        scheme = Xcodeproj::XCScheme.new xcshareddata_path if File.exist?(xcshareddata_path)
-        if scheme
-          @configuration = scheme.launch_action.build_configuration
+        scheme_path = xcshareddata_path if File.exist?(xcshareddata_path)
+
+        unless scheme_path
+          # Look for a local scheme
+          user = @xcode_settings["USER"] if @xcode_settings
+          user ||= ENV["USER"] || ENV["LOGNAME"]
+          xcuserdata_path = File.join project_path, "xcuserdata", "#{user}.xcuserdatad", "xcschemes", "#{@scheme}.xcscheme"
+          scheme_path = xcuserdata_path if File.exist?(xcuserdata_path)
         end
+
+        return unless scheme_path
+
+        @configuration = Xcodeproj::XCScheme.new(scheme_path).launch_action.build_configuration
       end
     end
   end
