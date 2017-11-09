@@ -1,5 +1,6 @@
 require "cocoapods-core"
 require "branch_io_cli/helper/methods"
+require "plist"
 
 module BranchIOCLI
   module Command
@@ -80,6 +81,8 @@ EOF
 
           say "Done ✅"
         end
+
+        obfuscate_report
 
         say "Report generated in #{config.report_path}"
       end
@@ -283,9 +286,52 @@ EOF
           header += "\nBranch SDK not found.\n"
         end
 
+        header += "\n#{branch_report}"
+
         header
       end
       # rubocop: enable Metrics/PerceivedComplexity
+
+      # String containing information relevant to Branch setup
+      def branch_report
+        bundle_identifier = helper.expanded_build_setting config.target, "PRODUCT_BUNDLE_IDENTIFIER", config.configuration
+        dev_team = helper.expanded_build_setting config.target, "DEVELOPMENT_TEAM", config.configuration
+        infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", config.configuration
+        entitlements_path = helper.expanded_build_setting config.target, "CODE_SIGN_ENTITLEMENTS", config.configuration
+
+        report = "Branch configuration:\n"
+        report += " PRODUCT_BUNDLE_IDENTIFIER = #{bundle_identifier.inspect}\n"
+        report += " DEVELOPMENT_TEAM = #{dev_team.inspect}\n"
+        report += " INFOPLIST_PATH = #{infoplist_path.inspect}\n"
+        report += " CODE_SIGN_ENTITLEMENTS = #{entitlements_path.inspect}\n"
+
+        begin
+          info_plist = File.open(infoplist_path) { |f| Plist.parse_xml f }
+          branch_key = info_plist["branch_key"]
+          report += " Branch key(s):\n"
+          if branch_key.kind_of? Hash
+            branch_key.each_key do |key|
+              report += "  #{key.capitalize}: #{branch_keys[key]}\n"
+            end
+          else
+            report += "  #{branch_key}\n"
+          end
+        rescue StandardError => e
+          report += " (Failed to get Branch key from Info.plist: #{e.message})\n"
+        end
+
+        begin
+          domains = helper.domains_from_project config.configuration
+          report += " Universal Link domains:\n"
+          domains.each do |domain|
+            report += "  #{domain}\n"
+          end
+        rescue StandardError => e
+          report += " (Failed to get Universal Link domains from entitlements file: #{e.message})\n"
+        end
+
+        report
+      end
     end
   end
 end
