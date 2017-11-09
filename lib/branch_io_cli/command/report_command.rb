@@ -15,7 +15,9 @@ module BranchIOCLI
       def run!
         say "\n"
 
-        load_settings_from_xcode
+        unless load_settings_from_xcode
+          say "Failed to load settings from Xcode. Some information may be missing.\n"
+        end
 
         if config.header_only
           say report_header
@@ -390,6 +392,7 @@ EOF
             @xcode_settings[matches[1]] = matches[2]
           end
           @xcodebuild_showbuildsettings_status = thread.value
+          return @xcodebuild_showbuildsettings_status.success?
         end
       end
     end
