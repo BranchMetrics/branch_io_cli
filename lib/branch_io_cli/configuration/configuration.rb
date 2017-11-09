@@ -137,7 +137,7 @@ EOF
         @sdk_integration_mode = filename == "Podfile" ? :cocoapods : :carthage
       end
 
-      def open_podfile(path)
+      def open_podfile(path = @podfile_path)
         @podfile = Pod::Podfile.from_file path
         @podfile_path = path
         true
