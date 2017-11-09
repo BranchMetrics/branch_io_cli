@@ -375,18 +375,22 @@ module BranchIOCLI
         setting_value = target.resolved_build_setting(setting_name)[configuration]
         return if setting_value.nil?
 
+        expand_build_settings setting_value, target, configuration
+      end
+
+      def expand_build_settings(string, target, configuration)
         search_position = 0
-        while (matches = /\$\(([^(){}]*)\)|\$\{([^(){}]*)\}/.match(setting_value, search_position))
+        while (matches = /\$\(([^(){}]*)\)|\$\{([^(){}]*)\}/.match(string, search_position))
           macro_name = matches[1] || matches[2]
-          search_position = setting_value.index(macro_name) - 2
+          search_position = string.index(macro_name) - 2
 
           expanded_macro = macro_name == "SRCROOT" ? "." : expanded_build_setting(target, macro_name, configuration)
           search_position += macro_name.length + 3 and next if expanded_macro.nil?
 
-          setting_value.gsub!(/\$\(#{macro_name}\)|\$\{#{macro_name}\}/, expanded_macro)
+          string.gsub!(/\$\(#{macro_name}\)|\$\{#{macro_name}\}/, expanded_macro)
           search_position += expanded_macro.length
         end
-        setting_value
+        string
       end
 
       def add_cocoapods(options)

@@ -1,5 +1,6 @@
 require "cocoapods-core"
 require "branch_io_cli/helper/methods"
+require "open3"
 require "plist"
 
 module BranchIOCLI
@@ -12,6 +13,8 @@ module BranchIOCLI
 
       def run!
         say "\n"
+
+        load_settings_from_xcode
 
         if config.header_only
           say report_header
@@ -65,7 +68,13 @@ EOF
           base_cmd = "#{base_cmd} -scheme #{config.scheme}" if config.workspace_path
 
           # xcodebuild -showBuildSettings
-          report.log_command "#{base_cmd} -showBuildSettings"
+          report.write "$ #{base_cmd} -showBuildSettings\n\n"
+          report.write @xcodebuild_showbuildsettings_output
+          if @xcodebuild_showbuildsettings_status.success?
+            report.write "Success.\n\n"
+          else
+            report.write "#{@xcodebuild_showbuildsettings_status}.\n\n"
+          end
 
           # Add more options for the rest of the commands
           base_cmd = "#{base_cmd} -configuration #{config.configuration} -sdk #{config.sdk}"
@@ -146,7 +155,11 @@ EOF
       def version_from_branch_framework
         framework = config.target.frameworks_build_phase.files.find { |f| f.file_ref.path =~ /Branch.framework$/ }
         return nil unless framework
-        framework_path = framework.file_ref.real_path
+        if framework.file_ref.isa == "PBXFileReference"
+          framework_path = framework.file_ref.real_path
+        elsif framework.file_ref.isa == "PBXReferenceProxy" && @xcode_settings
+          framework_path = File.expand_path framework.file_ref.path, @xcode_settings[framework.file_ref.source_tree]
+        end
         info_plist_path = File.join framework_path.to_s, "Info.plist"
         return nil unless File.exist? info_plist_path
 
@@ -347,6 +360,27 @@ EOF
         end
 
         report
+      end
+
+      def built_products_dir
+        @xcode_settings["BUILT_PRODUCTS_DIR"]
+      end
+
+      def load_settings_from_xcode
+        cmd = base_xcodebuild_cmd
+        cmd = "#{cmd} -scheme #{config.scheme}" if config.workspace_path
+        cmd = "#{cmd} -sdk #{config.sdk} -configuration #{config.configuration} -showBuildSettings"
+        @xcodebuild_showbuildsettings_output = ""
+        @xcode_settings = {}
+        Open3.popen2e(cmd) do |stdin, output, thread|
+          while (line = output.gets)
+            @xcodebuild_showbuildsettings_output += line
+            line.strip!
+            next unless (matches = /^(.+)\s+=\s+(.+)$/.match line)
+            @xcode_settings[matches[1]] = matches[2]
+          end
+          @xcodebuild_showbuildsettings_status = thread.value
+        end
       end
     end
   end
