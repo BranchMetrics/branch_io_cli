@@ -322,14 +322,16 @@ EOF
           report += " (Failed to get Branch key from Info.plist: #{e.message})\n"
         end
 
-        begin
-          domains = helper.domains_from_project config.configuration
-          report += " Universal Link domains:\n"
-          domains.each do |domain|
-            report += "  #{domain}\n"
+        unless config.target.extension_target_type?
+          begin
+            domains = helper.domains_from_project config.configuration
+            report += " Universal Link domains:\n"
+            domains.each do |domain|
+              report += "  #{domain}\n"
+            end
+          rescue StandardError => e
+            report += " (Failed to get Universal Link domains from entitlements file: #{e.message})\n"
           end
-        rescue StandardError => e
-          report += " (Failed to get Universal Link domains from entitlements file: #{e.message})\n"
         end
 
         report
