@@ -219,11 +219,20 @@ EOF
 
         header += `xcodebuild -version`
 
+        bundle_identifier = helper.expanded_build_setting config.target, "PRODUCT_BUNDLE_IDENTIFIER", config.configuration
+        dev_team = helper.expanded_build_setting config.target, "DEVELOPMENT_TEAM", config.configuration
+        infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", config.configuration
+        entitlements_path = helper.expanded_build_setting config.target, "CODE_SIGN_ENTITLEMENTS", config.configuration
+
         header += "\nTarget #{config.target.name}:\n"
+        header += " Bundle identifier: #{bundle_identifier || '(none)'}\n"
+        header += " Development team: #{dev_team || '(none)'}\n"
         header += " Deployment target: #{config.target.deployment_target}\n"
         header += " Modules #{config.modules_enabled? ? '' : 'not '}enabled\n"
         header += " Swift #{config.swift_version}\n" if config.swift_version
         header += " Bridging header: #{config.bridging_header_path}\n" if config.bridging_header_path
+        header += " Info.plist: #{infoplist_path || '(none)'}\n"
+        header += " Entitlements file: #{entitlements_path || '(none)'}\n"
 
         if config.podfile_path
           begin
