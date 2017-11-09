@@ -13,7 +13,6 @@ module BranchIOCLI
         @header_only = options.header_only
         @scheme = options.scheme
         @target = options.target
-        @configuration = options.configuration
         @report_path = options.out
         @sdk = options.sdk
         @pod_repo_update = options.pod_repo_update
@@ -21,6 +20,7 @@ module BranchIOCLI
         validate_xcodeproj_and_workspace options
         validate_target options
         validate_scheme options
+        validate_configuration options
 
         # If neither --podfile nor --cartfile is present, arbitrarily look for a Podfile
         # first.
@@ -157,6 +157,26 @@ EOF
           workspace.schemes.keys.reject { |scheme| scheme == "Pods" }
         else
           Xcodeproj::Project.schemes xcodeproj_path
+        end
+      end
+
+      def validate_configuration(options)
+        @configuration = options.configuration
+        return if @configuration
+
+        @configuration = "Debug" # Usual default for the launch action
+
+        if workspace_path
+          project_path = workspace.schemes[@scheme]
+        else
+          project_path = xcodeproj_path
+        end
+
+        # Look for a shared scheme.
+        xcshareddata_path = File.join project_path, "xcshareddata", "xcschemes", "#{@scheme}.xcscheme"
+        scheme = Xcodeproj::XCScheme.new xcshareddata_path if File.exist?(xcshareddata_path)
+        if scheme
+          @configuration = scheme.launch_action.build_configuration
         end
       end
     end
