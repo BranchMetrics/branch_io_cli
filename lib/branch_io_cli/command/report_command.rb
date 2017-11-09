@@ -2,6 +2,7 @@ require "cocoapods-core"
 require "branch_io_cli/helper/methods"
 require "open3"
 require "plist"
+require "xcodeproj"
 
 module BranchIOCLI
   module Command
@@ -171,9 +172,18 @@ EOF
         version ? "#{version} [Branch.framework/Info.plist]" : nil
       end
 
-      def version_from_bnc_config_m
+      def version_from_bnc_config_m(project = @config.xcodeproj)
         # Look for BNCConfig.m in embedded source
-        bnc_config_m_ref = config.xcodeproj.files.find { |f| f.path =~ /BNCConfig\.m$/ }
+        bnc_config_m_ref = project.files.find { |f| f.path =~ /BNCConfig\.m$/ }
+        unless bnc_config_m_ref
+          subprojects = project.files.select { |f| f.path =~ /\.xcodeproj$/ }
+          subprojects.each do |subproject|
+            p = Xcodeproj::Project.open subproject.real_path
+            version = version_from_bnc_config_m p
+            return version if version
+          end
+        end
+
         return nil unless bnc_config_m_ref
         bnc_config_m = File.read bnc_config_m_ref.real_path
         matches = /BNC_SDK_VERSION\s+=\s+@"(\d+\.\d+\.\d+)"/m.match bnc_config_m
