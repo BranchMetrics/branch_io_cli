@@ -13,14 +13,14 @@ module BranchIOCLI
         @header_only = options.header_only
         @scheme = options.scheme
         @target = options.target
-        @configuration = options.configuration
         @report_path = options.out
         @sdk = options.sdk
         @pod_repo_update = options.pod_repo_update
 
         validate_xcodeproj_and_workspace options
-        validate_target options
         validate_scheme options
+        validate_target options
+        validate_configuration options
 
         # If neither --podfile nor --cartfile is present, arbitrarily look for a Podfile
         # first.
@@ -132,24 +132,32 @@ EOF
 
       def validate_scheme(options)
         schemes = all_schemes
-        # TODO: Prompt if --scheme specified but not found.
+
         if options.scheme && schemes.include?(options.scheme)
           @scheme = options.scheme
         elsif schemes.count == 1
           @scheme = schemes.first
         elsif !schemes.empty?
-          # By default, take a scheme with the same name as the target name.
-          return if (@scheme = schemes.find { |s| s == target.name })
+          # By default, take a scheme with the same name as the project name.
+          return if (@scheme = schemes.find { |s| s == File.basename(xcodeproj_path, '.xcodeproj') })
 
-          say "Please specify one of the following for the --scheme argument:"
-          schemes.each do |scheme|
-            say " #{scheme}"
+          @scheme = choose do |menu|
+            menu.header = "Schemes from project"
+            schemes.each { |s| menu.choice s }
+            menu.prompt = "Please choose one of the schemes above. "
           end
-          exit 1
         else
           say "No scheme defined in project."
           exit(-1)
         end
+
+        scheme = scheme_with_name @scheme
+        return if options.target || scheme.nil?
+
+        # Find the target used when running the scheme if the user didn't specify one.
+        # This will be picked up in #validate_target
+        entry = scheme.build_action.entries.select(&:build_for_running?).first
+        options.target = entry.buildable_references.first.target_name
       end
 
       def all_schemes
@@ -158,6 +166,54 @@ EOF
         else
           Xcodeproj::Project.schemes xcodeproj_path
         end
+      end
+
+      def scheme_with_name(scheme_name)
+        if workspace_path
+          project_path = workspace.schemes[@scheme]
+        else
+          project_path = xcodeproj_path
+        end
+
+        # Look for a shared scheme.
+        xcshareddata_path = File.join project_path, "xcshareddata", "xcschemes", "#{@scheme}.xcscheme"
+        scheme_path = xcshareddata_path if File.exist?(xcshareddata_path)
+
+        unless scheme_path
+          # Look for a local scheme
+          user = @xcode_settings["USER"] if @xcode_settings
+          user ||= ENV["USER"] || ENV["LOGNAME"]
+          xcuserdata_path = File.join project_path, "xcuserdata", "#{user}.xcuserdatad", "xcschemes", "#{@scheme}.xcscheme"
+          scheme_path = xcuserdata_path if File.exist?(xcuserdata_path)
+        end
+
+        return nil unless scheme_path
+
+        Xcodeproj::XCScheme.new(scheme_path)
+      end
+
+      def validate_configuration(options)
+        all_configs = xcodeproj.build_configurations.map(&:name)
+
+        if options.configuration && all_configs.include?(options.configuration)
+          @configuration = options.configuration
+        elsif options.configuration
+          say "Configuration #{options.configuration} not found."
+          @configuration = choose do |menu|
+            menu.header = "Configurations from project"
+            all_configs.each { |c| menu.choice c }
+            menu.prompt = "Please choose one of the above. "
+          end
+        end
+
+        return if @configuration
+
+        @configuration = "Debug" # Usual default for the launch action
+
+        scheme = scheme_with_name @scheme
+        return unless scheme
+
+        @configuration = scheme.launch_action.build_configuration
       end
     end
   end

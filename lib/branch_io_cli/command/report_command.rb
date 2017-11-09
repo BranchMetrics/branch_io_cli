@@ -67,8 +67,9 @@ EOF
           end
 
           base_cmd = base_xcodebuild_cmd
-          # Add -scheme option for the rest of the commands if using a workspace
-          base_cmd = "#{base_cmd} -scheme #{config.scheme}" if config.workspace_path
+          # Add more options for the rest of the commands
+          base_cmd = "#{base_cmd} -scheme #{config.scheme}"
+          base_cmd = "#{base_cmd} -configuration #{config.configuration} -sdk #{config.sdk}"
 
           # xcodebuild -showBuildSettings
           report.write "$ #{base_cmd} -showBuildSettings\n\n"
@@ -78,10 +79,6 @@ EOF
           else
             report.write "#{@xcodebuild_showbuildsettings_status}.\n\n"
           end
-
-          # Add more options for the rest of the commands
-          base_cmd = "#{base_cmd} -configuration #{config.configuration} -sdk #{config.sdk}"
-          base_cmd = "#{base_cmd} -target #{config.target}" unless config.workspace_path
 
           if config.clean
             say "Cleaning"
@@ -241,6 +238,7 @@ EOF
         header = "cocoapods-core: #{Pod::CORE_VERSION}\n"
 
         header += `xcodebuild -version`
+        header += "SDK: #{@xcode_settings['SDK_NAME']}\n" if @xcode_settings
 
         bundle_identifier = helper.expanded_build_setting config.target, "PRODUCT_BUNDLE_IDENTIFIER", config.configuration
         dev_team = helper.expanded_build_setting config.target, "DEVELOPMENT_TEAM", config.configuration
@@ -374,14 +372,9 @@ EOF
         report
       end
 
-      def built_products_dir
-        @xcode_settings["BUILT_PRODUCTS_DIR"]
-      end
-
       def load_settings_from_xcode
-        cmd = base_xcodebuild_cmd
-        cmd = "#{cmd} -scheme #{config.scheme}" if config.workspace_path
-        cmd = "#{cmd} -sdk #{config.sdk} -configuration #{config.configuration} -showBuildSettings"
+        cmd = "#{base_xcodebuild_cmd} -scheme #{config.scheme}"
+        cmd += " -configuration #{config.configuration} -sdk #{config.sdk} -showBuildSettings"
         @xcodebuild_showbuildsettings_output = ""
         @xcode_settings = {}
         Open3.popen2e(cmd) do |stdin, output, thread|

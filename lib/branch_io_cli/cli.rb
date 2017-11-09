@@ -162,7 +162,7 @@ EOF
         c.option "--workspace MyProject.xcworkspace", String, "Path to an Xcode workspace"
         c.option "--scheme MyProjectScheme", String, "A scheme from the project or workspace to build"
         c.option "--target MyProjectTarget", String, "A target to build"
-        c.option "--configuration Debug|Release|CustomConfigName", String, "The build configuration to use (default: Release)"
+        c.option "--configuration Debug|Release|CustomConfigName", String, "The build configuration to use (default: Scheme-dependent)"
         c.option "--sdk iphonesimulator", String, "Passed as -sdk to xcodebuild (default: iphonesimulator)"
         c.option "--podfile /path/to/Podfile", String, "Path to the Podfile for the project"
         c.option "--cartfile /path/to/Cartfile", String, "Path to the Cartfile for the project"
@@ -175,7 +175,6 @@ EOF
           options.default(
             clean: true,
             header_only: false,
-            configuration: "Release",
             sdk: "iphonesimulator",
             out: "./report.txt",
             pod_repo_update: true
