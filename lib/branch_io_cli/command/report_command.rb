@@ -304,7 +304,7 @@ EOF
           report += " Branch key(s):\n"
           if branch_key.kind_of? Hash
             branch_key.each_key do |key|
-              report += "  #{key.capitalize}: #{branch_keys[key]}\n"
+              report += "  #{key.capitalize}: #{branch_key[key]}\n"
             end
           else
             report += "  #{branch_key}\n"
