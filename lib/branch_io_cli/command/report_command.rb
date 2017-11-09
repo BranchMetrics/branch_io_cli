@@ -308,22 +308,36 @@ EOF
         begin
           info_plist = File.open(infoplist_path) { |f| Plist.parse_xml f }
           branch_key = info_plist["branch_key"]
-          report += " Branch key(s):\n"
+          report += " Branch key(s) (Info.plist):\n"
           if branch_key.kind_of? Hash
             branch_key.each_key do |key|
               report += "  #{key.capitalize}: #{branch_key[key]}\n"
             end
-          else
+          elsif branch_key
             report += "  #{branch_key}\n"
+          else
+            report += "  (none found)\n"
+          end
+
+          branch_universal_link_domains = info_plist["branch_universal_link_domains"]
+          if branch_universal_link_domains
+            if branch_universal_link_domains.kind_of? Array
+              report += " branch_universal_link_domains (Info.plist):\n"
+              branch_universal_link_domains.each do |domain|
+                report += "  #{domain}\n"
+              end
+            else
+              report += " branch_universal_link_domains (Info.plist): #{branch_universal_link_domains}\n"
+            end
           end
         rescue StandardError => e
-          report += " (Failed to get Branch key from Info.plist: #{e.message})\n"
+          report += " (Failed to open Info.plist: #{e.message})\n"
         end
 
         unless config.target.extension_target_type?
           begin
             domains = helper.domains_from_project config.configuration
-            report += " Universal Link domains:\n"
+            report += " Universal Link domains (entitlements):\n"
             domains.each do |domain|
               report += "  #{domain}\n"
             end
