@@ -82,8 +82,6 @@ EOF
           say "Done ✅"
         end
 
-        obfuscate_report
-
         say "Report generated in #{config.report_path}"
       end
 
