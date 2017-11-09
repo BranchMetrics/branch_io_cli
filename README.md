@@ -232,7 +232,7 @@ report with additional diagnostic information suitable for opening a support tic
 |--configuration Debug/Release/CustomConfig|Name of a build configuration (default: Release)|
 |--sdk iphonesimulator|Name of an SDK to use with xcodebuild (default: iphonesimulator)|
 |--[no-]clean|Clean before building (default: yes)|
-|--[no-]header-only|Show a diagnostic header and exit without cleaning or building (default: no)|
+|-H, --[no-]header-only|Show a diagnostic header and exit without cleaning or building (default: no)|
 |--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|
 |--podfile /path/to/Podfile|Path to the Podfile for the project|
 |--cartfile /path/to/Cartfile|Path to the Cartfile for the project|

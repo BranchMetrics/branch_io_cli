@@ -167,7 +167,7 @@ EOF
         c.option "--podfile /path/to/Podfile", String, "Path to the Podfile for the project"
         c.option "--cartfile /path/to/Cartfile", String, "Path to the Cartfile for the project"
         c.option "--[no-]clean", "Clean before attempting to build (default: yes)"
-        c.option "--[no-]header-only", "Write a report header to standard output and exit"
+        c.option "-H", "--[no-]header-only", "Write a report header to standard output and exit"
         c.option "--[no-]pod-repo-update", "Update the local podspec repo before installing (default: yes)"
         c.option "--out ./report.txt", String, "Report output path (default: ./report.txt)"
 
