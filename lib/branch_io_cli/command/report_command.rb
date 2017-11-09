@@ -294,16 +294,9 @@ EOF
 
       # String containing information relevant to Branch setup
       def branch_report
-        bundle_identifier = helper.expanded_build_setting config.target, "PRODUCT_BUNDLE_IDENTIFIER", config.configuration
-        dev_team = helper.expanded_build_setting config.target, "DEVELOPMENT_TEAM", config.configuration
         infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", config.configuration
-        entitlements_path = helper.expanded_build_setting config.target, "CODE_SIGN_ENTITLEMENTS", config.configuration
 
         report = "Branch configuration:\n"
-        report += " PRODUCT_BUNDLE_IDENTIFIER = #{bundle_identifier.inspect}\n"
-        report += " DEVELOPMENT_TEAM = #{dev_team.inspect}\n"
-        report += " INFOPLIST_PATH = #{infoplist_path.inspect}\n"
-        report += " CODE_SIGN_ENTITLEMENTS = #{entitlements_path.inspect}\n"
 
         begin
           info_plist = File.open(infoplist_path) { |f| Plist.parse_xml f }
