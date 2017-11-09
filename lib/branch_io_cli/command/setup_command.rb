@@ -91,8 +91,9 @@ module BranchIOCLI
         choice = choose do |menu|
           menu.header = "There are uncommitted changes in this repo. It's best to stash or commit them before continuing."
           menu.choice "Stash"
-          menu.choice "Commit (you will be prompted for a commit message)"
+          menu.choice "Commit (You will be prompted for a commit message.)"
           menu.choice "Quit"
+          menu.choice "Ignore and continue"
           menu.prompt = "Please enter one of the options above: "
         end
 
@@ -102,7 +103,7 @@ module BranchIOCLI
         when /^Commit/
           message = ask "Please enter a commit message: "
           sh "git commit -aqm #{Shellwords.escape(message)}"
-        else
+        when /^Quit/
           say "Please stash or commit your changes before continuing."
           exit(-1)
         end

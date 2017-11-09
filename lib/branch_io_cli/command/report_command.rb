@@ -1,5 +1,6 @@
 require "cocoapods-core"
 require "branch_io_cli/helper/methods"
+require "plist"
 
 module BranchIOCLI
   module Command
@@ -216,11 +217,20 @@ EOF
 
         header += `xcodebuild -version`
 
+        bundle_identifier = helper.expanded_build_setting config.target, "PRODUCT_BUNDLE_IDENTIFIER", config.configuration
+        dev_team = helper.expanded_build_setting config.target, "DEVELOPMENT_TEAM", config.configuration
+        infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", config.configuration
+        entitlements_path = helper.expanded_build_setting config.target, "CODE_SIGN_ENTITLEMENTS", config.configuration
+
         header += "\nTarget #{config.target.name}:\n"
+        header += " Bundle identifier: #{bundle_identifier || '(none)'}\n"
+        header += " Development team: #{dev_team || '(none)'}\n"
         header += " Deployment target: #{config.target.deployment_target}\n"
         header += " Modules #{config.modules_enabled? ? '' : 'not '}enabled\n"
         header += " Swift #{config.swift_version}\n" if config.swift_version
         header += " Bridging header: #{config.bridging_header_path}\n" if config.bridging_header_path
+        header += " Info.plist: #{infoplist_path || '(none)'}\n"
+        header += " Entitlements file: #{entitlements_path || '(none)'}\n"
 
         if config.podfile_path
           begin
@@ -244,9 +254,7 @@ EOF
             header += "\n"
           end
 
-          # Already verified existence.
-          podfile = Pod::Podfile.from_file Pathname.new config.podfile_path
-          target_definition = podfile.target_definitions[config.target.name]
+          target_definition = config.podfile.target_definitions[config.target.name]
           if target_definition
             branch_deps = target_definition.dependencies.select { |p| p.name =~ %r{^(Branch|Branch-SDK)(/.*)?$} }
             header += "Podfile target #{target_definition.name}:"
@@ -285,9 +293,61 @@ EOF
           header += "\nBranch SDK not found.\n"
         end
 
+        header += "\n#{branch_report}"
+
         header
       end
       # rubocop: enable Metrics/PerceivedComplexity
+
+      # String containing information relevant to Branch setup
+      def branch_report
+        infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", config.configuration
+
+        report = "Branch configuration:\n"
+
+        begin
+          info_plist = File.open(infoplist_path) { |f| Plist.parse_xml f }
+          branch_key = info_plist["branch_key"]
+          report += " Branch key(s) (Info.plist):\n"
+          if branch_key.kind_of? Hash
+            branch_key.each_key do |key|
+              report += "  #{key.capitalize}: #{branch_key[key]}\n"
+            end
+          elsif branch_key
+            report += "  #{branch_key}\n"
+          else
+            report += "  (none found)\n"
+          end
+
+          branch_universal_link_domains = info_plist["branch_universal_link_domains"]
+          if branch_universal_link_domains
+            if branch_universal_link_domains.kind_of? Array
+              report += " branch_universal_link_domains (Info.plist):\n"
+              branch_universal_link_domains.each do |domain|
+                report += "  #{domain}\n"
+              end
+            else
+              report += " branch_universal_link_domains (Info.plist): #{branch_universal_link_domains}\n"
+            end
+          end
+        rescue StandardError => e
+          report += " (Failed to open Info.plist: #{e.message})\n"
+        end
+
+        unless config.target.extension_target_type?
+          begin
+            domains = helper.domains_from_project config.configuration
+            report += " Universal Link domains (entitlements):\n"
+            domains.each do |domain|
+              report += "  #{domain}\n"
+            end
+          rescue StandardError => e
+            report += " (Failed to get Universal Link domains from entitlements file: #{e.message})\n"
+          end
+        end
+
+        report
+      end
     end
   end
 end

@@ -651,7 +651,7 @@ EOF
           exit(-1)
         end
 
-        gem_home = ENV["GEM_HOME"]
+        gem_home = Gem.dir
         if gem_home && File.writable?(gem_home)
           sh "gem install cocoapods"
         else
