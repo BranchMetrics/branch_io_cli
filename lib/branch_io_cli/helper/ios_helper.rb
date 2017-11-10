@@ -380,6 +380,10 @@ module BranchIOCLI
 
       def expand_build_settings(string, target, configuration)
         search_position = 0
+        # It's safest to make a copy of this string, though we probably get a
+        # copy from PBXNativeTarget#resolve_build_setting anyway. Copying here
+        # avoids a copy on every match.
+        string = string.clone
         while (matches = /\$\(([^(){}]*)\)|\$\{([^(){}]*)\}/.match(string, search_position))
           original_macro = matches[1] || matches[2]
           search_position = string.index(original_macro) - 2
@@ -396,7 +400,8 @@ module BranchIOCLI
           when "SRCROOT"
             expanded_macro = "."
           when "TARGET_NAME"
-            expanded_macro = target.name
+            # Clone in case of modifier processing
+            expanded_macro = target.name.clone
           else
             expanded_macro = expanded_build_setting(target, macro_name, configuration)
           end
