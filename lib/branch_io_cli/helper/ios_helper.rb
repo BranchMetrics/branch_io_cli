@@ -372,7 +372,14 @@ module BranchIOCLI
       end
 
       def expanded_build_setting(target, setting_name, configuration)
-        setting_value = target.resolved_build_setting(setting_name)[configuration]
+        # second arg true means if there is an xcconfig, also consult that
+        begin
+          setting_value = target.resolved_build_setting(setting_name, true)[configuration]
+        rescue Errno::ENOENT
+          # If not found, look up without it
+          setting_value = target.resolved_build_setting(setting_name, false)[configuration]
+        end
+
         return if setting_value.nil?
 
         expand_build_settings setting_value, target, configuration
@@ -384,9 +391,15 @@ module BranchIOCLI
         # copy from PBXNativeTarget#resolve_build_setting anyway. Copying here
         # avoids a copy on every match.
         string = string.clone
-        while (matches = /\$\(([^(){}]*)\)|\$\{([^(){}]*)\}/.match(string, search_position))
-          original_macro = matches[1] || matches[2]
-          search_position = string.index(original_macro) - 2
+
+        # HACK: When matching against an xcconfig, as here, sometimes the macro is just returned
+        # without delimiters, e.g. TARGET_NAME or BUILT_PRODUCTS_DIR/Branch.framework. We allow
+        # these two patterns for now.
+        while (matches = %r{\$\(([^(){}]*)\)|\$\{([^(){}]*)\}|^([A-Z_]+)(/.*)?$}.match(string, search_position))
+          original_macro = matches[1] || matches[2] || matches[3]
+          delimiter_length = matches[3] ? 0 : 3 # $() or ${}
+          delimiter_offset = matches[3] ? 0 : 2 # $( or ${
+          search_position = string.index(original_macro) - delimiter_offset
 
           modifier_regexp = /^(.+):(.+)$/
           if (matches = modifier_regexp.match original_macro)
@@ -406,7 +419,7 @@ module BranchIOCLI
             expanded_macro = expanded_build_setting(target, macro_name, configuration)
           end
 
-          search_position += original_macro.length + 3 and next if expanded_macro.nil?
+          search_position += original_macro.length + delimiter_length and next if expanded_macro.nil?
 
           if modifier == "rfc1034identifier"
             # From the Apple dev portal when creating a new app ID:
@@ -417,7 +430,7 @@ module BranchIOCLI
             expanded_macro.gsub!(special_chars, '-')
           end
 
-          string.gsub!(/\$\(#{original_macro}\)|\$\{#{original_macro}\}/, expanded_macro)
+          string.gsub!(/\$\(#{original_macro}\)|\$\{#{original_macro}\}|^#{original_macro}/, expanded_macro)
           search_position += expanded_macro.length
         end
         string

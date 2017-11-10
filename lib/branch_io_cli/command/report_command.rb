@@ -334,10 +334,12 @@ EOF
           report += " Branch key(s) (Info.plist):\n"
           if branch_key.kind_of? Hash
             branch_key.each_key do |key|
-              report += "  #{key.capitalize}: #{branch_key[key]}\n"
+              resolved_key = helper.expand_build_settings branch_key[key], config.target, config.configuration
+              report += "  #{key.capitalize}: #{resolved_key}\n"
             end
           elsif branch_key
-            report += "  #{branch_key}\n"
+            resolved_key = helper.expand_build_settings branch_key, config.target, config.configuration
+            report += "  #{resolved_key}\n"
           else
             report += "  (none found)\n"
           end
