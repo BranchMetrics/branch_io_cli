@@ -4,6 +4,7 @@ module BranchIOCLI
       APP_LINK_REGEXP = /\.app\.link$|\.test-app\.link$/
       SDK_OPTIONS =
         {
+          "Specify the location of a Podfile or Cartfile" => :specify,
           "Set this project up to use CocoaPods and add the Branch SDK." => :cocoapods,
           "Set this project up to use Carthage and add the Branch SDK." => :carthage,
           "Add Branch.framework directly to the project's dependencies." => :direct,
@@ -183,6 +184,20 @@ module BranchIOCLI
         scheme.sub %r{://$}, ""
       end
 
+      def prompt_for_podfile_or_cartfile
+        loop do
+          path = ask("Please enter the location of your Podfile or Cartfile: ").trim
+          case path
+          when %r{/?Podfile$}
+            return if validate_buildfile_at_path path, "Podfile"
+          when %r{/?Cartfile$}
+            return if validate_buildfile_at_path path, "Cartfile"
+          else
+            say "Path must end in Podfile or Cartfile."
+          end
+        end
+      end
+
       def validate_sdk_addition(options)
         return if !options.add_sdk || sdk_integration_mode
 
@@ -202,6 +217,8 @@ module BranchIOCLI
         @sdk_integration_mode = SDK_OPTIONS[selected]
 
         case sdk_integration_mode
+        when :specify
+          prompt_for_podfile_or_cartfile
         when :cocoapods
           @podfile_path = File.expand_path "../Podfile", xcodeproj_path
         when :carthage
