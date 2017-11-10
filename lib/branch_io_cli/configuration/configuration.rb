@@ -157,6 +157,7 @@ EOF
       def open_podfile(path = @podfile_path)
         @podfile = Pod::Podfile.from_file path
         @podfile_path = path
+        @sdk_integration_mode = :cocoapods
         true
       rescue RuntimeError => e
         say e.message
@@ -169,13 +170,14 @@ EOF
 
         if valid
           valid = File.exist? buildfile_path
-          say "#{buildfile_path} not found." unless valid
+          say "#{buildfile_path} not found." and return false unless valid
         end
 
         if filename == "Podfile" && open_podfile(buildfile_path)
           true
         elsif filename == "Cartfile"
           @cartfile_path = buildfile_path
+          @sdk_integration_mode = :carthage
           true
         else
           false
