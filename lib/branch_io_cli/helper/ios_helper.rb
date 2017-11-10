@@ -406,6 +406,8 @@ module BranchIOCLI
             expanded_macro = expanded_build_setting(target, macro_name, configuration)
           end
 
+          search_position += original_macro.length + 3 and next if expanded_macro.nil?
+
           if modifier == "rfc1034identifier"
             # From the Apple dev portal when creating a new app ID:
             # You cannot use special characters such as @, &, *, ', "
@@ -414,8 +416,6 @@ module BranchIOCLI
             special_chars = /[^A-Za-z0-9-]/
             expanded_macro.gsub!(special_chars, '-')
           end
-
-          search_position += original_macro.length + 3 and next if expanded_macro.nil?
 
           string.gsub!(/\$\(#{original_macro}\)|\$\{#{original_macro}\}/, expanded_macro)
           search_position += expanded_macro.length
