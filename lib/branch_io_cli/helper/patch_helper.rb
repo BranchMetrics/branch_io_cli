@@ -45,7 +45,14 @@ module BranchIOCLI
           say "Patching #{config.bridging_header_path}"
 
           if /^\s*(#import|#include|@import)/.match_file config.bridging_header_path
+            # Add among other imports
             load_patch(:objc_import).apply config.bridging_header_path
+          elsif /\n\s*#ifndef\s+(\w+).*\n\s*#define\s+\1.*?\n/m.match_file config.bridging_header_path
+            # Has an include guard. Add inside.
+            load_patch(:objc_import_include_guard).apply config.bridging_header_path
+          else
+            # No imports, no include guard. Add at the end.
+            load_patch(:objc_import_at_end).apply config.bridging_header_path
           end
           helper.add_change config.bridging_header_path
         end
