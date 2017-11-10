@@ -137,9 +137,10 @@ EOF
           @scheme = options.scheme
         elsif schemes.count == 1
           @scheme = schemes.first
+          say "Scheme #{options.scheme} not found. Using #{@scheme}." if options.scheme
         elsif !schemes.empty?
           # By default, take a scheme with the same name as the project name.
-          return if (@scheme = schemes.find { |s| s == File.basename(xcodeproj_path, '.xcodeproj') })
+          return if !options.scheme && (@scheme = schemes.find { |s| s == File.basename(xcodeproj_path, '.xcodeproj') })
 
           @scheme = choose do |menu|
             menu.header = "Schemes from project"
@@ -151,12 +152,11 @@ EOF
           exit(-1)
         end
 
-        scheme = scheme_with_name @scheme
-        return if options.target || scheme.nil?
+        return if options.target || xcscheme.nil?
 
         # Find the target used when running the scheme if the user didn't specify one.
         # This will be picked up in #validate_target
-        entry = scheme.build_action.entries.select(&:build_for_running?).first
+        entry = xcscheme.build_action.entries.select(&:build_for_running?).first
         options.target = entry.buildable_references.first.target_name
       end
 
@@ -166,6 +166,14 @@ EOF
         else
           Xcodeproj::Project.schemes xcodeproj_path
         end
+      end
+
+      def xcscheme
+        return @xcscheme if @xcscheme_checked
+        # This may not exist. If it comes back nil once, don't keep checking.
+        @xcscheme_checked = true
+        @xcscheme = scheme_with_name @scheme
+        @xcscheme
       end
 
       def scheme_with_name(scheme_name)
@@ -210,10 +218,9 @@ EOF
 
         @configuration = "Debug" # Usual default for the launch action
 
-        scheme = scheme_with_name @scheme
-        return unless scheme
+        return unless xcscheme
 
-        @configuration = scheme.launch_action.build_configuration
+        @configuration = xcscheme.launch_action.build_configuration
       end
     end
   end
