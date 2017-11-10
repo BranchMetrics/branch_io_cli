@@ -384,8 +384,13 @@ module BranchIOCLI
           original_macro = matches[1] || matches[2]
           search_position = string.index(original_macro) - 2
 
-          # ignore modifiers for now
-          macro_name = original_macro.sub(/:.*$/, "")
+          modifier_regexp = /^(.+):(.+)$/
+          if (matches = modifier_regexp.match original_macro)
+            macro_name = matches[1]
+            modifier = matches[2]
+          else
+            macro_name = original_macro
+          end
 
           case macro_name
           when "SRCROOT"
@@ -394,6 +399,15 @@ module BranchIOCLI
             expanded_macro = target.name
           else
             expanded_macro = expanded_build_setting(target, macro_name, configuration)
+          end
+
+          if modifier == "rfc1034identifier"
+            # From the Apple dev portal when creating a new app ID:
+            # You cannot use special characters such as @, &, *, ', "
+            # From trial and error with Xcode, it appears that only letters, digits and hyphens are allowed.
+            # Everything else becomes a hyphen, including underscores.
+            special_chars = /[^A-Za-z0-9-]/
+            expanded_macro.gsub!(special_chars, '-')
           end
 
           search_position += original_macro.length + 3 and next if expanded_macro.nil?

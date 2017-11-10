@@ -42,7 +42,7 @@ describe BranchIOCLI::Helper::IOSHelper do
   end
 
   describe "#expanded_build_setting" do
-    let (:target) { double "target" }
+    let (:target) { double "target", name: "MyTarget" }
     it "expands values delimited by $()" do
       expect(target).to receive(:resolved_build_setting).with("SETTING_WITH_NESTED_VALUE") { { "Release" => "$(SETTING_VALUE)" } }
       expect(target).to receive(:resolved_build_setting).with("SETTING_VALUE") { { "Release" => "value" } }
@@ -63,6 +63,11 @@ describe BranchIOCLI::Helper::IOSHelper do
     it "substitutes . for $(SRCROOT)" do
       expect(target).to receive(:resolved_build_setting).with("SETTING_USING_SRCROOT") { { "Release" => "$(SRCROOT)/some.file" } }
       expect(instance.expanded_build_setting(target, "SETTING_USING_SRCROOT", "Release")).to eq "./some.file"
+    end
+
+    it "subsitutes the target name for $(TARGET_NAME)" do
+      expect(target).to receive(:resolved_build_setting).with("SETTING_USING_TARGET_NAME") { { "Release" => "$(TARGET_NAME)" } }
+      expect(instance.expanded_build_setting(target, "SETTING_USING_TARGET_NAME", "Release")).to eq target.name
     end
 
     it "returns the setting when no macro present" do
@@ -100,6 +105,24 @@ describe BranchIOCLI::Helper::IOSHelper do
       expect(target).to receive(:resolved_build_setting).with("SETTING_VALUE1") { { "Release" => nil } }
       expect(target).to receive(:resolved_build_setting).with("SETTING_VALUE2") { { "Release" => "value2" } }
       expect(instance.expanded_build_setting(target, "SETTING_WITH_BOGUS_VALUE", "Release")).to eq "$(SETTING_VALUE1).value2"
+    end
+
+    it "recognizes :rfc1034identifier when expanding" do
+      expect(target).to receive(:resolved_build_setting).with("PRODUCT_NAME") { { "Release" => "My App" } }
+      expect(target).to receive(:resolved_build_setting).with("PRODUCT_BUNDLE_IDENTIFIER") { { "Release" => "com.example.$(PRODUCT_NAME:rfc1034identifier)" } }
+      expect(instance.expanded_build_setting(target, "PRODUCT_BUNDLE_IDENTIFIER", "Release")).to eq "com.example.My-App"
+    end
+
+    it "ignores any other modifier" do
+      expect(target).to receive(:resolved_build_setting).with("PRODUCT_NAME") { { "Release" => "My App" } }
+      expect(target).to receive(:resolved_build_setting).with("PRODUCT_BUNDLE_IDENTIFIER") { { "Release" => "com.example.$(PRODUCT_NAME:foo)" } }
+      expect(instance.expanded_build_setting(target, "PRODUCT_BUNDLE_IDENTIFIER", "Release")).to eq "com.example.My App"
+    end
+
+    it "substitutes _ for special characters when :rfc1034identifier is present" do
+      expect(target).to receive(:resolved_build_setting).with("PRODUCT_NAME") { { "Release" => "My .@*&'\\\"+%_App" } }
+      expect(target).to receive(:resolved_build_setting).with("PRODUCT_BUNDLE_IDENTIFIER") { { "Release" => "com.example.$(PRODUCT_NAME:rfc1034identifier)" } }
+      expect(instance.expanded_build_setting(target, "PRODUCT_BUNDLE_IDENTIFIER", "Release")).to eq "com.example.My-----------App"
     end
   end
 
