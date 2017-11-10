@@ -157,7 +157,7 @@ EOF
         return nil unless framework
 
         if framework.file_ref.isa == "PBXFileReference"
-          project_path = config.xcodeproj_path
+          project_path = config.relative_path(config.xcodeproj_path)
           framework_path = framework.file_ref.real_path
         elsif framework.file_ref.isa == "PBXReferenceProxy" && @xcode_settings
           project_path = config.relative_path framework.file_ref.remote_ref.proxied_object.project.path
@@ -205,8 +205,8 @@ Scheme: #{config.scheme || '(none)'}
 Target: #{config.target || '(none)'}
 Configuration: #{config.configuration || '(none)'}
 SDK: #{config.sdk}
-Podfile: #{config.podfile_path || '(none)'}
-Cartfile: #{config.cartfile_path || '(none)'}
+Podfile: #{config.relative_path(config.podfile_path) || '(none)'}
+Cartfile: #{config.relative_path(config.cartfile_path) || '(none)'}
 Pod repo update: #{config.pod_repo_update.inspect}
 Clean: #{config.clean.inspect}
 EOF
@@ -329,6 +329,7 @@ EOF
       # String containing information relevant to Branch setup
       def branch_report
         infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", config.configuration
+        infoplist_path = File.expand_path infoplist_path, File.dirname(config.xcodeproj_path)
 
         report = "Branch configuration:\n"
 

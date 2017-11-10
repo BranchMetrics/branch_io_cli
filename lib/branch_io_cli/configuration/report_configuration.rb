@@ -57,12 +57,12 @@ EOF
           if options.workspace
             path = options.workspace
             @workspace = Xcodeproj::Workspace.new_from_xcworkspace options.workspace
-            @workspace_path = options.workspace
+            @workspace_path = File.expand_path options.workspace
           end
           if options.xcodeproj
             path = options.xcodeproj
             @xcodeproj = Xcodeproj::Project.open options.xcodeproj
-            @xcodeproj_path = options.xcodeproj
+            @xcodeproj_path = File.expand_path options.xcodeproj
           else
             # Pass --workspace and --xcodeproj to override this inference.
             if workspace && workspace.file_references.count > 0 && workspace.file_references.first.path =~ /\.xcodeproj$/
@@ -107,7 +107,7 @@ EOF
           begin
             if path =~ /\.xcworkspace$/
               @workspace = Xcodeproj::Workspace.new_from_xcworkspace path
-              @workspace_path = path
+              @workspace_path = File.expand_path path
 
               # Pass --workspace and --xcodeproj to override this inference.
               if workspace.file_references.count > 0 && workspace.file_references.first.path =~ /\.xcodeproj$/
@@ -118,7 +118,7 @@ EOF
               return
             elsif path =~ /\.xcodeproj$/
               @xcodeproj = Xcodeproj::Project.open path
-              @xcodeproj_path = path
+              @xcodeproj_path = File.expand_path path
               return
             else
               say "Path must end with .xcworkspace or .xcodeproj"

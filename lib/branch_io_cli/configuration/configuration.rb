@@ -61,13 +61,15 @@ EOF
         path = Pathname.new(path) unless path.kind_of? Pathname
         return path.to_s unless path.absolute?
 
-        if workspace
-          root = Pathname.new(workspace_path).dirname
-        else
-          root = Pathname.new(xcodeproj_path).dirname
+        unless @root
+          if workspace
+            @root = Pathname.new(workspace_path).dirname
+          else
+            @root = Pathname.new(xcodeproj_path).dirname
+          end
         end
 
-        path.relative_path_from(root).to_s
+        path.relative_path_from(@root).to_s
       end
 
       # 1. Look for options.xcodeproj.
@@ -96,7 +98,7 @@ EOF
           # TODO: Allow the user to choose if xcodeproj_paths.count > 0
           begin
             @xcodeproj = Xcodeproj::Project.open path
-            @xcodeproj_path = path
+            @xcodeproj_path = File.expand_path path
             return
           rescue StandardError => e
             say e.message
