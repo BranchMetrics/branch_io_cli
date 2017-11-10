@@ -155,9 +155,12 @@ EOF
       def version_from_branch_framework
         framework = config.target.frameworks_build_phase.files.find { |f| f.file_ref.path =~ /Branch.framework$/ }
         return nil unless framework
+
         if framework.file_ref.isa == "PBXFileReference"
+          project_path = config.relative_path(config.xcodeproj_path)
           framework_path = framework.file_ref.real_path
         elsif framework.file_ref.isa == "PBXReferenceProxy" && @xcode_settings
+          project_path = config.relative_path framework.file_ref.remote_ref.proxied_object.project.path
           framework_path = File.expand_path framework.file_ref.path, @xcode_settings[framework.file_ref.source_tree]
         end
         info_plist_path = File.join framework_path.to_s, "Info.plist"
@@ -168,7 +171,8 @@ EOF
         raw_info_plist = CFPropertyList::List.new file: info_plist_path
         info_plist = CFPropertyList.native_types raw_info_plist.value
         version = info_plist["CFBundleVersion"]
-        version ? "#{version} [Branch.framework/Info.plist]" : nil
+        return nil unless version
+        "#{version} [Branch.framework/Info.plist:#{project_path}]"
       end
 
       def version_from_bnc_config_m(project = @config.xcodeproj)
@@ -188,7 +192,7 @@ EOF
         matches = /BNC_SDK_VERSION\s+=\s+@"(\d+\.\d+\.\d+)"/m.match bnc_config_m
         return nil unless matches
         version = matches[1]
-        "#{version} [BNCConfig.m]"
+        "#{version} [BNCConfig.m:#{config.relative_path project.path}]"
       end
 
       def report_configuration
@@ -201,8 +205,8 @@ Scheme: #{config.scheme || '(none)'}
 Target: #{config.target || '(none)'}
 Configuration: #{config.configuration || '(none)'}
 SDK: #{config.sdk}
-Podfile: #{config.podfile_path || '(none)'}
-Cartfile: #{config.cartfile_path || '(none)'}
+Podfile: #{config.relative_path(config.podfile_path) || '(none)'}
+Cartfile: #{config.relative_path(config.cartfile_path) || '(none)'}
 Pod repo update: #{config.pod_repo_update.inspect}
 Clean: #{config.clean.inspect}
 EOF
@@ -251,9 +255,9 @@ EOF
         header += " Deployment target: #{config.target.deployment_target}\n"
         header += " Modules #{config.modules_enabled? ? '' : 'not '}enabled\n"
         header += " Swift #{config.swift_version}\n" if config.swift_version
-        header += " Bridging header: #{config.bridging_header_path}\n" if config.bridging_header_path
-        header += " Info.plist: #{infoplist_path || '(none)'}\n"
-        header += " Entitlements file: #{entitlements_path || '(none)'}\n"
+        header += " Bridging header: #{config.relative_path(config.bridging_header_path)}\n" if config.bridging_header_path
+        header += " Info.plist: #{config.relative_path(infoplist_path) || '(none)'}\n"
+        header += " Entitlements file: #{config.relative_path(entitlements_path) || '(none)'}\n"
 
         if config.podfile_path
           begin
@@ -325,6 +329,7 @@ EOF
       # String containing information relevant to Branch setup
       def branch_report
         infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", config.configuration
+        infoplist_path = File.expand_path infoplist_path, File.dirname(config.xcodeproj_path)
 
         report = "Branch configuration:\n"
 
