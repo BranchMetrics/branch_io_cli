@@ -42,8 +42,8 @@ module BranchIOCLI
 <%= color('Target:', BOLD) %> #{target || '(none)'}
 <%= color('Configuration:', BOLD) %> #{configuration}
 <%= color('SDK:', BOLD) %> #{sdk}
-<%= color('Podfile:', BOLD) %> #{podfile_path || '(none)'}
-<%= color('Cartfile:', BOLD) %> #{cartfile_path || '(none)'}
+<%= color('Podfile:', BOLD) %> #{relative_path(podfile_path) || '(none)'}
+<%= color('Cartfile:', BOLD) %> #{relative_path(cartfile_path) || '(none)'}
 <%= color('Pod repo update:', BOLD) %> #{pod_repo_update.inspect}
 <%= color('Clean:', BOLD) %> #{clean.inspect}
 <%= color('Report path:', BOLD) %> #{report_path}

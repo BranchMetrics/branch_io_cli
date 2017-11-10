@@ -62,8 +62,8 @@ module BranchIOCLI
 <%= color('Test key:', BOLD) %> #{keys[:test] || '(none)'}
 <%= color('Domains:', BOLD) %> #{all_domains}
 <%= color('URI scheme:', BOLD) %> #{uri_scheme || '(none)'}
-<%= color('Podfile:', BOLD) %> #{podfile_path || '(none)'}
-<%= color('Cartfile:', BOLD) %> #{cartfile_path || '(none)'}
+<%= color('Podfile:', BOLD) %> #{relative_path(podfile_path) || '(none)'}
+<%= color('Cartfile:', BOLD) %> #{relative_path(cartfile_path) || '(none)'}
 <%= color('Carthage command:', BOLD) %> #{carthage_command || '(none)'}
 <%= color('Pod repo update:', BOLD) %> #{pod_repo_update.inspect}
 <%= color('Validate:', BOLD) %> #{validate.inspect}

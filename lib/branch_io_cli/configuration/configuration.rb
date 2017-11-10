@@ -55,6 +55,21 @@ EOF
         Helper::BranchHelper
       end
 
+      def relative_path(path)
+        return nil if path.nil?
+
+        path = Pathname.new(path) unless path.kind_of? Pathname
+        return path.to_s unless path.absolute?
+
+        if workspace
+          root = Pathname.new(workspace_path).dirname
+        else
+          root = Pathname.new(xcodeproj_path).dirname
+        end
+
+        path.relative_path_from(root).to_s
+      end
+
       # 1. Look for options.xcodeproj.
       # 2. If not specified, look for projects under . (excluding anything in Pods or Carthage folder).
       # 3. If none or more than one found, prompt the user.
