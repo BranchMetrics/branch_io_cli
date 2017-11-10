@@ -169,7 +169,7 @@ EOF
 
         if valid
           valid = File.exist? buildfile_path
-          say "#{buildfile_path} not found." unless valid
+          say "#{buildfile_path} not found." and return false unless valid
         end
 
         if filename == "Podfile" && open_podfile(buildfile_path)
