@@ -373,7 +373,13 @@ module BranchIOCLI
 
       def expanded_build_setting(target, setting_name, configuration)
         # second arg true means if there is an xcconfig, also consult that
-        setting_value = target.resolved_build_setting(setting_name, true)[configuration]
+        begin
+          setting_value = target.resolved_build_setting(setting_name, true)[configuration]
+        rescue Errno::ENOENT
+          # If not found, look up without it
+          setting_value = target.resolved_build_setting(setting_name, false)[configuration]
+        end
+
         return if setting_value.nil?
 
         expand_build_settings setting_value, target, configuration
