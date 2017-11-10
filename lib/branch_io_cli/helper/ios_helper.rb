@@ -402,11 +402,12 @@ module BranchIOCLI
           end
 
           if modifier == "rfc1034identifier"
-            # from the Apple dev portal when creating a new app ID:
+            # From the Apple dev portal when creating a new app ID:
             # You cannot use special characters such as @, &, *, ', "
-            # Also include whitespace and period based on https://stackoverflow.com/a/2468382/875725
-            special_chars = /[\s\.@&*'"]/
-            expanded_macro.gsub!(special_chars, '_')
+            # From trial and error with Xcode, it appears that only letters, digits and hyphens are allowed.
+            # Everything else becomes a hyphen, including underscores.
+            special_chars = /[^A-Za-z0-9-]/
+            expanded_macro.gsub!(special_chars, '-')
           end
 
           search_position += original_macro.length + 3 and next if expanded_macro.nil?

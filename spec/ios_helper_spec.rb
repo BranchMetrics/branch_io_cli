@@ -110,7 +110,7 @@ describe BranchIOCLI::Helper::IOSHelper do
     it "recognizes :rfc1034identifier when expanding" do
       expect(target).to receive(:resolved_build_setting).with("PRODUCT_NAME") { { "Release" => "My App" } }
       expect(target).to receive(:resolved_build_setting).with("PRODUCT_BUNDLE_IDENTIFIER") { { "Release" => "com.example.$(PRODUCT_NAME:rfc1034identifier)" } }
-      expect(instance.expanded_build_setting(target, "PRODUCT_BUNDLE_IDENTIFIER", "Release")).to eq "com.example.My_App"
+      expect(instance.expanded_build_setting(target, "PRODUCT_BUNDLE_IDENTIFIER", "Release")).to eq "com.example.My-App"
     end
 
     it "ignores any other modifier" do
@@ -120,9 +120,9 @@ describe BranchIOCLI::Helper::IOSHelper do
     end
 
     it "substitutes _ for special characters when :rfc1034identifier is present" do
-      expect(target).to receive(:resolved_build_setting).with("PRODUCT_NAME") { { "Release" => "My .@*&'\"App" } }
+      expect(target).to receive(:resolved_build_setting).with("PRODUCT_NAME") { { "Release" => "My .@*&'\\\"+%_App" } }
       expect(target).to receive(:resolved_build_setting).with("PRODUCT_BUNDLE_IDENTIFIER") { { "Release" => "com.example.$(PRODUCT_NAME:rfc1034identifier)" } }
-      expect(instance.expanded_build_setting(target, "PRODUCT_BUNDLE_IDENTIFIER", "Release")).to eq "com.example.My_______App"
+      expect(instance.expanded_build_setting(target, "PRODUCT_BUNDLE_IDENTIFIER", "Release")).to eq "com.example.My-----------App"
     end
   end
 
