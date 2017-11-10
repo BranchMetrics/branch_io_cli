@@ -67,6 +67,13 @@ describe BranchIOCLI::Helper::IOSHelper do
       expect(instance.expanded_build_setting(target, "SETTING_WITH_NESTED_VALUE", "Release")).to eq "value/file.txt"
     end
 
+    it "resolves without an xcconfig if the xcconfig is not found" do
+      expect(target).to receive(:resolved_build_setting).with("SETTING_WITH_NESTED_VALUE", true).and_raise(Errno::ENOENT)
+      expect(target).to receive(:resolved_build_setting).with("SETTING_WITH_NESTED_VALUE", false) { { "Release" => "$(SETTING_VALUE)" } }
+      expect(target).to receive(:resolved_build_setting).with("SETTING_VALUE", true) { { "Release" => "value" } }
+      expect(instance.expanded_build_setting(target, "SETTING_WITH_NESTED_VALUE", "Release")).to eq "value"
+    end
+
     it "returns nil if the setting is not present" do
       expect(target).to receive(:resolved_build_setting).with("NONEXISTENT_SETTING", true) { { "Release" => nil } }
       expect(instance.expanded_build_setting(target, "NONEXISTENT_SETTING", "Release")).to be_nil
