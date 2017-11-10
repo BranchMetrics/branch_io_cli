@@ -381,13 +381,24 @@ module BranchIOCLI
       def expand_build_settings(string, target, configuration)
         search_position = 0
         while (matches = /\$\(([^(){}]*)\)|\$\{([^(){}]*)\}/.match(string, search_position))
-          macro_name = matches[1] || matches[2]
-          search_position = string.index(macro_name) - 2
+          original_macro = matches[1] || matches[2]
+          search_position = string.index(original_macro) - 2
 
-          expanded_macro = macro_name == "SRCROOT" ? "." : expanded_build_setting(target, macro_name, configuration)
-          search_position += macro_name.length + 3 and next if expanded_macro.nil?
+          # ignore modifiers for now
+          macro_name = original_macro.sub(/:.*$/, "")
 
-          string.gsub!(/\$\(#{macro_name}\)|\$\{#{macro_name}\}/, expanded_macro)
+          case macro_name
+          when "SRCROOT"
+            expanded_macro = "."
+          when "TARGET_NAME"
+            expanded_macro = target.name
+          else
+            expanded_macro = expanded_build_setting(target, macro_name, configuration)
+          end
+
+          search_position += original_macro.length + 3 and next if expanded_macro.nil?
+
+          string.gsub!(/\$\(#{original_macro}\)|\$\{#{original_macro}\}/, expanded_macro)
           search_position += expanded_macro.length
         end
         string
