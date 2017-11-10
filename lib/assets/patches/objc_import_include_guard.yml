@@ -1,0 +1,3 @@
+regexp: '/\n\s*#ifndef\s+(\w+).*\n\s*#define\s+\1.*?\n/m'
+mode: append
+text: "\n#import <Branch/Branch.h>\n"
