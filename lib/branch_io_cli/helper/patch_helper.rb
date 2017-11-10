@@ -44,7 +44,9 @@ module BranchIOCLI
 
           say "Patching #{config.bridging_header_path}"
 
-          load_patch(:objc_import).apply config.bridging_header_path
+          if /^\s*(#import|#include|@import)/.match_file config.bridging_header_path
+            load_patch(:objc_import).apply config.bridging_header_path
+          end
           helper.add_change config.bridging_header_path
         end
 
