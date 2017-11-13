@@ -241,6 +241,18 @@ EOF
         @swift_version = target.resolved_build_setting("SWIFT_VERSION")["Release"]
         @swift_version
       end
+
+      def branch_imports
+        return @branch_imports if @branch_imports
+
+        source_files = [app_delegate_swift_path, app_delegate_objc_path, bridging_header_path]
+        @branch_imports = source_files.compact.map { |f| { f => branch_imports_from_file(f) } }.inject({}, :merge)
+        @branch_imports
+      end
+
+      def branch_imports_from_file(path)
+        File.readlines(path).grep(/import.*Branch/).map &:chomp
+      end
     end
   end
 end
