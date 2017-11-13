@@ -645,7 +645,7 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          sh "carthage #{config.carthage_command}"
+          sh "carthage #{config.carthage_command} ios-branch-deep-linking"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
