@@ -251,7 +251,7 @@ EOF
       end
 
       def branch_imports_from_file(path)
-        File.readlines(path).grep(/import.*Branch/).map &:chomp
+        File.readlines(path).grep(/(import|include).*Branch/).map &:chomp
       end
     end
   end
