@@ -87,20 +87,35 @@ module BranchIOCLI
       end
 
       def validate_keys_from_setup_options(options)
-        live_key = options.live_key
-        test_key = options.test_key
         @keys = {}
-        keys[:live] = live_key unless live_key.nil?
-        keys[:test] = test_key unless test_key.nil?
 
+        # 1. Check the options passed in. If nothing (nil) passed, continue.
+        validate_key options.live_key, :live, accept_nil: true
+        validate_key options.test_key, :test, accept_nil: true
+
+        # 2. Did we find a valid key above?
         while @keys.empty?
+          # 3. If not, prompt.
           say "A live key, a test key or both is required."
-          live_key = ask "Please enter your live Branch key or use --live_key [enter for none]: "
-          test_key = ask "Please enter your test Branch key or use --test_key [enter for none]: "
-
-          keys[:live] = live_key unless live_key == ""
-          keys[:test] = test_key unless test_key == ""
+          validate_key nil, :live
+          validate_key nil, :test
         end
+
+        # 4. We have at least one valid key now.
+      end
+
+      def key_valid?(key, type)
+        return false if key.nil?
+        key.empty? || key =~ /^key_#{type}_/
+      end
+
+      def validate_key(key, type, options = {})
+        return if options[:accept_nil] && key.nil?
+        until key_valid? key, type
+          say "#{key.inspect} is not a valid #{type} Branch key. It must begin with key_#{type}_." if key
+          key = ask "Please enter your #{type} Branch key or use --#{type}-key [enter for none]: "
+        end
+        @keys[type] = key unless key.empty?
       end
 
       def validate_all_domains(options, required = true)
