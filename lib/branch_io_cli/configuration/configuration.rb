@@ -198,6 +198,22 @@ EOF
         podfile && !uses_frameworks?
       end
 
+      def app_delegate_swift_path
+        return nil unless swift_version && swift_version.to_f >= 3.0
+
+        app_delegate = target.source_build_phase.files.find { |f| f.file_ref.path =~ /AppDelegate\.swift$/ }
+        return nil if app_delegate.nil?
+
+        app_delegate.file_ref.real_path.to_s
+      end
+
+      def app_delegate_objc_path
+        app_delegate = target.source_build_phase.files.find { |f| f.file_ref.path =~ /AppDelegate\.m$/ }
+        return nil if app_delegate.nil?
+
+        app_delegate.file_ref.real_path.to_s
+      end
+
       # TODO: How many of these can vary by configuration?
 
       def modules_enabled?

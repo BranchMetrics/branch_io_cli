@@ -58,12 +58,10 @@ module BranchIOCLI
         end
 
         def patch_app_delegate_swift(project)
-          return false unless config.swift_version
+          return false unless config.patch_source
+          app_delegate_swift_path = config.app_delegate_swift_path
 
-          app_delegate_swift = project.files.find { |f| f.path =~ /AppDelegate.swift$/ }
-          return false if app_delegate_swift.nil?
-
-          app_delegate_swift_path = app_delegate_swift.real_path.to_s
+          return false unless app_delegate_swift_path
 
           app_delegate = File.read app_delegate_swift_path
 
@@ -87,10 +85,10 @@ module BranchIOCLI
         end
 
         def patch_app_delegate_objc(project)
-          app_delegate_objc = project.files.find { |f| f.path =~ /AppDelegate.m$/ }
-          return false if app_delegate_objc.nil?
+          return false unless config.patch_source
+          app_delegate_objc_path = config.app_delegate_objc_path
 
-          app_delegate_objc_path = app_delegate_objc.real_path.to_s
+          return false unless app_delegate_objc_path
 
           app_delegate = File.read app_delegate_objc_path
           return false if app_delegate =~ %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}
