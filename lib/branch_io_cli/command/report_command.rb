@@ -94,6 +94,10 @@ EOF
         say "Report generated in #{config.report_path}"
       end
 
+      def report_helper
+        Helper::ReportHelper
+      end
+
       def base_xcodebuild_cmd
         cmd = "xcodebuild"
         if config.workspace_path
@@ -375,6 +379,8 @@ EOF
             report += " (Failed to get Universal Link domains from entitlements file: #{e.message})\n"
           end
         end
+
+        report += report_helper.report_imports
 
         report
       end

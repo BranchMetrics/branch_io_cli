@@ -241,6 +241,25 @@ EOF
         @swift_version = target.resolved_build_setting("SWIFT_VERSION")["Release"]
         @swift_version
       end
+
+      def branch_imports
+        return @branch_imports if @branch_imports
+
+        source_files = [app_delegate_swift_path, app_delegate_objc_path, bridging_header_path]
+        @branch_imports = source_files.compact.map { |f| { f => branch_imports_from_file(f) } }.inject({}, :merge)
+        @branch_imports
+      end
+
+      # Detect anything that appears to be an attempt to import the Branch SDK,
+      # even if it might be wrong.
+      def branch_imports_from_file(path)
+        imports = []
+        File.readlines(path).each_with_index do |line, line_no|
+          next unless line =~ /(include|import).*branch/i
+          imports << "#{line_no}: #{line.chomp}"
+        end
+        imports
+      end
     end
   end
 end
