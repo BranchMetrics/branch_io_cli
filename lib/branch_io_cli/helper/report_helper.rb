@@ -7,7 +7,7 @@ module BranchIOCLI
         def report_imports
           report = "Branch imports:\n"
           config.branch_imports.each_key do |path|
-            report += " #{File.basename path}:\n"
+            report += " #{config.relative_path path}:\n"
             report += "  #{config.branch_imports[path].join("\n  ")}"
             report += "\n"
           end

@@ -250,8 +250,15 @@ EOF
         @branch_imports
       end
 
+      # Detect anything that appears to be an attempt to import the Branch SDK,
+      # even if it might be wrong.
       def branch_imports_from_file(path)
-        File.readlines(path).grep(/(import|include).*Branch/).map &:chomp
+        imports = []
+        File.readlines(path).each_with_index do |line, line_no|
+          next unless line =~ /(include|import).*branch/i
+          imports << "#{line_no}: #{line.chomp}"
+        end
+        imports
       end
     end
   end
