@@ -1,6 +1,13 @@
 module BranchIOCLI
   module Helper
-    class CommandError < RuntimeError; end
+    class CommandError < RuntimeError
+      attr_reader :status
+      def initialize(args)
+        message, status = *args
+        super message
+        @status = status
+      end
+    end
 
     module Methods
       # Execute a shell command with reporting.
@@ -16,7 +23,7 @@ module BranchIOCLI
       # :output: [IO] An optional IO object to receive stdout and stderr from the command
       def sh(command, output = STDOUT)
         status = output.log_command command
-        raise CommandError, %{Error executing "#{command}": #{status}.} unless status.success?
+        raise CommandError, [%{Error executing "#{command}": #{status}.}, status] unless status.success?
       end
     end
   end
