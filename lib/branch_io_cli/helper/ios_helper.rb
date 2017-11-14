@@ -345,11 +345,13 @@ module BranchIOCLI
         if target_name
           target = project.targets.find { |t| t.name == target_name }
           raise "Target #{target} not found" if target.nil?
+        elsif config.respond_to?(:scheme) && project.targets.map(&:name).include?(config.scheme)
+          # Return a target with the same name as the scheme, if there is one.
+          target = project.targets.find { |t| t.name == config.scheme }
         else
           # find the first application target
-          targets = project.targets.select { |t| !t.extension_target_type? && !t.test_target_type? }
-          target = targets.find { |t| t.name == File.basename(project.path).sub(/\.xcodeproj$/, "") } || targets.first
-          raise "No application target found" if target.nil?
+          target = targets.find { |t| t.name == File.basename(project.path, '.xcodeproj') } ||
+                   project.targets.select { |t| !t.extension_target_type? && !t.test_target_type? }.first
         end
         target
       end

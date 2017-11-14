@@ -31,7 +31,7 @@ module Xcodeproj
       schemes.uniq!
       if schemes.empty?
         # Open the project, get all targets. Add one scheme per target.
-        project = Project.open project_path
+        project = self.open project_path
         schemes += project.targets.reject(&:test_target_type?).map(&:name)
       end
       schemes
@@ -252,8 +252,7 @@ EOF
 
         unless scheme_path
           # Look for a local scheme
-          user = xcode_settings["USER"] if xcode_settings
-          user ||= ENV["USER"] || ENV["LOGNAME"]
+          user = ENV["USER"]
           xcuserdata_path = File.join project_path, "xcuserdata", "#{user}.xcuserdatad", "xcschemes", "#{@scheme}.xcscheme"
           scheme_path = xcuserdata_path if File.exist?(xcuserdata_path)
         end

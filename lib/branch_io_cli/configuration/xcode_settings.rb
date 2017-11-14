@@ -7,7 +7,7 @@ module BranchIOCLI
       class << self
         def settings
           return @settings if @settings
-          @settings = XcodeSettings.new
+          @settings = self.new
           @settings
         end
       end
@@ -30,12 +30,8 @@ module BranchIOCLI
 
       def xcodebuild_cmd
         cmd = "xcodebuild"
-        if config.workspace_path
-          cmd = "#{cmd} -workspace #{Shellwords.escape config.workspace_path}"
-        else
-          cmd = "#{cmd} -project #{Shellwords.escape config.xcodeproj_path}"
-        end
-        cmd += " -scheme #{Shellwords.escape config.scheme}"
+        cmd = "#{cmd} -project #{Shellwords.escape config.xcodeproj_path}"
+        cmd += " -target #{Shellwords.escape config.target.name}"
         cmd += " -configuration #{Shellwords.escape config.configuration}"
         cmd += " -sdk #{Shellwords.escape config.sdk}"
         cmd += " -showBuildSettings"
