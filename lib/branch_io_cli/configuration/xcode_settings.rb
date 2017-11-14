@@ -53,7 +53,12 @@ module BranchIOCLI
       end
 
       def log_xcodebuild_showbuildsettings(report = STDOUT)
-        report.write "$ #{xcodebuild_cmd}\n\n"
+        if report == STDOUT
+          say "<%= color('$ #{xcodebuild_cmd}', [MAGENTA, BOLD]) %>\n\n"
+        else
+          report.write "$ #{xcodebuild_cmd}\n\n"
+        end
+
         report.write @xcodebuild_showbuildsettings_output
         if valid?
           report.write "Success.\n\n"

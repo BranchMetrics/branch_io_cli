@@ -171,7 +171,7 @@ EOF
         c.option "--[no-]clean", "Clean before attempting to build (default: yes)"
         c.option "-H", "--[no-]header-only", "Write a report header to standard output and exit"
         c.option "--[no-]pod-repo-update", "Update the local podspec repo before installing (default: yes)"
-        c.option "--out ./report.txt", String, "Report output path (default: ./report.txt)"
+        c.option "-o", "--out ./report.txt", String, "Report output path (default: ./report.txt)"
 
         c.action do |args, options|
           options.default(
