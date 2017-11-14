@@ -20,6 +20,7 @@ module BranchIOCLI
       attr_reader :force
       attr_reader :patch_source
       attr_reader :commit
+      attr_reader :setting
 
       def validate_options
         @validate = options.validate
@@ -39,6 +40,7 @@ module BranchIOCLI
         validate_keys_from_setup_options options
         validate_all_domains options, !target.extension_target_type?
         validate_uri_scheme options
+        validate_setting options
 
         # If neither --podfile nor --cartfile is present, arbitrarily look for a Podfile
         # first.
@@ -63,6 +65,15 @@ module BranchIOCLI
 <%= color('Test key:', BOLD) %> #{keys[:test] || '(none)'}
 <%= color('Domains:', BOLD) %> #{all_domains}
 <%= color('URI scheme:', BOLD) %> #{uri_scheme || '(none)'}
+        EOF
+
+        if setting
+          message += <<-EOF
+<%= color('Branch key setting:', BOLD) %> #{setting}
+          EOF
+        end
+
+        message += <<-EOF
 <%= color('Podfile:', BOLD) %> #{relative_path(podfile_path) || '(none)'}
 <%= color('Cartfile:', BOLD) %> #{relative_path(cartfile_path) || '(none)'}
 <%= color('Carthage command:', BOLD) %> #{carthage_command || '(none)'}
@@ -239,6 +250,18 @@ module BranchIOCLI
         when :carthage
           @cartfile_path = File.expand_path "../Cartfile", xcodeproj_path
           @carthage_command = options.carthage_command
+        end
+      end
+
+      def validate_setting(options)
+        setting = options.setting
+        return if setting.nil?
+
+        @setting = "BRANCH_KEY" and return if setting.empty?
+
+        loop do
+          return if setting =~ /A-Z0-9_/
+          setting = "Invalid build setting. Please enter an all-caps identifier (may include digits and underscores): "
         end
       end
     end
