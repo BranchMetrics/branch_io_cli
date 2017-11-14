@@ -1,4 +1,5 @@
 require "plist"
+require "shellwords"
 require "branch_io_cli/configuration/configuration"
 
 module BranchIOCLI
@@ -30,9 +31,9 @@ module BranchIOCLI
         def base_xcodebuild_cmd
           cmd = "xcodebuild"
           if config.workspace_path
-            cmd = "#{cmd} -workspace #{config.workspace_path}"
+            cmd = "#{cmd} -workspace #{Shellwords.escape config.workspace_path}"
           else
-            cmd = "#{cmd} -project #{config.xcodeproj_path}"
+            cmd = "#{cmd} -project #{Shellwords.escape config.xcodeproj_path}"
           end
           cmd
         end
