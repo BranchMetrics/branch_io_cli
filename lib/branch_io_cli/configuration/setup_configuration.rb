@@ -264,7 +264,7 @@ module BranchIOCLI
             @setting = setting
             return
           end
-          setting = "Invalid build setting. Please enter an all-caps identifier (may include digits and underscores): "
+          setting = ask "Invalid build setting. Please enter an all-caps identifier (may include digits and underscores): "
         end
       end
     end
