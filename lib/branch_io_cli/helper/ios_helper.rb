@@ -35,7 +35,7 @@ module BranchIOCLI
       def add_custom_build_setting
         return unless config.setting
 
-        config.target.build_configuration_list.each do |c|
+        config.target.build_configurations.each do |c|
           c.build_settings[config.setting] = c.debug? ? config.keys[:test] : config.keys[:live]
         end
       end
