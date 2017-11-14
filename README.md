@@ -121,7 +121,8 @@ that the relevant commands are available in your `PATH`.
 |--app-link-subdomain myapp|Branch app.link subdomain, e.g. myapp for myapp.app.link|
 |-D, --domains example.com,www.example.com|Comma-separated list of custom domain(s) or non-Branch domain(s)|
 |-U, --uri-scheme myurischeme[://]|Custom URI scheme used in the Branch Dashboard for this app|
-|-S, --setting [BRANCH_KEY_SETTING]|Use a custom build setting for the Branch key (default: Use Info.plist)|
+|-s, --setting [BRANCH_KEY_SETTING]|Use a custom build setting for the Branch key (default: Use Info.plist)|
+|--test-configurations|List of configurations that use the test key with a custom build setting (default: Debug configurations)|
 |--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|
 |--target MyAppTarget|Name of a target to modify in the Xcode project|
 |--podfile /path/to/Podfile|Path to the Podfile for the project|

@@ -32,13 +32,18 @@ module BranchIOCLI
         end.uniq.count > 1
       end
 
+      def uses_test_key?(build_configuration)
+        return build_configuration.debug? unless config.setting && config.test_configurations
+        config.test_configurations.include? build_configuration.name
+      end
+
       def add_custom_build_setting
         return unless config.setting
 
         config.target.build_configurations.each do |c|
-          key = c.debug? ? config.keys[:test] : config.keys[:live]
+          key = uses_test_key?(c) ? config.keys[:test] : config.keys[:live]
           # Reuse the same key if both not present
-          key ||= c.debug? ? config.keys[:live] : config.keys[:test]
+          key ||= uses_test_key?(c) ? config.keys[:live] : config.keys[:test]
           c.build_settings[config.setting] = key
         end
       end

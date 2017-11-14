@@ -21,6 +21,7 @@ module BranchIOCLI
       attr_reader :patch_source
       attr_reader :commit
       attr_reader :setting
+      attr_reader :test_configurations
 
       def validate_options
         @validate = options.validate
@@ -41,6 +42,7 @@ module BranchIOCLI
         validate_all_domains options, !target.extension_target_type?
         validate_uri_scheme options
         validate_setting options
+        validate_test_configurations options
 
         # If neither --podfile nor --cartfile is present, arbitrarily look for a Podfile
         # first.
@@ -71,6 +73,11 @@ module BranchIOCLI
           message += <<-EOF
 <%= color('Branch key setting:', BOLD) %> #{setting}
           EOF
+          if test_configurations
+            message += <<-EOF
+<%= color('Test configurations:', BOLD) %> #{test_configurations}
+            EOF
+          end
         end
 
         message += <<-EOF
@@ -265,6 +272,24 @@ module BranchIOCLI
             return
           end
           setting = ask "Invalid build setting. Please enter an all-caps identifier (may include digits and underscores): "
+        end
+      end
+
+      def validate_test_configurations(options)
+        return unless options.test_configurations
+        unless options.setting
+          say "--test-configurations ignored without --setting"
+          return
+        end
+
+        all_configurations = target.build_configurations.map(&:name)
+        test_configs = options.test_configurations
+        loop do
+          invalid_configurations = test_configs.reject { |c| all_configurations.include? c }
+          @test_configurations = test_configs and return if invalid_configurations.empty?
+
+          say "The following test configurations are invalid: #{invalid_configurations}."
+          test_configs = ask "Please enter a comma-separated list of configurations to use the Branch test key: ", Array
         end
       end
     end
