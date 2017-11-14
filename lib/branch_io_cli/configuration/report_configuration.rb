@@ -382,6 +382,7 @@ EOF
         return @branch_key_setting_from_info_plist if @branch_key_setting_from_info_plist
 
         infoplist_path = helper.expanded_build_setting target, "INFOPLIST_FILE", configuration
+        infoplist_path = File.expand_path infoplist_path, File.dirname(xcodeproj_path)
         info_plist = File.open(infoplist_path) { |f| Plist.parse_xml f }
         branch_key = info_plist["branch_key"]
         regexp = /^\$\((\w+)\)$|^\$\{(\w+)\}$/
