@@ -1,3 +1,5 @@
+require "xcodeproj"
+
 module BranchIOCLI
   module Configuration
     class ReportConfiguration < Configuration

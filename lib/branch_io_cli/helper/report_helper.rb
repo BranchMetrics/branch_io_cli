@@ -1,3 +1,4 @@
+require "plist"
 require "branch_io_cli/configuration/configuration"
 
 module BranchIOCLI

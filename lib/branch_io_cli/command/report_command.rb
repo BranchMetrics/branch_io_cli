@@ -1,9 +1,3 @@
-require "cocoapods-core"
-require "branch_io_cli/helper/methods"
-require "open3"
-require "plist"
-require "xcodeproj"
-
 module BranchIOCLI
   module Command
     class ReportCommand < Command

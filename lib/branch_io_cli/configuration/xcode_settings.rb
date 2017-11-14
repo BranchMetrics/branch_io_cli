@@ -1,3 +1,5 @@
+require "open3"
+
 module BranchIOCLI
   module Configuration
     class XcodeSettings
