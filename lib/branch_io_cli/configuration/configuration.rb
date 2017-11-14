@@ -184,6 +184,31 @@ EOF
         end
       end
 
+      def pod_install_required?
+        # If this is set, its existence has been verified.
+        return false unless podfile_path
+
+        lockfile_path = "#{podfile_path}.lock"
+        manifest_path = File.expand_path "../Pods/Manifest.lock", podfile_path
+
+        return true unless File.exist?(lockfile_path) && File.exist?(manifest_path)
+
+        lockfile = Pod::Lockfile.from_file Pathname.new lockfile_path
+        manifest = Pod::Lockfile.from_file Pathname.new manifest_path
+
+        # diff the contents of Podfile.lock and Pods/Manifest.lock
+        # This is just what is done in the "[CP] Check Pods Manifest.lock" script build phase
+        # in a project using CocoaPods.
+        return true unless lockfile == manifest
+
+        # compare checksum of Podfile with checksum in Podfile.lock
+        # This is a good sanity check, but perhaps unnecessary. It means pod install
+        # has not been run since the Podfile was modified, which is probably an oversight.
+        return true unless lockfile.to_hash["PODFILE CHECKSUM"] == podfile.checksum
+
+        false
+      end
+
       def uses_frameworks?
         return nil unless podfile
         target_definition = podfile.target_definition_list.find { |t| t.name == target.name }
