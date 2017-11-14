@@ -137,7 +137,13 @@ module BranchIOCLI
           begin
             info_plist = File.open(infoplist_path) { |f| Plist.parse_xml f }
             branch_key = info_plist["branch_key"]
-            report += " Branch key(s) (Info.plist):\n"
+            if config.branch_key_setting_from_info_plist
+              annotation = "[Info.plist:$(#{config.branch_key_setting_from_info_plist})]"
+            else
+              annotation = "(Info.plist)"
+            end
+
+            report += " Branch key(s) #{annotation}:\n"
             if branch_key.kind_of? Hash
               branch_key.each_key do |key|
                 resolved_key = helper.expand_build_settings branch_key[key], config.target, config.configuration

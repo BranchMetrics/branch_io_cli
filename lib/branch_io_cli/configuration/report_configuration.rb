@@ -377,6 +377,18 @@ EOF
         version = matches[1]
         "#{version} [BNCConfig.m:#{relative_path project.path}]"
       end
+
+      def branch_key_setting_from_info_plist
+        return @branch_key_setting_from_info_plist if @branch_key_setting_from_info_plist
+
+        infoplist_path = helper.expanded_build_setting target, "INFOPLIST_FILE", configuration
+        info_plist = File.open(infoplist_path) { |f| Plist.parse_xml f }
+        branch_key = info_plist["branch_key"]
+        regexp = /^\$\((\w+)\)$|^\$\{(\w+)\}$/
+        return nil unless branch_key.kind_of?(String) && (matches = regexp.match branch_key)
+        @branch_key_setting_from_info_plist = matches[1] || matches[2]
+        @branch_key_setting_from_info_plist
+      end
     end
   end
 end
