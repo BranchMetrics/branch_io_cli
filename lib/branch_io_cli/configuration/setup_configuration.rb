@@ -283,7 +283,7 @@ module BranchIOCLI
         end
 
         all_configurations = target.build_configurations.map(&:name)
-        test_configs = options.test_configurations
+        test_configs = options.test_configurations == false ? [] : options.test_configurations
         loop do
           invalid_configurations = test_configs.reject { |c| all_configurations.include? c }
           @test_configurations = test_configs and return if invalid_configurations.empty?

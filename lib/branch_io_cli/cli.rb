@@ -78,7 +78,7 @@ EOF
         c.option "-D", "--domains example.com,www.example.com", Array, "Comma-separated list of custom domain(s) or non-Branch domain(s)"
         c.option "-U", "--uri-scheme myurischeme[://]", String, "Custom URI scheme used in the Branch Dashboard for this app"
         c.option "-s", "--setting [BRANCH_KEY_SETTING]", String, "Use a custom build setting for the Branch key (default: Use Info.plist)"
-        c.option "--test-configurations config1,config2", Array, "List of configurations that use the test key with a custom build setting (default: Debug configurations)"
+        c.option "--[no-]test-configurations [config1,config2]", Array, "List of configurations that use the test key with a custom build setting (default: Debug configurations)"
 
         c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project to update"
         c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"
