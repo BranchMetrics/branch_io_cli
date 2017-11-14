@@ -33,6 +33,24 @@ module BranchIOCLI
         validate_buildfile_path(options.cartfile, "Cartfile") if sdk_integration_mode.nil?
       end
 
+      # TODO: Collapse the following methods with support for formatting.
+      def report_configuration
+        <<EOF
+Configuration:
+
+Xcode workspace: #{workspace_path || '(none)'}
+Xcode project: #{xcodeproj_path || '(none)'}
+Scheme: #{scheme || '(none)'}
+Target: #{target || '(none)'}
+Configuration: #{configuration || '(none)'}
+SDK: #{sdk}
+Podfile: #{relative_path(podfile_path) || '(none)'}
+Cartfile: #{relative_path(cartfile_path) || '(none)'}
+Pod repo update: #{pod_repo_update.inspect}
+Clean: #{clean.inspect}
+EOF
+      end
+
       def log
         super
         say <<EOF

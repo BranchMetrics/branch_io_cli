@@ -36,23 +36,6 @@ module BranchIOCLI
           cmd
         end
 
-        def report_configuration
-          <<EOF
-Configuration:
-
-Xcode workspace: #{config.workspace_path || '(none)'}
-Xcode project: #{config.xcodeproj_path || '(none)'}
-Scheme: #{config.scheme || '(none)'}
-Target: #{config.target || '(none)'}
-Configuration: #{config.configuration || '(none)'}
-SDK: #{config.sdk}
-Podfile: #{config.relative_path(config.podfile_path) || '(none)'}
-Cartfile: #{config.relative_path(config.cartfile_path) || '(none)'}
-Pod repo update: #{config.pod_repo_update.inspect}
-Clean: #{config.clean.inspect}
-EOF
-        end
-
         # rubocop: disable Metrics/PerceivedComplexity
         def report_header
           header = "cocoapods-core: #{Pod::CORE_VERSION}\n"

@@ -52,7 +52,7 @@ EOF
 
         File.open config.report_path, "w" do |report|
           report.write "Branch.io Xcode build report v #{VERSION} #{DateTime.now}\n\n"
-          report.write "#{report_helper.report_configuration}\n"
+          report.write "#{config.report_configuration}\n"
           report.write "#{report_helper.report_header}\n"
 
           # run xcodebuild -list
