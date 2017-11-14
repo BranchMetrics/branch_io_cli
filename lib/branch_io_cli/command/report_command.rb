@@ -50,7 +50,7 @@ module BranchIOCLI
         base_cmd = report_helper.base_xcodebuild_cmd
         # Add more options for the rest of the commands
         base_cmd += " -scheme #{Shellwords.escape config.scheme}"
-        base_cmd += " -configuration #{Shellwords.escape config.configuration}"
+        base_cmd += " -configuration #{Shellwords.escape(config.configuration || config.configurations_from_scheme.first)}"
         base_cmd += " -sdk #{Shellwords.escape config.sdk}"
 
         if config.clean

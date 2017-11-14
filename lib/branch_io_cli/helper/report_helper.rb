@@ -54,7 +54,7 @@ module BranchIOCLI
 
           header += report_scheme
 
-          configuration = config.configuration || "Release"
+          configuration = config.configuration || config.configurations_from_scheme.first
           configurations = config.configuration ? [config.configuration] : config.configurations_from_scheme
 
           bundle_identifier = helper.expanded_build_setting config.target, "PRODUCT_BUNDLE_IDENTIFIER", configuration
@@ -158,9 +158,9 @@ module BranchIOCLI
               info_plist = File.open(infoplist_path) { |f| Plist.parse_xml f }
               branch_key = info_plist["branch_key"]
               if config.branch_key_setting_from_info_plist(configuration)
-                annotation = "[Info.plist:$(#{config.branch_key_setting_from_info_plist})]"
+                annotation = "[#{File.basename infoplist_path}:$(#{config.branch_key_setting_from_info_plist})]"
               else
-                annotation = "(Info.plist)"
+                annotation = "(#{File.basename infoplist_path})"
               end
 
               report += "  Branch key(s) #{annotation}:\n"
@@ -196,7 +196,7 @@ module BranchIOCLI
             begin
               # This isn't likely to vary by configuration, so just report for one, either
               # whatever was passed or Release.
-              domains = helper.domains_from_project config.configuration || "Release"
+              domains = helper.domains_from_project config.configuration || config.configurations_from_scheme.first
               report += " Universal Link domains (entitlements):\n"
               domains.each do |domain|
                 report += "  #{domain}\n"
