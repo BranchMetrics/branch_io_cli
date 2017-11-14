@@ -45,10 +45,12 @@ module BranchIOCLI
           header += `xcodebuild -version`
           header += "SDK: #{xcode_settings['SDK_NAME']}\n" if xcode_settings
 
-          bundle_identifier = helper.expanded_build_setting config.target, "PRODUCT_BUNDLE_IDENTIFIER", config.configuration
-          dev_team = helper.expanded_build_setting config.target, "DEVELOPMENT_TEAM", config.configuration
-          infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", config.configuration
-          entitlements_path = helper.expanded_build_setting config.target, "CODE_SIGN_ENTITLEMENTS", config.configuration
+          configuration = config.configuration || "Release"
+          configurations = config.configuration ? [config.configuration] : config.configurations_from_scheme
+
+          bundle_identifier = helper.expanded_build_setting config.target, "PRODUCT_BUNDLE_IDENTIFIER", configuration
+          dev_team = helper.expanded_build_setting config.target, "DEVELOPMENT_TEAM", configuration
+          entitlements_path = helper.expanded_build_setting config.target, "CODE_SIGN_ENTITLEMENTS", configuration
 
           header += "\nTarget #{config.target.name}:\n"
           header += " Bundle identifier: #{bundle_identifier || '(none)'}\n"
@@ -57,7 +59,12 @@ module BranchIOCLI
           header += " Modules #{config.modules_enabled? ? '' : 'not '}enabled\n"
           header += " Swift #{config.swift_version}\n" if config.swift_version
           header += " Bridging header: #{config.relative_path(config.bridging_header_path)}\n" if config.bridging_header_path
-          header += " Info.plist: #{config.relative_path(infoplist_path) || '(none)'}\n"
+
+          header += " Info.plist\n"
+          configurations.each do |c|
+            header += "  #{c}: #{helper.expanded_build_setting config.target, 'INFOPLIST_FILE', c}\n"
+          end
+
           header += " Entitlements file: #{config.relative_path(entitlements_path) || '(none)'}\n"
 
           if config.podfile_path
@@ -121,17 +128,19 @@ module BranchIOCLI
             header += "\nBranch SDK not found.\n"
           end
 
-          header += "\n#{branch_report}"
+          header += "\n#{report_branch}"
 
           header
         end
         # rubocop: enable Metrics/PerceivedComplexity
 
         # String containing information relevant to Branch setup
-        def branch_report
+        def report_branch
           report = "Branch configuration:\n"
 
-          config.configurations_from_scheme.each do |configuration|
+          configurations = config.configuration ? [config.configuration] : config.configurations_from_scheme
+
+          configurations.each do |configuration|
             report += " #{configuration}:\n"
             infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", configuration
             infoplist_path = File.expand_path infoplist_path, File.dirname(config.xcodeproj_path)
@@ -140,9 +149,9 @@ module BranchIOCLI
               info_plist = File.open(infoplist_path) { |f| Plist.parse_xml f }
               branch_key = info_plist["branch_key"]
               if config.branch_key_setting_from_info_plist(configuration)
-                annotation = " [Info.plist:$(#{config.branch_key_setting_from_info_plist})]"
+                annotation = "[Info.plist:$(#{config.branch_key_setting_from_info_plist})]"
               else
-                annotation = " (Info.plist)"
+                annotation = "(Info.plist)"
               end
 
               report += "  Branch key(s) #{annotation}:\n"
@@ -176,7 +185,9 @@ module BranchIOCLI
 
           unless config.target.extension_target_type?
             begin
-              domains = helper.domains_from_project config.configuration
+              # This isn't likely to vary by configuration, so just report for one, either
+              # whatever was passed or Release.
+              domains = helper.domains_from_project config.configuration || "Release"
               report += " Universal Link domains (entitlements):\n"
               domains.each do |domain|
                 report += "  #{domain}\n"
