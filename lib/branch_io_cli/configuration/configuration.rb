@@ -244,10 +244,18 @@ EOF
 
         all_paths = target.source_build_phase.files.map { |f| f.file_ref.real_path.to_s }
         swift_paths = all_paths.grep(/\.swift$/)
-        objc_paths = all_paths.grep(/\.h$/)
+
+        # We're looking for the @interface declaration for a class that inherits from
+        # MSMessagesAppViewController. The target probably doesn't have a headers
+        # build phase. Include all .ms from the source build phase and any .h
+        # with the same root.
+        objc_paths = all_paths.grep(/\.m$/)
+        objc_paths += objc_paths.map { |p| p.sub(/\.m$/, '.h') }.select { |f| File.exist? f }
 
         path = swift_paths.find { |f| /class.*:\s+MSMessagesAppViewController\s*{\n/m.match_file f } ||
                objc_paths.find { |f| /@interface.*:\s+MSMessagesAppViewController/.match_file f }
+
+        # If we found a .h, patch the corresponding .m.
         path && path.sub(/\.h$/, '.m')
       end
 
