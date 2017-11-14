@@ -5,14 +5,22 @@ module BranchIOCLI
   module Configuration
     class XcodeSettings
       class << self
+        def settings_for_config(configuration)
+          return @settings[configuration] if @settings && @settings[configuration]
+          @settings ||= {}
+
+          @settings[configuration] = self.new configuration
+        end
+
         def settings
-          return @settings if @settings
-          @settings = self.new
-          @settings
+          settings_for_config "Release"
         end
       end
 
-      def initialize
+      attr_reader :configuration
+
+      def initialize(configuration)
+        @configuration = configuration
         load_settings_from_xcode
       end
 
@@ -32,7 +40,7 @@ module BranchIOCLI
         cmd = "xcodebuild"
         cmd = "#{cmd} -project #{Shellwords.escape config.xcodeproj_path}"
         cmd += " -target #{Shellwords.escape config.target.name}"
-        cmd += " -configuration #{Shellwords.escape config.configuration}"
+        cmd += " -configuration #{Shellwords.escape configuration}"
         cmd += " -sdk #{Shellwords.escape config.sdk}"
         cmd += " -showBuildSettings"
         cmd

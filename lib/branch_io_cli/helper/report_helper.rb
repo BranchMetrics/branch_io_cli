@@ -129,46 +129,49 @@ module BranchIOCLI
 
         # String containing information relevant to Branch setup
         def branch_report
-          infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", config.configuration
-          infoplist_path = File.expand_path infoplist_path, File.dirname(config.xcodeproj_path)
-
           report = "Branch configuration:\n"
 
-          begin
-            info_plist = File.open(infoplist_path) { |f| Plist.parse_xml f }
-            branch_key = info_plist["branch_key"]
-            if config.branch_key_setting_from_info_plist
-              annotation = "[Info.plist:$(#{config.branch_key_setting_from_info_plist})]"
-            else
-              annotation = "(Info.plist)"
-            end
+          config.configurations_from_scheme.each do |configuration|
+            report += " #{configuration}:\n"
+            infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", configuration
+            infoplist_path = File.expand_path infoplist_path, File.dirname(config.xcodeproj_path)
 
-            report += " Branch key(s) #{annotation}:\n"
-            if branch_key.kind_of? Hash
-              branch_key.each_key do |key|
-                resolved_key = helper.expand_build_settings branch_key[key], config.target, config.configuration
-                report += "  #{key.capitalize}: #{resolved_key}\n"
-              end
-            elsif branch_key
-              resolved_key = helper.expand_build_settings branch_key, config.target, config.configuration
-              report += "  #{resolved_key}\n"
-            else
-              report += "  (none found)\n"
-            end
-
-            branch_universal_link_domains = info_plist["branch_universal_link_domains"]
-            if branch_universal_link_domains
-              if branch_universal_link_domains.kind_of? Array
-                report += " branch_universal_link_domains (Info.plist):\n"
-                branch_universal_link_domains.each do |domain|
-                  report += "  #{domain}\n"
-                end
+            begin
+              info_plist = File.open(infoplist_path) { |f| Plist.parse_xml f }
+              branch_key = info_plist["branch_key"]
+              if config.branch_key_setting_from_info_plist(configuration)
+                annotation = " [Info.plist:$(#{config.branch_key_setting_from_info_plist})]"
               else
-                report += " branch_universal_link_domains (Info.plist): #{branch_universal_link_domains}\n"
+                annotation = " (Info.plist)"
               end
+
+              report += "  Branch key(s) #{annotation}:\n"
+              if branch_key.kind_of? Hash
+                branch_key.each_key do |key|
+                  resolved_key = helper.expand_build_settings branch_key[key], config.target, configuration
+                  report += "   #{key.capitalize}: #{resolved_key}\n"
+                end
+              elsif branch_key
+                resolved_key = helper.expand_build_settings branch_key, config.target, configuration
+                report += "   #{resolved_key}\n"
+              else
+                report += "   (none found)\n"
+              end
+
+              branch_universal_link_domains = info_plist["branch_universal_link_domains"]
+              if branch_universal_link_domains
+                if branch_universal_link_domains.kind_of? Array
+                  report += "  branch_universal_link_domains (Info.plist):\n"
+                  branch_universal_link_domains.each do |domain|
+                    report += "   #{domain}\n"
+                  end
+                else
+                  report += "  branch_universal_link_domains (Info.plist): #{branch_universal_link_domains}\n"
+                end
+              end
+            rescue StandardError => e
+              report += "  (Failed to open Info.plist: #{e.message})\n"
             end
-          rescue StandardError => e
-            report += " (Failed to open Info.plist: #{e.message})\n"
           end
 
           unless config.target.extension_target_type?

@@ -105,7 +105,7 @@ EOF
 <%= color('Xcode project:', BOLD) %> #{xcodeproj_path || '(none)'}
 <%= color('Scheme:', BOLD) %> #{scheme || '(none)'}
 <%= color('Target:', BOLD) %> #{target || '(none)'}
-<%= color('Configuration:', BOLD) %> #{configuration}
+<%= color('Configuration:', BOLD) %> #{configuration || '(none)'}
 <%= color('SDK:', BOLD) %> #{sdk}
 <%= color('Podfile:', BOLD) %> #{relative_path(podfile_path) || '(none)'}
 <%= color('Cartfile:', BOLD) %> #{relative_path(cartfile_path) || '(none)'}
@@ -265,11 +265,13 @@ EOF
       end
 
       def validate_configuration(options)
+        return unless options.configuration
+
         all_configs = xcodeproj.build_configurations.map(&:name)
 
-        if options.configuration && all_configs.include?(options.configuration)
+        if all_configs.include?(options.configuration)
           @configuration = options.configuration
-        elsif options.configuration
+        else
           say "Configuration #{options.configuration} not found."
           @configuration = choose do |menu|
             menu.header = "Configurations from project"
@@ -277,14 +279,11 @@ EOF
             menu.prompt = "Please choose one of the above. "
           end
         end
+      end
 
-        return if @configuration
-
-        @configuration = "Debug" # Usual default for the launch action
-
-        return unless xcscheme
-
-        @configuration = xcscheme.launch_action.build_configuration
+      def configurations_from_scheme
+        return ["Debug", "Release"] unless xcscheme
+        %i[test launch profile archive analyze].map { |pfx| xcscheme.send("#{pfx}_action").build_configuration }.uniq
       end
 
       def branch_version
@@ -378,7 +377,7 @@ EOF
         "#{version} [BNCConfig.m:#{relative_path project.path}]"
       end
 
-      def branch_key_setting_from_info_plist
+      def branch_key_setting_from_info_plist(configuration = config.configuration || "Release")
         return @branch_key_setting_from_info_plist if @branch_key_setting_from_info_plist
 
         infoplist_path = helper.expanded_build_setting target, "INFOPLIST_FILE", configuration
