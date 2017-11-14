@@ -3,11 +3,6 @@ module BranchIOCLI
     class ValidateCommand < Command
       attr_reader :config
 
-      def initialize(options)
-        super
-        @config = Configuration::ValidateConfiguration.new options
-      end
-
       def run!
         valid = true
 

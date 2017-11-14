@@ -8,7 +8,6 @@ module BranchIOCLI
 
       def initialize(options)
         super
-        @config = Configuration::SetupConfiguration.new options
         @keys = config.keys
         @domains = config.all_domains
       end

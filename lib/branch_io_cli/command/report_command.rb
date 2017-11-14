@@ -7,11 +7,6 @@ require "xcodeproj"
 module BranchIOCLI
   module Command
     class ReportCommand < Command
-      def initialize(options)
-        super
-        @config = Configuration::ReportConfiguration.new options
-      end
-
       def run!
         say "\n"
 
