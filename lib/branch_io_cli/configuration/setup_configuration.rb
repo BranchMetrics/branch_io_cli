@@ -289,6 +289,7 @@ module BranchIOCLI
           @test_configurations = test_configs and return if invalid_configurations.empty?
 
           say "The following test configurations are invalid: #{invalid_configurations}."
+          say "Available configurations: #{all_configurations}"
           test_configs = ask "Please enter a comma-separated list of configurations to use the Branch test key: ", Array
         end
       end
