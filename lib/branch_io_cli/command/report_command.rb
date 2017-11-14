@@ -1,8 +1,4 @@
-require "cocoapods-core"
-require "branch_io_cli/helper/methods"
-require "open3"
-require "plist"
-require "xcodeproj"
+require "shellwords"
 
 module BranchIOCLI
   module Command
@@ -57,14 +53,15 @@ EOF
           if config.workspace_path
             config.workspace.file_references.map(&:path).each do |project_path|
               path = File.join File.dirname(config.workspace_path), project_path
-              report.log_command "xcodebuild -list -project #{path}"
+              report.log_command "xcodebuild -list -project #{Shellwords.escape path}"
             end
           end
 
           base_cmd = report_helper.base_xcodebuild_cmd
           # Add more options for the rest of the commands
-          base_cmd = "#{base_cmd} -scheme #{config.scheme}"
-          base_cmd = "#{base_cmd} -configuration #{config.configuration} -sdk #{config.sdk}"
+          base_cmd += " -scheme #{Shellwords.escape config.scheme}"
+          base_cmd += " -configuration #{Shellwords.escape config.configuration}"
+          base_cmd += " -sdk #{Shellwords.escape config.sdk}"
 
           # xcodebuild -showBuildSettings
           xcode_settings.log_xcodebuild_showbuildsettings report

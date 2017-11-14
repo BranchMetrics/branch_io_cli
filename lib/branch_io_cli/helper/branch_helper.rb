@@ -1,7 +1,6 @@
 require "branch_io_cli/helper/android_helper"
 require "branch_io_cli/helper/ios_helper"
 require "net/http"
-require "pattern_patch"
 require "set"
 
 module BranchIOCLI

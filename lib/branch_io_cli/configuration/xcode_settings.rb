@@ -1,3 +1,6 @@
+require "open3"
+require "shellwords"
+
 module BranchIOCLI
   module Configuration
     class XcodeSettings
@@ -28,12 +31,14 @@ module BranchIOCLI
       def xcodebuild_cmd
         cmd = "xcodebuild"
         if config.workspace_path
-          cmd = "#{cmd} -workspace #{config.workspace_path}"
+          cmd = "#{cmd} -workspace #{Shellwords.escape config.workspace_path}"
         else
-          cmd = "#{cmd} -project #{config.xcodeproj_path}"
+          cmd = "#{cmd} -project #{Shellwords.escape config.xcodeproj_path}"
         end
-        cmd += " -scheme #{config.scheme}"
-        cmd += " -configuration #{config.configuration} -sdk #{config.sdk} -showBuildSettings"
+        cmd += " -scheme #{Shellwords.escape config.scheme}"
+        cmd += " -configuration #{Shellwords.escape config.configuration}"
+        cmd += " -sdk #{Shellwords.escape config.sdk}"
+        cmd += " -showBuildSettings"
         cmd
       end
 
