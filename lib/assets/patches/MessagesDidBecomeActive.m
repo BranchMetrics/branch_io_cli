@@ -7,7 +7,7 @@
     [Branch setUseTestBranchKey:YES];
 #endif // DEBUG
 <% end %>
-    [[Branch getInstance] initSessionWithLaunchOptions:launchOptions
+    [[Branch getInstance] initSessionWithLaunchOptions:@{}
         andRegisterDeepLinkHandlerUsingBranchUniversalObject:^(BranchUniversalObject *universalObject, BranchLinkProperties *linkProperties, NSError *error){
         // TODO: Route Branch links
     }];

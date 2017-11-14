@@ -6,7 +6,7 @@
             Branch.setUseTestBranchKey(true)
         #endif
 <% end %>
-        Branch.getInstance().initSession(launchOptions: launchOptions) {
+        Branch.getInstance().initSession(launchOptions: [:]) {
             universalObject, linkProperties, error in
 
             // TODO: Route Branch links

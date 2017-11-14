@@ -242,7 +242,7 @@ EOF
       def messages_view_controller_path
         return nil unless target.symbol_type == :messages_extension
 
-        all_paths = target.source_build_phase.files.map { |f| f.file_ref.real_path }
+        all_paths = target.source_build_phase.files.map { |f| f.file_ref.real_path.to_s }
         swift_paths = all_paths.grep(/\.swift$/)
         objc_paths = all_paths.grep(/\.h$/)
 

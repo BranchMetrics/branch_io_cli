@@ -195,20 +195,22 @@ module BranchIOCLI
           when /\.swift$/
             return false if /branch.*initSession/m.match_file path
 
-            unless bridging_header_required?
+            unless config.bridging_header_required?
               load_patch(:swift_import).apply path
             end
 
-            is_new_method = /didBecomeActive\(with.*?\{[^\n]*\n/m.match_file(path)
+            is_new_method = !/didBecomeActive\(with.*?\{[^\n]*\n/m.match_file(path)
             patch_name += "#{is_new_method ? 'new_' : ''}swift"
           else
             return false if %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}.match_file(path)
 
             load_patch(:objc_import).apply path
 
-            is_new_method = /didBecomeActiveWithConversation.*?\{[^\n]*\n/m.match_file(path)
+            is_new_method = !/didBecomeActiveWithConversation.*?\{[^\n]*\n/m.match_file(path)
             patch_name += "#{is_new_method ? 'new_' : ''}objc"
           end
+
+          say "Patching #{path}"
 
           load_patch(patch_name).apply path, binding: binding
 
