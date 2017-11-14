@@ -1,4 +1,39 @@
+require "plist"
 require "xcodeproj"
+
+module Xcodeproj
+  class Project
+    # Local override to allow for user schemes.
+    #
+    # Get list of shared and user schemes in project
+    #
+    # @param [String] path
+    #         project path
+    #
+    # @return [Array]
+    #
+    def self.schemes(project_path)
+      base_dirs = [File.join(project_path, 'xcshareddata', 'xcschemes'),
+                   File.join(project_path, 'xcuserdata', "#{ENV['USER']}.xcuserdatad", 'xcschemes')]
+
+      # Take any .xcscheme file from base_dirs
+      schemes = base_dirs.inject([]) { |memo, dir| memo + Dir[File.join dir, '*.xcscheme'] }
+                         .map { |f| File.basename(f, '.xcscheme') }
+
+      # Include any scheme defined in the xcschememanagement.plist, if it exists.
+      base_dirs.map { |d| File.join d, 'xcschememanagement.plist' }
+               .select { |f| File.exist? f }.each do |plist_path|
+        plist = File.open(plist_path) { |f| ::Plist.parse_xml f }
+        scheme_user_state = plist["SchemeUserState"]
+        schemes += scheme_user_state.keys.map { |k| File.basename k, '.xcscheme' }
+      end
+
+      schemes.uniq!
+      schemes << File.basename(project_path, '.xcodeproj') if schemes.empty?
+      schemes
+    end
+  end
+end
 
 module BranchIOCLI
   module Configuration
