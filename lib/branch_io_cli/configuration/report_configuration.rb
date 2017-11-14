@@ -222,6 +222,97 @@ EOF
 
         @configuration = xcscheme.launch_action.build_configuration
       end
+
+      def branch_version
+        version_from_podfile_lock ||
+          version_from_cartfile_resolved ||
+          version_from_branch_framework ||
+          version_from_bnc_config_m
+      end
+
+      def requirement_from_podfile
+        return nil unless podfile_path
+        podfile = File.read podfile_path
+        matches = /\n?\s*pod\s+("Branch"|'Branch').*?\n/m.match podfile
+        matches ? matches[0].strip : nil
+      end
+
+      def requirement_from_cartfile
+        return nil unless cartfile_path
+        cartfile = File.read cartfile_path
+        matches = %r{^git(hub\s+"|\s+"https://github.com/)BranchMetrics/(ios-branch-deep-linking|iOS-Deferred-Deep-Linking-SDK.*?).*?\n}m.match cartfile
+        matches ? matches[0].strip : nil
+      end
+
+      def version_from_podfile_lock
+        return nil unless podfile_path && File.exist?("#{podfile_path}.lock")
+        podfile_lock = Pod::Lockfile.from_file Pathname.new "#{podfile_path}.lock"
+        version = podfile_lock.version("Branch") || podfile_lock.version("Branch-SDK")
+
+        version ? "#{version} [Podfile.lock]" : nil
+      end
+
+      def version_from_cartfile_resolved
+        return nil unless cartfile_path && File.exist?("#{cartfile_path}.resolved")
+        cartfile_resolved = File.read "#{cartfile_path}.resolved"
+
+        # Matches:
+        # git "https://github.com/BranchMetrics/ios-branch-deep-linking"
+        # git "https://github.com/BranchMetrics/ios-branch-deep-linking/"
+        # git "https://github.com/BranchMetrics/iOS-Deferred-Deep-Linking-SDK"
+        # git "https://github.com/BranchMetrics/iOS-Deferred-Deep-Linking-SDK/"
+        # github "BranchMetrics/ios-branch-deep-linking"
+        # github "BranchMetrics/ios-branch-deep-linking/"
+        # github "BranchMetrics/iOS-Deferred-Deep-Linking-SDK"
+        # github "BranchMetrics/iOS-Deferred-Deep-Linking-SDK/"
+        matches = %r{(ios-branch-deep-linking|iOS-Deferred-Deep-Linking-SDK)/?" "(\d+\.\d+\.\d+)"}m.match cartfile_resolved
+        return nil unless matches
+        version = matches[2]
+        "#{version} [Cartfile.resolved]"
+      end
+
+      def version_from_branch_framework
+        framework = target.frameworks_build_phase.files.find { |f| f.file_ref.path =~ /Branch.framework$/ }
+        return nil unless framework
+
+        if framework.file_ref.isa == "PBXFileReference"
+          project_path = relative_path(config.xcodeproj_path)
+          framework_path = framework.file_ref.real_path
+        elsif framework.file_ref.isa == "PBXReferenceProxy" && xcode_settings
+          project_path = relative_path framework.file_ref.remote_ref.proxied_object.project.path
+          framework_path = File.expand_path framework.file_ref.path, xcode_settings[framework.file_ref.source_tree]
+        end
+        info_plist_path = File.join framework_path.to_s, "Info.plist"
+        return nil unless File.exist? info_plist_path
+
+        require "cfpropertylist"
+
+        raw_info_plist = CFPropertyList::List.new file: info_plist_path
+        info_plist = CFPropertyList.native_types raw_info_plist.value
+        version = info_plist["CFBundleVersion"]
+        return nil unless version
+        "#{version} [Branch.framework/Info.plist:#{project_path}]"
+      end
+
+      def version_from_bnc_config_m(project = xcodeproj)
+        # Look for BNCConfig.m in embedded source
+        bnc_config_m_ref = project.files.find { |f| f.path =~ /BNCConfig\.m$/ }
+        unless bnc_config_m_ref
+          subprojects = project.files.select { |f| f.path =~ /\.xcodeproj$/ }
+          subprojects.each do |subproject|
+            p = Xcodeproj::Project.open subproject.real_path
+            version = version_from_bnc_config_m p
+            return version if version
+          end
+        end
+
+        return nil unless bnc_config_m_ref
+        bnc_config_m = File.read bnc_config_m_ref.real_path
+        matches = /BNC_SDK_VERSION\s+=\s+@"(\d+\.\d+\.\d+)"/m.match bnc_config_m
+        return nil unless matches
+        version = matches[1]
+        "#{version} [BNCConfig.m:#{relative_path project.path}]"
+      end
     end
   end
 end
