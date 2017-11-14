@@ -23,7 +23,7 @@ module BranchIOCLI
         end
 
         def use_conditional_test_key?
-          config.keys.count > 1 && !helper.has_multiple_info_plists?
+          config.keys.count > 1 && config.setting.nil? && !helper.has_multiple_info_plists?
         end
 
         def swift_file_includes_branch?(path)
