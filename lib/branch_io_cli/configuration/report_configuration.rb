@@ -8,6 +8,10 @@ module BranchIOCLI
       attr_reader :report_path
       attr_reader :sdk
 
+      def xcode_settings
+        XcodeSettings.settings
+      end
+
       def validate_options
         @clean = options.clean
         @header_only = options.header_only
@@ -207,7 +211,7 @@ EOF
 
         unless scheme_path
           # Look for a local scheme
-          user = @xcode_settings["USER"] if @xcode_settings
+          user = xcode_settings["USER"] if xcode_settings
           user ||= ENV["USER"] || ENV["LOGNAME"]
           xcuserdata_path = File.join project_path, "xcuserdata", "#{user}.xcuserdatad", "xcschemes", "#{@scheme}.xcscheme"
           scheme_path = xcuserdata_path if File.exist?(xcuserdata_path)
