@@ -33,8 +33,6 @@ module BranchIOCLI
         begin
           config.xcodeproj.build_configurations.first.debug?
         rescue RuntimeError
-          # Work around a potential crash for now. The PBXBuildConfiguration#debug?
-          # method may raise in this case.
           helper.verify_cocoapods
           say "Installing pods to resolve current build settings"
           # We haven't modified anything yet. Don't use --repo-update at this stage.
