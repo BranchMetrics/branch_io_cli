@@ -36,7 +36,10 @@ module BranchIOCLI
         return unless config.setting
 
         config.target.build_configurations.each do |c|
-          c.build_settings[config.setting] = c.debug? ? config.keys[:test] : config.keys[:live]
+          key = c.debug? ? config.keys[:test] : config.keys[:live]
+          # Reuse the same key if both not present
+          key ||= c.debug? ? config.keys[:live] : config.keys[:test]
+          c.build_settings[config.setting] = key
         end
       end
 
