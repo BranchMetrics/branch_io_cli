@@ -93,7 +93,7 @@ EOF
       end
 
       def xcode_settings
-        Configuration::XcodeSettings.new
+        Configuration::XcodeSettings.settings
       end
     end
   end

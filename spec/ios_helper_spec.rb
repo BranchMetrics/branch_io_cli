@@ -138,7 +138,7 @@ describe BranchIOCLI::Helper::IOSHelper do
       expect(instance.expanded_build_setting(target, "PRODUCT_BUNDLE_IDENTIFIER", "Release")).to eq "com.example.My App"
     end
 
-    it "substitutes _ for special characters when :rfc1034identifier is present" do
+    it "substitutes - for special characters when :rfc1034identifier is present" do
       expect(target).to receive(:resolved_build_setting).with("PRODUCT_NAME", true) { { "Release" => "My .@*&'\\\"+%_App" } }
       expect(target).to receive(:resolved_build_setting).with("PRODUCT_BUNDLE_IDENTIFIER", true) { { "Release" => "com.example.$(PRODUCT_NAME:rfc1034identifier)" } }
       expect(instance.expanded_build_setting(target, "PRODUCT_BUNDLE_IDENTIFIER", "Release")).to eq "com.example.My-----------App"
