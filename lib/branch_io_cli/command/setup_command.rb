@@ -35,9 +35,11 @@ module BranchIOCLI
         rescue RuntimeError
           helper.verify_cocoapods
           say "Installing pods to resolve current build settings"
-          # We haven't modified anything yet. Don't use --repo-update at this stage.
-          # This is unlikely to fail.
-          sh "pod install"
+          Dir.chdir(File.dirname(config.podfile_path)) do
+            # We haven't modified anything yet. Don't use --repo-update at this stage.
+            # This is unlikely to fail.
+            sh "pod install"
+          end
         end
 
         helper.add_custom_build_setting if config.setting
