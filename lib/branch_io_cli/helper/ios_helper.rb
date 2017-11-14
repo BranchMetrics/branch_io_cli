@@ -350,7 +350,7 @@ module BranchIOCLI
           target = project.targets.find { |t| t.name == config.scheme }
         else
           # find the first application target
-          target = targets.find { |t| t.name == File.basename(project.path, '.xcodeproj') } ||
+          target = project.targets.find { |t| t.name == File.basename(project.path, '.xcodeproj') } ||
                    project.targets.select { |t| !t.extension_target_type? && !t.test_target_type? }.first
         end
         target

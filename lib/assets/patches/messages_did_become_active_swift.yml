@@ -1,0 +1,3 @@
+regexp: '/didBecomeActive\(with.*?\{[^\n]*\n/m'
+mode: append
+text_file: MessagesDidBecomeActive.swift
