@@ -57,7 +57,7 @@ module BranchIOCLI
       end
 
       def log_xcodebuild_showbuildsettings(report = STDOUT)
-        report.write "$ #{xcodebuild_cmd} -showBuildSettings\n\n"
+        report.write "$ #{xcodebuild_cmd}\n\n"
         report.write @xcodebuild_showbuildsettings_output
         if valid?
           report.write "Success.\n\n"
