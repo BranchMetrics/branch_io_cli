@@ -29,7 +29,11 @@ module Xcodeproj
       end
 
       schemes.uniq!
-      schemes << File.basename(project_path, '.xcodeproj') if schemes.empty?
+      if schemes.empty?
+        # Open the project, get all targets. Add one scheme per target.
+        project = Project.open project_path
+        schemes += project.targets.reject(&:test_target_type?).map(&:name)
+      end
       schemes
     end
   end
