@@ -1,5 +1,28 @@
 require "xcodeproj"
 
+module Xcodeproj
+  class Project
+    # Local override to allow for user schemes.
+    #
+    # Get list of shared and user schemes in project
+    #
+    # @param [String] path
+    #         project path
+    #
+    # @return [Array]
+    #
+    def self.schemes(project_path)
+      schemes = Dir[File.join(project_path, 'xcshareddata', 'xcschemes', '*.xcscheme'),
+                    File.join(project_path, 'xcuserdata', "#{ENV['USER']}.xcuserdatad", 'xcschemes', '*.xcscheme')].map do |scheme|
+        File.basename(scheme, '.xcscheme')
+      end
+      schemes.uniq!
+      schemes << File.basename(project_path, '.xcodeproj') if schemes.empty?
+      schemes
+    end
+  end
+end
+
 module BranchIOCLI
   module Configuration
     class ReportConfiguration < Configuration
