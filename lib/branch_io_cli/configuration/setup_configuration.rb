@@ -260,7 +260,7 @@ module BranchIOCLI
         @setting = "BRANCH_KEY" and return if setting == true
 
         loop do
-          return if setting =~ /A-Z0-9_/
+          return if setting =~ /^[A-Z0-9_]+$/
           setting = "Invalid build setting. Please enter an all-caps identifier (may include digits and underscores): "
         end
       end
