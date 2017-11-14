@@ -1,0 +1,3 @@
+regexp: '/^@implementation.*?\n/m'
+mode: append
+text_file: MessagesDidBecomeActive.m

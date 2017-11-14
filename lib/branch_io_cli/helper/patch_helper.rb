@@ -185,6 +185,24 @@ module BranchIOCLI
           patch.apply app_delegate_objc_path
         end
 
+        def patch_messages_view_controller
+          path = config.messages_view_controller_path
+
+          patch_name = "messages_did_become_active_"
+          case path
+          when nil
+            return
+          when /\.swift$/
+            is_new_method = /didBecomeActive\(with.*?\{[^\n]*\n/m.match_file(path)
+            patch_name += "#{is_new_method ? 'new_' : ''}swift"
+          else
+            is_new_method = /didBecomeActiveWithConversation.*?\{[^\n]*\n/m.match_file(path)
+            patch_name += "#{is_new_method ? 'new_' : ''}objc"
+          end
+
+          load_patch(patch_name).apply path, binding: binding
+        end
+
         def patch_podfile(podfile_path)
           target_definition = config.podfile.target_definitions[config.target.name]
           raise "Target #{config.target.name} not found in Podfile" unless target_definition
@@ -238,6 +256,7 @@ module BranchIOCLI
           # is in Swift or Objective-C.
           patch_bridging_header if config.bridging_header_required?
           patch_app_delegate_swift(xcodeproj) || patch_app_delegate_objc(xcodeproj)
+          patch_messages_view_controller
         end
       end
     end
