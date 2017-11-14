@@ -38,12 +38,21 @@ module BranchIOCLI
           cmd
         end
 
+        def report_scheme
+          report = "\nScheme #{config.scheme}:\n"
+          report += " Configurations:\n"
+          report += "  #{config.configurations_from_scheme.join("\n  ")}\n"
+          report
+        end
+
         # rubocop: disable Metrics/PerceivedComplexity
         def report_header
           header = "cocoapods-core: #{Pod::CORE_VERSION}\n"
 
           header += `xcodebuild -version`
           header += "SDK: #{xcode_settings['SDK_NAME']}\n" if xcode_settings
+
+          header += report_scheme
 
           configuration = config.configuration || "Release"
           configurations = config.configuration ? [config.configuration] : config.configurations_from_scheme
