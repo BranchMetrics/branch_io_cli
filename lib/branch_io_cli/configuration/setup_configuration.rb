@@ -257,7 +257,7 @@ module BranchIOCLI
         setting = options.setting
         return if setting.nil?
 
-        @setting = "BRANCH_KEY" and return if setting.empty?
+        @setting = "BRANCH_KEY" and return if setting == true
 
         loop do
           return if setting =~ /A-Z0-9_/
