@@ -276,7 +276,7 @@ module BranchIOCLI
       end
 
       def validate_test_configurations(options)
-        return unless options.test_configurations
+        return if options.test_configurations.nil?
         unless options.setting
           say "--test-configurations ignored without --setting"
           return
