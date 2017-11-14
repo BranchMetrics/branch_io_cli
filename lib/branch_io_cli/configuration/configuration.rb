@@ -282,7 +282,8 @@ EOF
       def branch_imports
         return @branch_imports if @branch_imports
 
-        source_files = [app_delegate_swift_path, app_delegate_objc_path, bridging_header_path]
+        source_files = target.source_build_phase.files.map { |f| f.file_ref.real_path.to_s }
+        source_files << bridging_header_path if bridging_header_path
         @branch_imports = source_files.compact.map { |f| { f => branch_imports_from_file(f) } }.inject({}, :merge)
         @branch_imports
       end
