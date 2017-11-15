@@ -7,7 +7,7 @@ module BranchIOCLI
         say "\n"
 
         say "Loading settings from Xcode"
-        if xcode_settings.valid?
+        if Configuration::XcodeSettings.all_valid?
           say "Done ✅"
         else
           say "Failed to load settings from Xcode. Some information may be missing.\n"
@@ -45,7 +45,9 @@ module BranchIOCLI
         end
 
         # xcodebuild -showBuildSettings
-        xcode_settings.log_xcodebuild_showbuildsettings report
+        config.configurations.each do |configuration|
+          Configuration::XcodeSettings[configuration].log_xcodebuild_showbuildsettings report
+        end
 
         base_cmd = report_helper.base_xcodebuild_cmd
         # Add more options for the rest of the commands
@@ -72,10 +74,6 @@ module BranchIOCLI
 
       def report_helper
         Helper::ReportHelper
-      end
-
-      def xcode_settings
-        Configuration::XcodeSettings.settings
       end
     end
   end
