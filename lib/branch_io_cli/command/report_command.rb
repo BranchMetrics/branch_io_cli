@@ -7,7 +7,7 @@ module BranchIOCLI
         say "\n"
 
         say "Loading settings from Xcode"
-        if config.configurations.map { |c| Configuration::XcodeSettings[c] }.all?(&:valid?)
+        if Configuration::XcodeSettings.all_valid?
           say "Done ✅"
         else
           say "Failed to load settings from Xcode. Some information may be missing.\n"

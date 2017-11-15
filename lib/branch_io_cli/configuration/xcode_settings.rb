@@ -5,6 +5,10 @@ module BranchIOCLI
   module Configuration
     class XcodeSettings
       class << self
+        def all_valid?
+          Configuration.current.configurations.map { |c| settings(c) }.all?(&:valid?)
+        end
+
         def [](configuration)
           settings configuration
         end
