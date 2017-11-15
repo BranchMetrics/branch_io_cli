@@ -181,6 +181,39 @@ module BranchIOCLI
 
           report
         end
+
+        def pod_install_if_required(report)
+          return unless config.pod_install_required?
+          # Only if a Podfile is detected/supplied at the command line.
+          say "pod install required in order to build."
+          install = ask %{Run "pod install" now (Y/n)? }
+          if install.downcase =~ /^n/
+            say %{Please run "pod install" or "pod update" first in order to continue.}
+            exit(-1)
+          end
+
+          helper.verify_cocoapods
+
+          install_command = "pod install"
+
+          if config.pod_repo_update
+            install_command += " --repo-update"
+          else
+            say <<-EOF
+You have disabled "pod repo update". This can cause "pod install" to fail in
+some cases. If that happens, please rerun without --no-pod-repo-update or run
+"pod install --repo-update" manually.
+        EOF
+          end
+
+          say "Running #{install_command.inspect}"
+          if report.log_command(install_command).success?
+            say "Done ✅"
+          else
+            say "pod install failed. See report for details."
+            exit(-1)
+          end
+        end
       end
     end
   end
