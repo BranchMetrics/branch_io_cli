@@ -26,6 +26,13 @@ module BranchIOCLI
           config.keys.count > 1 && !helper.has_multiple_info_plists?
         end
 
+        def swift_file_includes_branch?(path)
+          # Can't just check for the import here, since there may be a bridging header.
+          # This may match branch.initSession (if the Branch instance is stored) or
+          # Branch.getInstance().initSession, etc.
+          !/branch.*initsession|^\s*import\s+branch/i.match_file(path).nil?
+        end
+
         def patch_bridging_header
           unless config.bridging_header_path
             say "Modules not available and bridging header not found. Cannot import Branch."
@@ -62,20 +69,14 @@ module BranchIOCLI
           return false unless config.patch_source
           app_delegate_swift_path = config.app_delegate_swift_path
 
-          return false unless app_delegate_swift_path
+          return false if app_delegate_swift_path.nil? ||
+                          swift_file_includes_branch?(app_delegate_swift_path)
 
-          app_delegate = File.read app_delegate_swift_path
-
-          # Can't just check for the import here, since there may be a bridging header.
-          # This may match branch.initSession (if the Branch instance is stored) or
-          # Branch.getInstance().initSession, etc.
-          return false if app_delegate =~ /(import\s+branch|branch\.*initsession)/i
+          say "Patching #{app_delegate_swift_path}"
 
           unless config.bridging_header_required?
             patch(:swift_import).apply app_delegate_swift_path
           end
-
-          say "Patching #{app_delegate_swift_path}"
 
           patch_did_finish_launching_method_swift app_delegate_swift_path
           patch_continue_user_activity_method_swift app_delegate_swift_path
@@ -194,7 +195,7 @@ module BranchIOCLI
           when nil
             return false
           when /\.swift$/
-            return false if /branch.*initSession/m.match_file path
+            return false if swift_file_includes_branch?(path)
 
             unless config.bridging_header_required?
               patch(:swift_import).apply path
