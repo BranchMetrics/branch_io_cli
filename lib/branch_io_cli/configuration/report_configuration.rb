@@ -334,7 +334,7 @@ EOF
         "#{version} [Cartfile.resolved]"
       end
 
-      def version_from_branch_framework(config = configuration)
+      def version_from_branch_framework(config = configurations.first)
         framework = target.frameworks_build_phase.files.find { |f| f.file_ref.path =~ /Branch.framework$/ }
         return nil unless framework
 
