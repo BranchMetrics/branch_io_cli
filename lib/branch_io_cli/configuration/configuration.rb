@@ -292,7 +292,11 @@ EOF
 
         source_files = target.source_build_phase.files.map { |f| f.file_ref.real_path.to_s }
         source_files << bridging_header_path if bridging_header_path
-        @branch_imports = source_files.compact.map { |f| { f => branch_imports_from_file(f) } }.inject({}, :merge)
+        @branch_imports = source_files.compact.map do |f|
+          imports = branch_imports_from_file f
+          next {} if imports.empty?
+          { f => imports }
+        end.inject({}, :merge)
         @branch_imports
       end
 
