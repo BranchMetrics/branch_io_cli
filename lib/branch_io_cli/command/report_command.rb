@@ -6,7 +6,10 @@ module BranchIOCLI
       def run!
         say "\n"
 
-        unless xcode_settings.valid?
+        say "Loading settings from Xcode"
+        if xcode_settings.valid?
+          say "Done ✅"
+        else
           say "Failed to load settings from Xcode. Some information may be missing.\n"
         end
 
@@ -15,36 +18,12 @@ module BranchIOCLI
           exit 0
         end
 
-        # Only if a Podfile is detected/supplied at the command line.
-        if config.pod_install_required?
-          say "pod install required in order to build."
-          install = ask %{Run "pod install" now (Y/n)? }
-          if install.downcase =~ /^n/
-            say %{Please run "pod install" or "pod update" first in order to continue.}
-            exit(-1)
-          end
-
-          helper.verify_cocoapods
-
-          install_command = "pod install"
-
-          if config.pod_repo_update
-            install_command += " --repo-update"
-          else
-            say <<EOF
-You have disabled "pod repo update". This can cause "pod install" to fail in
-some cases. If that happens, please rerun without --no-pod-repo-update or run
-"pod install --repo-update" manually.
-EOF
-          end
-
-          sh install_command
-        end
-
         File.open config.report_path, "w" do |report|
           report.write "Branch.io Xcode build report v #{VERSION} #{DateTime.now}\n\n"
           report.write "#{config.report_configuration}\n"
           report.write "#{report_helper.report_header}\n"
+
+          report_helper.pod_install_if_required report
 
           # run xcodebuild -list
           report.log_command "#{report_helper.base_xcodebuild_cmd} -list"
@@ -68,13 +47,19 @@ EOF
 
           if config.clean
             say "Cleaning"
-            report.log_command "#{base_cmd} clean"
+            if report.log_command("#{base_cmd} clean").success?
+              say "Done ✅"
+            else
+              say "Clean failed."
+            end
           end
 
           say "Building"
-          report.log_command "#{base_cmd} -verbose"
-
-          say "Done ✅"
+          if report.log_command("#{base_cmd} -verbose").success?
+            say "Done ✅"
+          else
+            say "Build failed."
+          end
         end
 
         say "Report generated in #{config.report_path}"
