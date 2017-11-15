@@ -4,9 +4,10 @@ module BranchIOCLI
   module Helper
     class PatchHelper
       class << self
+        PatternPatch.patch_dir = File.expand_path(File.join('..', '..', '..', 'assets', 'patches'), __FILE__)
+
         def load_patch(name)
-          path = File.expand_path(File.join('..', '..', '..', 'assets', 'patches', "#{name}.yml"), __FILE__)
-          PatternPatch::Patch.from_yaml path
+          PatternPatch.patch name
         end
 
         def config

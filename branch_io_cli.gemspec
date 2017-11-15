@@ -24,7 +24,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'CFPropertyList'
   spec.add_dependency 'cocoapods-core'
   spec.add_dependency 'commander'
-  spec.add_dependency 'pattern_patch', '>= 0.5.1'
+  spec.add_dependency 'pattern_patch', '>= 0.5.3'
   spec.add_dependency 'plist'
   spec.add_dependency 'rubyzip'
   spec.add_dependency 'xcodeproj'
