@@ -134,7 +134,7 @@ that the relevant commands are available in your `PATH`.
 |--[no-]force|Update project even if Universal Link validation fails (default: no)|
 |--[no-]add-sdk|Add the Branch framework to the project (default: yes)|
 |--[no-]patch-source|Add Branch SDK calls to the AppDelegate (default: yes)|
-|--[no-]commit|Commit the results to Git (default: no)|
+|--[no-]commit [message]|Commit the results to Git (default: no)|
 
 All parameters are optional. A live key or test key, or both is required, as well as at least one domain.
 Specify --live-key, --test-key or both and --app-link-subdomain, --domains or both. If these are not
