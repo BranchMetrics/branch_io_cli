@@ -68,8 +68,6 @@ module BranchIOCLI
         else
           say "Build failed."
         end
-
-        say "Done ✅"
       end
 
       def report_helper
