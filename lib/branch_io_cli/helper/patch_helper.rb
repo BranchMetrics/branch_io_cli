@@ -3,13 +3,13 @@ require "pattern_patch"
 module BranchIOCLI
   module Helper
     class PatchHelper
+      # Adds patch_dir class attr and patch class method
+      extend PatternPatch::Methods
+
+      # Set the patch_dir for PatternPatch
+      @patch_dir = File.expand_path(File.join('..', '..', '..', 'assets', 'patches'), __FILE__)
+
       class << self
-        PatternPatch.patch_dir = File.expand_path(File.join('..', '..', '..', 'assets', 'patches'), __FILE__)
-
-        def load_patch(name)
-          PatternPatch.patch name
-        end
-
         def config
           Configuration::Configuration.current
         end
@@ -24,6 +24,13 @@ module BranchIOCLI
 
         def use_conditional_test_key?
           config.keys.count > 1 && !helper.has_multiple_info_plists?
+        end
+
+        def swift_file_includes_branch?(path)
+          # Can't just check for the import here, since there may be a bridging header.
+          # This may match branch.initSession (if the Branch instance is stored) or
+          # Branch.getInstance().initSession, etc.
+          !/branch.*initsession|^\s*import\s+branch/i.match_file(path).nil?
         end
 
         def patch_bridging_header
@@ -47,13 +54,13 @@ module BranchIOCLI
 
           if /^\s*(#import|#include|@import)/.match_file config.bridging_header_path
             # Add among other imports
-            load_patch(:objc_import).apply config.bridging_header_path
+            patch(:objc_import).apply config.bridging_header_path
           elsif /\n\s*#ifndef\s+(\w+).*\n\s*#define\s+\1.*?\n/m.match_file config.bridging_header_path
             # Has an include guard. Add inside.
-            load_patch(:objc_import_include_guard).apply config.bridging_header_path
+            patch(:objc_import_include_guard).apply config.bridging_header_path
           else
             # No imports, no include guard. Add at the end.
-            load_patch(:objc_import_at_end).apply config.bridging_header_path
+            patch(:objc_import_at_end).apply config.bridging_header_path
           end
           helper.add_change config.bridging_header_path
         end
@@ -62,20 +69,14 @@ module BranchIOCLI
           return false unless config.patch_source
           app_delegate_swift_path = config.app_delegate_swift_path
 
-          return false unless app_delegate_swift_path
-
-          app_delegate = File.read app_delegate_swift_path
-
-          # Can't just check for the import here, since there may be a bridging header.
-          # This may match branch.initSession (if the Branch instance is stored) or
-          # Branch.getInstance().initSession, etc.
-          return false if app_delegate =~ /(import\s+branch|branch\.*initsession)/i
-
-          unless config.bridging_header_required?
-            load_patch(:swift_import).apply app_delegate_swift_path
-          end
+          return false if app_delegate_swift_path.nil? ||
+                          swift_file_includes_branch?(app_delegate_swift_path)
 
           say "Patching #{app_delegate_swift_path}"
+
+          unless config.bridging_header_required?
+            patch(:swift_import).apply app_delegate_swift_path
+          end
 
           patch_did_finish_launching_method_swift app_delegate_swift_path
           patch_continue_user_activity_method_swift app_delegate_swift_path
@@ -96,7 +97,7 @@ module BranchIOCLI
 
           say "Patching #{app_delegate_objc_path}"
 
-          load_patch(:objc_import).apply app_delegate_objc_path
+          patch(:objc_import).apply app_delegate_objc_path
 
           patch_did_finish_launching_method_objc app_delegate_objc_path
           patch_continue_user_activity_method_objc app_delegate_objc_path
@@ -111,11 +112,11 @@ module BranchIOCLI
 
           is_new_method = app_delegate_swift !~ /didFinishLaunching[^\n]+?\{/m
           if is_new_method
-            patch = load_patch :did_finish_launching_new_swift
+            patch_name = :did_finish_launching_new_swift
           else
-            patch = load_patch :did_finish_launching_swift
+            patch_name = :did_finish_launching_swift
           end
-          patch.apply app_delegate_swift_path, binding: binding
+          patch(patch_name).apply app_delegate_swift_path, binding: binding
         end
 
         def patch_did_finish_launching_method_objc(app_delegate_objc_path)
@@ -123,11 +124,11 @@ module BranchIOCLI
 
           is_new_method = app_delegate_objc !~ /didFinishLaunchingWithOptions/m
           if is_new_method
-            patch = load_patch :did_finish_launching_new_objc
+            patch_name = :did_finish_launching_new_objc
           else
-            patch = load_patch :did_finish_launching_objc
+            patch_name = :did_finish_launching_objc
           end
-          patch.apply app_delegate_objc_path, binding: binding
+          patch(patch_name).apply app_delegate_objc_path, binding: binding
         end
 
         def patch_open_url_method_swift(app_delegate_swift_path)
@@ -135,27 +136,27 @@ module BranchIOCLI
 
           if app_delegate_swift =~ /application.*open\s+url.*options/
             # Has application:openURL:options:
-            patch = load_patch :open_url_swift
+            patch_name = :open_url_swift
           elsif app_delegate_swift =~ /application.*open\s+url.*sourceApplication/
             # Has application:openURL:sourceApplication:annotation:
             # TODO: This method is deprecated.
-            patch = load_patch :open_url_source_application_swift
+            patch_name = :open_url_source_application_swift
           else
             # Has neither
-            patch = load_patch :open_url_new_swift
+            patch_name = :open_url_new_swift
           end
-          patch.apply app_delegate_swift_path
+          patch(patch_name).apply app_delegate_swift_path
         end
 
         def patch_continue_user_activity_method_swift(app_delegate_swift_path)
           app_delegate_swift = File.read app_delegate_swift_path
 
           if app_delegate_swift =~ /application:.*continue userActivity:.*restorationHandler:/
-            patch = load_patch :continue_user_activity_swift
+            patch_name = :continue_user_activity_swift
           else
-            patch = load_patch :continue_user_activity_new_swift
+            patch_name = :continue_user_activity_new_swift
           end
-          patch.apply app_delegate_swift_path
+          patch(patch_name).apply app_delegate_swift_path
         end
 
         def patch_open_url_method_objc(app_delegate_objc_path)
@@ -163,27 +164,27 @@ module BranchIOCLI
 
           if app_delegate_objc =~ /application:.*openURL:.*options/
             # Has application:openURL:options:
-            patch = load_patch :open_url_objc
+            patch_name = :open_url_objc
           elsif app_delegate_objc =~ /application:.*openURL:.*sourceApplication/
             # Has application:openURL:sourceApplication:annotation:
-            patch = load_patch :open_url_source_annotation_objc
+            patch_name = :open_url_source_annotation_objc
             # TODO: This method is deprecated.
           else
             # Has neither
-            patch = load_patch :open_url_new_objc
+            patch_name = :open_url_new_objc
           end
-          patch.apply app_delegate_objc_path
+          patch(patch_name).apply app_delegate_objc_path
         end
 
         def patch_continue_user_activity_method_objc(app_delegate_objc_path)
           app_delegate_swift = File.read app_delegate_objc_path
 
           if app_delegate_swift =~ /application:.*continueUserActivity:.*restorationHandler:/
-            patch = load_patch :continue_user_activity_objc
+            patch_name = :continue_user_activity_objc
           else
-            patch = load_patch :continue_user_activity_new_objc
+            patch_name = :continue_user_activity_new_objc
           end
-          patch.apply app_delegate_objc_path
+          patch(patch_name).apply app_delegate_objc_path
         end
 
         def patch_messages_view_controller
@@ -194,10 +195,10 @@ module BranchIOCLI
           when nil
             return false
           when /\.swift$/
-            return false if /branch.*initSession/m.match_file path
+            return false if swift_file_includes_branch?(path)
 
             unless config.bridging_header_required?
-              load_patch(:swift_import).apply path
+              patch(:swift_import).apply path
             end
 
             is_new_method = !/didBecomeActive\(with.*?\{[^\n]*\n/m.match_file(path)
@@ -205,7 +206,7 @@ module BranchIOCLI
           else
             return false if %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}.match_file(path)
 
-            load_patch(:objc_import).apply path
+            patch(:objc_import).apply path
 
             is_new_method = !/didBecomeActiveWithConversation.*?\{[^\n]*\n/m.match_file(path)
             patch_name += "#{is_new_method ? 'new_' : ''}objc"
@@ -213,7 +214,7 @@ module BranchIOCLI
 
           say "Patching #{path}"
 
-          load_patch(patch_name).apply path, binding: binding
+          patch(patch_name).apply path, binding: binding
 
           helper.add_change(path)
           true
@@ -261,7 +262,7 @@ module BranchIOCLI
 
           say "Adding \"Branch\" to #{cartfile_path}"
 
-          load_patch(:cartfile).apply cartfile_path
+          patch(:cartfile).apply cartfile_path
 
           true
         end
