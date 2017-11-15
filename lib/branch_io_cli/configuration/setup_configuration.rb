@@ -20,6 +20,8 @@ module BranchIOCLI
       attr_reader :force
       attr_reader :patch_source
       attr_reader :commit
+      attr_reader :setting
+      attr_reader :test_configurations
 
       def validate_options
         @validate = options.validate
@@ -39,6 +41,8 @@ module BranchIOCLI
         validate_keys_from_setup_options options
         validate_all_domains options, !target.extension_target_type?
         validate_uri_scheme options
+        validate_setting options
+        validate_test_configurations options
 
         # If neither --podfile nor --cartfile is present, arbitrarily look for a Podfile
         # first.
@@ -63,6 +67,20 @@ module BranchIOCLI
 <%= color('Test key:', BOLD) %> #{keys[:test] || '(none)'}
 <%= color('Domains:', BOLD) %> #{all_domains}
 <%= color('URI scheme:', BOLD) %> #{uri_scheme || '(none)'}
+        EOF
+
+        if setting
+          message += <<-EOF
+<%= color('Branch key setting:', BOLD) %> #{setting}
+          EOF
+          if test_configurations
+            message += <<-EOF
+<%= color('Test configurations:', BOLD) %> #{test_configurations}
+            EOF
+          end
+        end
+
+        message += <<-EOF
 <%= color('Podfile:', BOLD) %> #{relative_path(podfile_path) || '(none)'}
 <%= color('Cartfile:', BOLD) %> #{relative_path(cartfile_path) || '(none)'}
 <%= color('Carthage command:', BOLD) %> #{carthage_command || '(none)'}
@@ -239,6 +257,40 @@ module BranchIOCLI
         when :carthage
           @cartfile_path = File.expand_path "../Cartfile", xcodeproj_path
           @carthage_command = options.carthage_command
+        end
+      end
+
+      def validate_setting(options)
+        setting = options.setting
+        return if setting.nil?
+
+        @setting = "BRANCH_KEY" and return if setting == true
+
+        loop do
+          if setting =~ /^[A-Z0-9_]+$/
+            @setting = setting
+            return
+          end
+          setting = ask "Invalid build setting. Please enter an all-caps identifier (may include digits and underscores): "
+        end
+      end
+
+      def validate_test_configurations(options)
+        return if options.test_configurations.nil?
+        unless options.setting
+          say "--test-configurations ignored without --setting"
+          return
+        end
+
+        all_configurations = target.build_configurations.map(&:name)
+        test_configs = options.test_configurations == false ? [] : options.test_configurations
+        loop do
+          invalid_configurations = test_configs.reject { |c| all_configurations.include? c }
+          @test_configurations = test_configs and return if invalid_configurations.empty?
+
+          say "The following test configurations are invalid: #{invalid_configurations}."
+          say "Available configurations: #{all_configurations}"
+          test_configs = ask "Please enter a comma-separated list of configurations to use the Branch test key: ", Array
         end
       end
     end

@@ -268,11 +268,11 @@ EOF
         setting == "YES"
       end
 
-      def bridging_header_path
+      def bridging_header_path(configuration = "Release")
         return @bridging_header_path if @bridging_header_path
 
         return nil unless target
-        path = helper.expanded_build_setting target, "SWIFT_OBJC_BRIDGING_HEADER", "Release"
+        path = helper.expanded_build_setting target, "SWIFT_OBJC_BRIDGING_HEADER", configuration
         return nil unless path
 
         @bridging_header_path = File.expand_path path, File.dirname(xcodeproj_path)

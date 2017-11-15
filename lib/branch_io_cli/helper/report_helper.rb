@@ -38,6 +38,13 @@ module BranchIOCLI
           cmd
         end
 
+        def report_scheme
+          report = "\nScheme #{config.scheme}:\n"
+          report += " Configurations:\n"
+          report += "  #{config.configurations_from_scheme.join("\n  ")}\n"
+          report
+        end
+
         # rubocop: disable Metrics/PerceivedComplexity
         def report_header
           header = "cocoapods-core: #{Pod::CORE_VERSION}\n"
@@ -45,10 +52,14 @@ module BranchIOCLI
           header += `xcodebuild -version`
           header += "SDK: #{xcode_settings['SDK_NAME']}\n" if xcode_settings
 
-          bundle_identifier = helper.expanded_build_setting config.target, "PRODUCT_BUNDLE_IDENTIFIER", config.configuration
-          dev_team = helper.expanded_build_setting config.target, "DEVELOPMENT_TEAM", config.configuration
-          infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", config.configuration
-          entitlements_path = helper.expanded_build_setting config.target, "CODE_SIGN_ENTITLEMENTS", config.configuration
+          header += report_scheme
+
+          configuration = config.configuration || config.configurations_from_scheme.first
+          configurations = config.configuration ? [config.configuration] : config.configurations_from_scheme
+
+          bundle_identifier = helper.expanded_build_setting config.target, "PRODUCT_BUNDLE_IDENTIFIER", configuration
+          dev_team = helper.expanded_build_setting config.target, "DEVELOPMENT_TEAM", configuration
+          entitlements_path = helper.expanded_build_setting config.target, "CODE_SIGN_ENTITLEMENTS", configuration
 
           header += "\nTarget #{config.target.name}:\n"
           header += " Bundle identifier: #{bundle_identifier || '(none)'}\n"
@@ -57,7 +68,12 @@ module BranchIOCLI
           header += " Modules #{config.modules_enabled? ? '' : 'not '}enabled\n"
           header += " Swift #{config.swift_version}\n" if config.swift_version
           header += " Bridging header: #{config.relative_path(config.bridging_header_path)}\n" if config.bridging_header_path
-          header += " Info.plist: #{config.relative_path(infoplist_path) || '(none)'}\n"
+
+          header += " Info.plist\n"
+          configurations.each do |c|
+            header += "  #{c}: #{helper.expanded_build_setting config.target, 'INFOPLIST_FILE', c}\n"
+          end
+
           header += " Entitlements file: #{config.relative_path(entitlements_path) || '(none)'}\n"
 
           if config.podfile_path
@@ -121,53 +137,66 @@ module BranchIOCLI
             header += "\nBranch SDK not found.\n"
           end
 
-          header += "\n#{branch_report}"
+          header += "\n#{report_branch}"
 
           header
         end
         # rubocop: enable Metrics/PerceivedComplexity
 
         # String containing information relevant to Branch setup
-        def branch_report
-          infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", config.configuration
-          infoplist_path = File.expand_path infoplist_path, File.dirname(config.xcodeproj_path)
-
+        def report_branch
           report = "Branch configuration:\n"
 
-          begin
-            info_plist = File.open(infoplist_path) { |f| Plist.parse_xml f }
-            branch_key = info_plist["branch_key"]
-            report += " Branch key(s) (Info.plist):\n"
-            if branch_key.kind_of? Hash
-              branch_key.each_key do |key|
-                resolved_key = helper.expand_build_settings branch_key[key], config.target, config.configuration
-                report += "  #{key.capitalize}: #{resolved_key}\n"
-              end
-            elsif branch_key
-              resolved_key = helper.expand_build_settings branch_key, config.target, config.configuration
-              report += "  #{resolved_key}\n"
-            else
-              report += "  (none found)\n"
-            end
+          configurations = config.configuration ? [config.configuration] : config.configurations_from_scheme
 
-            branch_universal_link_domains = info_plist["branch_universal_link_domains"]
-            if branch_universal_link_domains
-              if branch_universal_link_domains.kind_of? Array
-                report += " branch_universal_link_domains (Info.plist):\n"
-                branch_universal_link_domains.each do |domain|
-                  report += "  #{domain}\n"
-                end
+          configurations.each do |configuration|
+            report += " #{configuration}:\n"
+            infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", configuration
+            infoplist_path = File.expand_path infoplist_path, File.dirname(config.xcodeproj_path)
+
+            begin
+              info_plist = File.open(infoplist_path) { |f| Plist.parse_xml f }
+              branch_key = info_plist["branch_key"]
+              if config.branch_key_setting_from_info_plist(configuration)
+                annotation = "[#{File.basename infoplist_path}:$(#{config.branch_key_setting_from_info_plist})]"
               else
-                report += " branch_universal_link_domains (Info.plist): #{branch_universal_link_domains}\n"
+                annotation = "(#{File.basename infoplist_path})"
               end
+
+              report += "  Branch key(s) #{annotation}:\n"
+              if branch_key.kind_of? Hash
+                branch_key.each_key do |key|
+                  resolved_key = helper.expand_build_settings branch_key[key], config.target, configuration
+                  report += "   #{key.capitalize}: #{resolved_key}\n"
+                end
+              elsif branch_key
+                resolved_key = helper.expand_build_settings branch_key, config.target, configuration
+                report += "   #{resolved_key}\n"
+              else
+                report += "   (none found)\n"
+              end
+
+              branch_universal_link_domains = info_plist["branch_universal_link_domains"]
+              if branch_universal_link_domains
+                if branch_universal_link_domains.kind_of? Array
+                  report += "  branch_universal_link_domains (Info.plist):\n"
+                  branch_universal_link_domains.each do |domain|
+                    report += "   #{domain}\n"
+                  end
+                else
+                  report += "  branch_universal_link_domains (Info.plist): #{branch_universal_link_domains}\n"
+                end
+              end
+            rescue StandardError => e
+              report += "  (Failed to open Info.plist: #{e.message})\n"
             end
-          rescue StandardError => e
-            report += " (Failed to open Info.plist: #{e.message})\n"
           end
 
           unless config.target.extension_target_type?
             begin
-              domains = helper.domains_from_project config.configuration
+              # This isn't likely to vary by configuration, so just report for one, either
+              # whatever was passed or Release.
+              domains = helper.domains_from_project config.configuration || config.configurations_from_scheme.first
               report += " Universal Link domains (entitlements):\n"
               domains.each do |domain|
                 report += "  #{domain}\n"

@@ -32,13 +32,31 @@ module BranchIOCLI
         end.uniq.count > 1
       end
 
+      def uses_test_key?(build_configuration)
+        return build_configuration.debug? unless config.setting && config.test_configurations
+        config.test_configurations.include? build_configuration.name
+      end
+
+      def add_custom_build_setting
+        return unless config.setting
+
+        config.target.build_configurations.each do |c|
+          key = uses_test_key?(c) ? config.keys[:test] : config.keys[:live]
+          # Reuse the same key if both not present
+          key ||= uses_test_key?(c) ? config.keys[:live] : config.keys[:test]
+          c.build_settings[config.setting] = key
+        end
+      end
+
       def add_keys_to_info_plist(keys)
         if has_multiple_info_plists?
           config.xcodeproj.build_configurations.each do |c|
             update_info_plist_setting c.name do |info_plist|
-              if keys.count > 1
+              if keys.count > 1 && !config.setting
                 # Use test key in debug configs and live key in release configs
                 info_plist["branch_key"] = c.debug? ? keys[:test] : keys[:live]
+              elsif config.setting
+                info_plist["branch_key"] = "$(#{config.setting})"
               else
                 info_plist["branch_key"] = keys[:live] ? keys[:live] : keys[:test]
               end
@@ -47,8 +65,10 @@ module BranchIOCLI
         else
           update_info_plist_setting RELEASE_CONFIGURATION do |info_plist|
             # add/overwrite Branch key(s)
-            if keys.count > 1
+            if keys.count > 1 && !config.setting
               info_plist["branch_key"] = keys
+            elsif config.setting
+              info_plist["branch_key"] = "$(#{config.setting})"
             elsif keys[:live]
               info_plist["branch_key"] = keys[:live]
             else

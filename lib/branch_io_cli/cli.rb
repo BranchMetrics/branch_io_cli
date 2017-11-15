@@ -77,6 +77,8 @@ EOF
         c.option "--app-link-subdomain myapp", String, "Branch app.link subdomain, e.g. myapp for myapp.app.link"
         c.option "-D", "--domains example.com,www.example.com", Array, "Comma-separated list of custom domain(s) or non-Branch domain(s)"
         c.option "-U", "--uri-scheme myurischeme[://]", String, "Custom URI scheme used in the Branch Dashboard for this app"
+        c.option "-s", "--setting [BRANCH_KEY_SETTING]", String, "Use a custom build setting for the Branch key (default: Use Info.plist)"
+        c.option "--[no-]test-configurations [config1,config2]", Array, "List of configurations that use the test key with a custom build setting (default: Debug configurations)"
 
         c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project to update"
         c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"
@@ -169,7 +171,7 @@ EOF
         c.option "--[no-]clean", "Clean before attempting to build (default: yes)"
         c.option "-H", "--[no-]header-only", "Write a report header to standard output and exit"
         c.option "--[no-]pod-repo-update", "Update the local podspec repo before installing (default: yes)"
-        c.option "--out ./report.txt", String, "Report output path (default: ./report.txt)"
+        c.option "-o", "--out ./report.txt", String, "Report output path (default: ./report.txt)"
 
         c.action do |args, options|
           options.default(
