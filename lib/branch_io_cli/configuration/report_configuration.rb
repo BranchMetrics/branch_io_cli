@@ -334,16 +334,16 @@ EOF
         "#{version} [Cartfile.resolved]"
       end
 
-      def version_from_branch_framework(config = configurations.first)
+      def version_from_branch_framework(configuration = configurations.first)
         framework = target.frameworks_build_phase.files.find { |f| f.file_ref.path =~ /Branch.framework$/ }
         return nil unless framework
 
         if framework.file_ref.isa == "PBXFileReference"
-          project_path = relative_path(config.xcodeproj_path)
+          project_path = relative_path(xcodeproj_path)
           framework_path = framework.file_ref.real_path
-        elsif framework.file_ref.isa == "PBXReferenceProxy" && XcodeSettings[config].valid?
+        elsif framework.file_ref.isa == "PBXReferenceProxy" && XcodeSettings[configuration].valid?
           project_path = relative_path framework.file_ref.remote_ref.proxied_object.project.path
-          framework_path = File.expand_path framework.file_ref.path, XcodeSettings[config][framework.file_ref.source_tree]
+          framework_path = File.expand_path framework.file_ref.path, XcodeSettings[configuration][framework.file_ref.source_tree]
         end
         return nil unless framework_path
         info_plist_path = File.join framework_path.to_s, "Info.plist"
