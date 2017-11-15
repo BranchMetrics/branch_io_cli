@@ -5,15 +5,15 @@ module BranchIOCLI
   module Configuration
     class XcodeSettings
       class << self
-        def settings_for_config(configuration)
+        def [](configuration)
+          settings configuration
+        end
+
+        def settings(configuration = Configuration.current.configurations.first)
           return @settings[configuration] if @settings && @settings[configuration]
           @settings ||= {}
 
           @settings[configuration] = self.new configuration
-        end
-
-        def settings
-          settings_for_config "Release"
         end
       end
 
@@ -38,11 +38,11 @@ module BranchIOCLI
 
       def xcodebuild_cmd
         cmd = "xcodebuild"
-        cmd = "#{cmd} -project #{Shellwords.escape config.xcodeproj_path}"
-        cmd += " -target #{Shellwords.escape config.target.name}"
-        cmd += " -configuration #{Shellwords.escape configuration}"
-        cmd += " -sdk #{Shellwords.escape config.sdk}"
         cmd += " -showBuildSettings"
+        cmd += " -project #{Shellwords.escape config.xcodeproj_path}"
+        cmd += " -target #{Shellwords.escape config.target.name}"
+        cmd += " -sdk #{Shellwords.escape config.sdk}"
+        cmd += " -configuration #{Shellwords.escape configuration}"
         cmd
       end
 

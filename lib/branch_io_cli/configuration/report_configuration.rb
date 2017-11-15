@@ -51,10 +51,6 @@ module BranchIOCLI
       attr_reader :report_path
       attr_reader :sdk
 
-      def xcode_settings
-        XcodeSettings.settings
-      end
-
       def validate_options
         @clean = options.clean
         @header_only = options.header_only
@@ -281,6 +277,10 @@ EOF
         end
       end
 
+      def configurations
+        configuration ? [configuration] : configurations_from_scheme
+      end
+
       def configurations_from_scheme
         return ["Debug", "Release"] unless xcscheme
         %i[test launch profile archive analyze].map { |pfx| xcscheme.send("#{pfx}_action").build_configuration }.uniq
@@ -334,17 +334,18 @@ EOF
         "#{version} [Cartfile.resolved]"
       end
 
-      def version_from_branch_framework
+      def version_from_branch_framework(config = configuration)
         framework = target.frameworks_build_phase.files.find { |f| f.file_ref.path =~ /Branch.framework$/ }
         return nil unless framework
 
         if framework.file_ref.isa == "PBXFileReference"
           project_path = relative_path(config.xcodeproj_path)
           framework_path = framework.file_ref.real_path
-        elsif framework.file_ref.isa == "PBXReferenceProxy" && xcode_settings
+        elsif framework.file_ref.isa == "PBXReferenceProxy" && XcodeSettings[config].valid?
           project_path = relative_path framework.file_ref.remote_ref.proxied_object.project.path
-          framework_path = File.expand_path framework.file_ref.path, xcode_settings[framework.file_ref.source_tree]
+          framework_path = File.expand_path framework.file_ref.path, XcodeSettings[config][framework.file_ref.source_tree]
         end
+        return nil unless framework_path
         info_plist_path = File.join framework_path.to_s, "Info.plist"
         return nil unless File.exist? info_plist_path
 
