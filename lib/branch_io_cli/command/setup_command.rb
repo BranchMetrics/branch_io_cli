@@ -30,6 +30,17 @@ module BranchIOCLI
           say "Universal Link configuration passed validation. ✅"
         end
 
+        if @keys.count > 1 && helper.has_multiple_info_plists? &&
+           !File.exist?(File.join(File.dirname(config.podfile_path), 'Pods'))
+          # Work around a potential crash for now. The PBXBuildConfiguration#debug?
+          # method may raise in this case.
+          helper.verify_cocoapods
+          say "Installing pods to resolve current build settings"
+          # We haven't modified anything yet. Don't use --repo-update at this stage.
+          # This is unlikely to fail.
+          sh "pod install"
+        end
+
         # the following calls can all raise IOError
         helper.add_keys_to_info_plist @keys
         helper.add_branch_universal_link_domains_to_info_plist @domains if is_app_target
