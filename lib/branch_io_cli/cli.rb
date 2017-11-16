@@ -160,27 +160,34 @@ This command optionally cleans and then builds a workspace or project, generatin
 report with additional diagnostic information suitable for opening a support ticket.
 EOF
 
-        c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project"
-        c.option "--workspace MyProject.xcworkspace", String, "Path to an Xcode workspace"
-        c.option "--scheme MyProjectScheme", String, "A scheme from the project or workspace to build"
-        c.option "--target MyProjectTarget", String, "A target to build"
-        c.option "--configuration Debug|Release|CustomConfigName", String, "The build configuration to use (default: Scheme-dependent)"
-        c.option "--sdk iphonesimulator", String, "Passed as -sdk to xcodebuild (default: iphonesimulator)"
-        c.option "--podfile /path/to/Podfile", String, "Path to the Podfile for the project"
-        c.option "--cartfile /path/to/Cartfile", String, "Path to the Cartfile for the project"
-        c.option "--[no-]clean", "Clean before attempting to build (default: yes)"
-        c.option "-H", "--[no-]header-only", "Write a report header to standard output and exit"
-        c.option "--[no-]pod-repo-update", "Update the local podspec repo before installing (default: yes)"
-        c.option "-o", "--out ./report.txt", String, "Report output path (default: ./report.txt)"
+        available_options = Command::ReportCommand.available_options
+        available_options.each do |option|
+          args = option.aliases
+          declaration = "--"
+          declaration += "[no-]" unless option.type
+          declaration += "#{option.name.to_s.gsub(/_/, '-')} "
+          declaration += "[" if option.argument_optional
+          declaration += option.example if option.example
+          declaration += "]" if option.argument_optional
+          args << declaration
+          args << option.type if option.type
+
+          if option.type.nil?
+            default_value = option.default_value ? "yes" : "no"
+          else
+            default_value = option.default_value
+          end
+
+          default_string = default_value ? " (default: #{default_value})" : nil
+          args << "#{option.description}#{default_string}"
+          c.option(*args)
+        end
 
         c.action do |args, options|
-          options.default(
-            clean: true,
-            header_only: false,
-            sdk: "iphonesimulator",
-            out: "./report.txt",
-            pod_repo_update: true
-          )
+          defaults = available_options.reject { |o| o.default_value.nil? }.inject({}) do |defs, o|
+            defs.merge o.name => o.default_value
+          end
+          options.default defaults
           Command::ReportCommand.new(options).run!
         end
       end
