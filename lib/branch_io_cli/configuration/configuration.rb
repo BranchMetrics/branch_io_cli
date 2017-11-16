@@ -7,6 +7,10 @@ module BranchIOCLI
     class Configuration
       class << self
         attr_accessor :current
+
+        def wrapper(hash, add_defaults = true)
+          OptionWrapper.new hash, available_options, add_defaults
+        end
       end
 
       attr_reader :options
