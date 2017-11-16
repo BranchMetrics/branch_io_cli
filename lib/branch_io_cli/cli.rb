@@ -10,15 +10,12 @@ module BranchIOCLI
     def run
       program :name, "Branch.io command-line interface"
       program :version, VERSION
-      program :description, <<EOF
-Command-line tool to integrate the Branch SDK into mobile app projects (currently
-iOS only) and validate Universal Link domains
-EOF
+      program :description, render(:program_description)
 
       command :setup do |c|
         c.syntax = "branch_io setup [OPTIONS]"
         c.summary = "Integrates the Branch SDK into a native app project"
-        c.description = render(:setup_description)
+        c.description = render :setup_description
 
         add_options_for_command :setup, c
 
@@ -46,26 +43,7 @@ EOF
       command :validate do |c|
         c.syntax = "branch_io validate [OPTIONS]"
         c.summary = "Validates all Universal Link domains configured in a project"
-        c.description = <<EOF
-This command validates all Universal Link domains configured in a project without making any
-modification. It validates both Branch and non-Branch domains. Unlike web-based Universal
-Link validators, this command operates directly on the project. It finds the bundle and
-signing team identifiers in the project as well as the app's Associated Domains. It requests
-the apple-app-site-association file for each domain and validates the file against the
-project's settings.
-
-Only app targets are supported for this command. By default, it will validate the first.
-If your project has multiple app targets, specify the <%= color('--target', BOLD) %> option to validate other
-targets.
-
-All parameters are optional. If <%= color('--domains', BOLD) %> is specified, the list of Universal Link domains in
-the Associated Domains entitlement must exactly match this list, without regard to order. If
-no <%= color('--domains', BOLD) %> are provided, validation passes if at least one Universal Link domain is
-configured and passes validation, and no Universal Link domain is present that does not pass
-validation.
-
-See https://github.com/BranchMetrics/branch_io_cli#validate-command for more information.
-EOF
+        c.description = render :validate_description
 
         add_options_for_command :validate, c
 
@@ -79,12 +57,7 @@ EOF
       command :report do |c|
         c.syntax = "branch_io report [OPTIONS]"
         c.summary = "Generate and optionally submit a build diagnostic report."
-        c.description = <<EOF
-<%= color('Work in progress', BOLD) %>
-
-This command optionally cleans and then builds a workspace or project, generating a verbose
-report with additional diagnostic information suitable for opening a support ticket.
-EOF
+        c.description = render :report_description
 
         add_options_for_command :report, c
 
