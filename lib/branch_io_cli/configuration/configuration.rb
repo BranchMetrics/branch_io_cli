@@ -11,6 +11,13 @@ module BranchIOCLI
         def wrapper(hash, add_defaults = true)
           OptionWrapper.new hash, available_options, add_defaults
         end
+
+        def defaults
+          available_options.inject({}) do |defs, o|
+            next defs if o.default_value.nil?
+            defs.merge(o.name => o.default_value)
+          end
+        end
       end
 
       attr_reader :options

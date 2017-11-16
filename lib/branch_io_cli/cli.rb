@@ -25,16 +25,7 @@ module BranchIOCLI
         end
 
         c.action do |args, options|
-          options.default(
-            # Defaults for boolean options
-            pod_repo_update: true,
-            validate: true,
-            force: false,
-            add_sdk: true,
-            patch_source: true,
-            commit: false,
-            carthage_command: "update --platform ios"
-          )
+          options.default Configuration::SetupConfiguration.defaults
           Command::SetupCommand.new(options).run!
         end
       end
@@ -47,6 +38,7 @@ module BranchIOCLI
         add_options_for_command :validate, c
 
         c.action do |args, options|
+          options.default Configuration::ValidateConfiguration.defaults
           valid = Command::ValidateCommand.new(options).run!
           exit_code = valid ? 0 : 1
           exit exit_code
@@ -61,10 +53,7 @@ module BranchIOCLI
         add_options_for_command :report, c
 
         c.action do |args, options|
-          defaults = available_options.reject { |o| o.default_value.nil? }.inject({}) do |defs, o|
-            defs.merge o.name => o.default_value
-          end
-          options.default defaults
+          options.default Configuration::ReportConfiguration.defaults
           Command::ReportCommand.new(options).run!
         end
       end
