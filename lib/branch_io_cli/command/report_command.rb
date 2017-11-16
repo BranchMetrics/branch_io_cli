@@ -3,82 +3,84 @@ require "shellwords"
 module BranchIOCLI
   module Command
     class ReportCommand < Command
-      def self.available_options
-        [
-          Configuration::Option.new(
-            name: :workspace,
-            description: "Path to an Xcode workspace",
-            type: String,
-            example: "MyProject.xcworkspace"
-          ),
-          Configuration::Option.new(
-            name: :xcodeproj,
-            description: "Path to an Xcode project",
-            type: String,
-            example: "MyProject.xcodeproj"
-          ),
-          Configuration::Option.new(
-            name: :scheme,
-            description: "A scheme from the project or workspace to build",
-            type: String,
-            example: "MyProjectScheme"
-          ),
-          Configuration::Option.new(
-            name: :target,
-            description: "A target to build",
-            type: String,
-            example: "MyProjectTarget"
-          ),
-          Configuration::Option.new(
-            name: :configuration,
-            description: "The build configuration to use (default: Scheme-dependent)",
-            type: String,
-            example: "Debug|Release|CustomConfigName"
-          ),
-          Configuration::Option.new(
-            name: :sdk,
-            description: "Passed as -sdk to xcodebuild",
-            type: String,
-            example: "iphoneos",
-            default_value: "iphonesimulator"
-          ),
-          Configuration::Option.new(
-            name: :podfile,
-            description: "Path to the Podfile for the project",
-            type: String,
-            example: "/path/to/Podfile"
-          ),
-          Configuration::Option.new(
-            name: :cartfile,
-            description: "Path to the Cartfile for the project",
-            type: String,
-            example: "/path/to/Cartfile"
-          ),
-          Configuration::Option.new(
-            name: :clean,
-            description: "Clean before attempting to build",
-            default_value: true
-          ),
-          Configuration::Option.new(
-            name: :header_only,
-            description: "Write a report header to standard output and exit",
-            default_value: false,
-            aliases: "-H"
-          ),
-          Configuration::Option.new(
-            name: :pod_repo_update,
-            description: "Update the local podspec repo before installing",
-            default_value: true
-          ),
-          Configuration::Option.new(
-            name: :out,
-            description: "Report output path",
-            default_value: "./report.txt",
-            aliases: "-o",
-            example: "./report.txt",
-            type: String
-          )
-        ]
+      class << self
+        def available_options
+          [
+            Configuration::Option.new(
+              name: :workspace,
+              description: "Path to an Xcode workspace",
+              type: String,
+              example: "MyProject.xcworkspace"
+            ),
+            Configuration::Option.new(
+              name: :xcodeproj,
+              description: "Path to an Xcode project",
+              type: String,
+              example: "MyProject.xcodeproj"
+            ),
+            Configuration::Option.new(
+              name: :scheme,
+              description: "A scheme from the project or workspace to build",
+              type: String,
+              example: "MyProjectScheme"
+            ),
+            Configuration::Option.new(
+              name: :target,
+              description: "A target to build",
+              type: String,
+              example: "MyProjectTarget"
+            ),
+            Configuration::Option.new(
+              name: :configuration,
+              description: "The build configuration to use (default: Scheme-dependent)",
+              type: String,
+              example: "Debug|Release|CustomConfigName"
+            ),
+            Configuration::Option.new(
+              name: :sdk,
+              description: "Passed as -sdk to xcodebuild",
+              type: String,
+              example: "iphoneos",
+              default_value: "iphonesimulator"
+            ),
+            Configuration::Option.new(
+              name: :podfile,
+              description: "Path to the Podfile for the project",
+              type: String,
+              example: "/path/to/Podfile"
+            ),
+            Configuration::Option.new(
+              name: :cartfile,
+              description: "Path to the Cartfile for the project",
+              type: String,
+              example: "/path/to/Cartfile"
+            ),
+            Configuration::Option.new(
+              name: :clean,
+              description: "Clean before attempting to build",
+              default_value: true
+            ),
+            Configuration::Option.new(
+              name: :header_only,
+              description: "Write a report header to standard output and exit",
+              default_value: false,
+              aliases: "-H"
+            ),
+            Configuration::Option.new(
+              name: :pod_repo_update,
+              description: "Update the local podspec repo before installing",
+              default_value: true
+            ),
+            Configuration::Option.new(
+              name: :out,
+              description: "Report output path",
+              default_value: "./report.txt",
+              aliases: "-o",
+              example: "./report.txt",
+              type: String
+            )
+          ]
+        end
       end
 
       def run!

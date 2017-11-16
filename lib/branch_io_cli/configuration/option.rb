@@ -8,6 +8,7 @@ module BranchIOCLI
       attr_accessor :example
       attr_accessor :argument_optional
       attr_accessor :aliases
+      attr_accessor :negatable
 
       def initialize(options)
         @name = options[:name]
@@ -18,6 +19,9 @@ module BranchIOCLI
         @argument_optional = options[:argument_optional] || false
         @aliases = options[:aliases] || []
         @aliases = [@aliases] unless @aliases.kind_of?(Array)
+        @negatable = options[:type].nil? if options[:negatable].nil?
+
+        @argument_optional ||= @negatable
       end
     end
   end

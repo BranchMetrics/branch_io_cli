@@ -164,7 +164,7 @@ EOF
         available_options.each do |option|
           args = option.aliases
           declaration = "--"
-          declaration += "[no-]" unless option.type
+          declaration += "[no-]" if option.negatable
           declaration += "#{option.name.to_s.gsub(/_/, '-')} "
           declaration += "[" if option.argument_optional
           declaration += option.example if option.example

@@ -3,7 +3,128 @@ require "branch_io_cli/helper/methods"
 module BranchIOCLI
   module Command
     class SetupCommand < Command
-      attr_reader :config
+      class << self
+        def available_options
+          [
+            Configuration::Option.new(
+              name: :live_key,
+              description: "Branch live key",
+              example: "key_live_xxxx",
+              type: String,
+              aliases: "-L"
+            ),
+            Configuration::Option.new(
+              name: :test_key,
+              description: "Branch test key",
+              example: "key_test_yyyy",
+              type: String,
+              aliases: "-T"
+            ),
+            Configuration::Option.new(
+              name: :domains,
+              description: "Comma-separated list of custom domain(s) or non-Branch domain(s)",
+              example: "example.com,www.example.com",
+              type: Array,
+              aliases: "-D"
+            ),
+            Configuration::Option.new(
+              name: :app_link_subdomain,
+              description: "Branch app.link subdomain, e.g. myapp for myapp.app.link",
+              example: "myapp",
+              type: String
+            ),
+            Configuration::Option.new(
+              name: :uri_scheme,
+              description: "Custom URI scheme used in the Branch Dashboard for this app",
+              example: "myurischeme[://]",
+              type: String,
+              aliases: "-U"
+            ),
+            Configuration::Option.new(
+              name: :setting,
+              description: "Use a custom build setting for the Branch key (default: Use Info.plist)",
+              example: "BRANCH_KEY_SETTING",
+              type: String,
+              argument_optional: true,
+              aliases: "-s"
+            ),
+            Configuration::Option.new(
+              name: :test_configurations,
+              description: "List of configurations that use the test key with a custom build setting (default: Debug configurations)",
+              example: "config1,config2",
+              type: Array,
+              negatable: true
+            ),
+            Configuration::Option.new(
+              name: :xcodeproj,
+              description: "Path to an Xcode project to update",
+              example: "MyProject.xcodeproj",
+              type: String
+            ),
+            Configuration::Option.new(
+              name: :target,
+              description: "Name of a target to modify in the Xcode project",
+              example: "MyAppTarget",
+              type: String
+            ),
+            Configuration::Option.new(
+              name: :podfile,
+              description: "Path to the Podfile for the project",
+              example: "/path/to/Podfile",
+              type: String
+            ),
+            Configuration::Option.new(
+              name: :cartfile,
+              description: "Path to the Cartfile for the project",
+              example: "/path/to/Cartfile",
+              type: String
+            ),
+            Configuration::Option.new(
+              name: :carthage_command,
+              description: "Command to run when installing from Carthage",
+              example: "<command>",
+              type: String,
+              default_value: "update --platform ios"
+            ),
+            Configuration::Option.new(
+              name: :frameworks,
+              description: "Comma-separated list of system frameworks to add to the project",
+              example: "AdSupport,CoreSpotlight,SafariServices",
+              type: Array
+            ),
+            Configuration::Option.new(
+              name: :pod_repo_update,
+              description: "Update the local podspec repo before installing",
+              default_value: true
+            ),
+            Configuration::Option.new(
+              name: :validate,
+              description: "Validate Universal Link configuration",
+              default_value: true
+            ),
+            Configuration::Option.new(
+              name: :force,
+              description: "Update project even if Universal Link validation fails",
+              default_value: false
+            ),
+            Configuration::Option.new(
+              name: :add_sdk,
+              description: "Add the Branch framework to the project",
+              default_value: true
+            ),
+            Configuration::Option.new(
+              name: :patch_source,
+              description: "Add Branch SDK calls to the AppDelegate",
+              default_value: true
+            ),
+            Configuration::Option.new(
+              name: :commit,
+              description: "Commit the results to Git",
+              default_value: false
+            )
+          ]
+        end
+      end
 
       def initialize(options)
         super
