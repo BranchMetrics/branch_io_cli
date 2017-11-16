@@ -1,4 +1,5 @@
 require "open3"
+require "shellwords"
 
 class IO
   # Report the command. Execute the command, capture stdout
@@ -6,8 +7,9 @@ class IO
   # status at the end in case of error. Returns a Process::Status
   # object.
   #
-  # :command: [String] a shell command to execute and report
+  # @param command [String, Array] a shell command to execute and report
   def log_command(command)
+    command = command.map(&:shellescape).join(" ") if command.kind_of? Array
     write "$ #{command}\n\n"
 
     Open3.popen2e(command) do |stdin, output, thread|
@@ -31,8 +33,9 @@ end
 # not redirected. Report the exit status at the end if nonzero.
 # Returns a Process::Status object.
 #
-# :command: [String] a shell command to execute and report
+# @param command [String, Array] a shell command to execute and report
 def STDOUT.log_command(command)
+  command = command.map(&:shellescape).join(" ") if command.kind_of? Array
   # TODO: Improve this implementation?
   say "<%= color(%q{$ #{command}}, [MAGENTA, BOLD]) %>\n\n"
   # May also write to stderr

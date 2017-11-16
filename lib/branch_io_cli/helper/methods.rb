@@ -19,8 +19,8 @@ module BranchIOCLI
       # other cases, both stdout and stderr are redirected to output.
       # In these cases, formatting (colors, highlights) may be lost.
       #
-      # :command: [String] A shell command to execute
-      # :output: [IO] An optional IO object to receive stdout and stderr from the command
+      # @param command [String, Array] A shell command to execute
+      # @param output [IO] An optional IO object to receive stdout and stderr from the command
       def sh(command, output = STDOUT)
         status = output.log_command command
         raise CommandError, [%{Error executing "#{command}": #{status}.}, status] unless status.success?

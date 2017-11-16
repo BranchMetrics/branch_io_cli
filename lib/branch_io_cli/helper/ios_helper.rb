@@ -489,11 +489,14 @@ module BranchIOCLI
         add_change pods_folder_path
         add_change workspace_path
 
-        cmd = "git add #{Shellwords.escape(podfile_pathname)} " \
-          "#{Shellwords.escape(podfile_pathname)}.lock " \
-          "#{Shellwords.escape(pods_folder_path)} " \
-          "#{Shellwords.escape(workspace_path)}"
-        sh cmd
+        sh [
+          "git",
+          "add",
+          podfile_pathname,
+          "#{podfile_pathname}.lock",
+          pods_folder_path,
+          workspace_path
+        ]
       end
 
       def add_carthage(options)
@@ -543,10 +546,7 @@ EOF
         carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from(Pathname.pwd)
         cartfile_pathname = Pathname.new(cartfile_path).relative_path_from Pathname.pwd
         add_change carthage_folder_path
-        cmd = "git add #{Shellwords.escape(cartfile_pathname)} " \
-          "#{Shellwords.escape(cartfile_pathname)}.resolved " \
-          "#{Shellwords.escape(carthage_folder_path)}"
-        sh cmd
+        sh ["git", "add", cartfile_pathname, "#{cartfile_pathname}.resolved", carthage_folder_path]
       end
 
       def add_direct(options)
@@ -601,7 +601,7 @@ EOF
 
         add_change config.xcodeproj_path
         add_change framework_path
-        sh "git add #{Shellwords.escape(framework_path)}" if options.commit
+        sh ["git", "add", framework_path] if options.commit
 
         say "Done. ✅"
       end
@@ -646,12 +646,12 @@ EOF
 
         # 4. Check if Pods folder is under SCM
         pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from Pathname.pwd
-        `git ls-files #{pods_folder_path} --error-unmatch > /dev/null 2>&1`
+        `git ls-files #{pods_folder_path.shellescape} --error-unmatch > /dev/null 2>&1`
         return true unless $?.exitstatus == 0
 
         # 5. If so, add the Pods folder to the commit (in case :commit param specified)
         add_change pods_folder_path
-        sh "git add #{Shellwords.escape(pods_folder_path)}" if options.commit
+        sh ["git", "add", pods_folder_path] if options.commit
 
         true
       end
@@ -693,12 +693,12 @@ EOF
 
         # 6. Check if Carthage folder is under SCM
         carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from Pathname.pwd
-        `git ls-files #{carthage_folder_path} --error-unmatch > /dev/null 2>&1`
+        `git ls-files #{carthage_folder_path.shellescape} --error-unmatch > /dev/null 2>&1`
         return true unless $?.exitstatus == 0
 
         # 7. If so, add the Carthage folder to the commit (in case :commit param specified)
         add_change carthage_folder_path
-        sh "git add #{Shellwords.escape(carthage_folder_path)}" if options.commit
+        sh ["git", "add", carthage_folder_path] if options.commit
 
         true
       end
