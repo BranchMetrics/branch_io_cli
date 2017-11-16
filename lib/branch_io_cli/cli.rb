@@ -71,28 +71,7 @@ for this information.
 See https://github.com/BranchMetrics/branch_io_cli#setup-command for more information.
 EOF
 
-        # Required Branch params
-        c.option "-L", "--live-key key_live_xxxx", String, "Branch live key"
-        c.option "-T", "--test-key key_test_yyyy", String, "Branch test key"
-        c.option "--app-link-subdomain myapp", String, "Branch app.link subdomain, e.g. myapp for myapp.app.link"
-        c.option "-D", "--domains example.com,www.example.com", Array, "Comma-separated list of custom domain(s) or non-Branch domain(s)"
-        c.option "-U", "--uri-scheme myurischeme[://]", String, "Custom URI scheme used in the Branch Dashboard for this app"
-        c.option "-s", "--setting [BRANCH_KEY_SETTING]", String, "Use a custom build setting for the Branch key (default: Use Info.plist)"
-        c.option "--[no-]test-configurations [config1,config2]", Array, "List of configurations that use the test key with a custom build setting (default: Debug configurations)"
-
-        c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project to update"
-        c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"
-        c.option "--podfile /path/to/Podfile", String, "Path to the Podfile for the project"
-        c.option "--cartfile /path/to/Cartfile", String, "Path to the Cartfile for the project"
-        c.option "--carthage-command <command>", String, "Command to run when installing from Carthage (default: update --platform ios)"
-        c.option "--frameworks AdSupport,CoreSpotlight,SafariServices", Array, "Comma-separated list of system frameworks to add to the project"
-
-        c.option "--[no-]pod-repo-update", "Update the local podspec repo before installing (default: yes)"
-        c.option "--[no-]validate", "Validate Universal Link configuration (default: yes)"
-        c.option "--[no-]force", "Update project even if Universal Link validation fails (default: no)"
-        c.option "--[no-]add-sdk", "Add the Branch framework to the project (default: yes)"
-        c.option "--[no-]patch-source", "Add Branch SDK calls to the AppDelegate (default: yes)"
-        c.option "--[no-]commit [message]", String, "Commit the results to Git (default: no)"
+        add_options_for_command :setup, c
 
         c.example "Test without validation (can use dummy keys and domains)", "branch_io setup -L key_live_xxxx -D myapp.app.link --no-validate"
         c.example "Use both live and test keys", "branch_io setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link"
@@ -139,9 +118,7 @@ validation.
 See https://github.com/BranchMetrics/branch_io_cli#validate-command for more information.
 EOF
 
-        c.option "-D", "--domains example.com,www.example.com", Array, "Comma-separated list of domains to validate (Branch domains or non-Branch domains)"
-        c.option "--xcodeproj MyProject.xcodeproj", String, "Path to an Xcode project to update"
-        c.option "--target MyAppTarget", String, "Name of a target to modify in the Xcode project"
+        add_options_for_command :validate, c
 
         c.action do |args, options|
           valid = Command::ValidateCommand.new(options).run!
@@ -160,28 +137,7 @@ This command optionally cleans and then builds a workspace or project, generatin
 report with additional diagnostic information suitable for opening a support ticket.
 EOF
 
-        available_options = Command::ReportCommand.available_options
-        available_options.each do |option|
-          args = option.aliases
-          declaration = "--"
-          declaration += "[no-]" if option.negatable
-          declaration += "#{option.name.to_s.gsub(/_/, '-')} "
-          declaration += "[" if option.argument_optional
-          declaration += option.example if option.example
-          declaration += "]" if option.argument_optional
-          args << declaration
-          args << option.type if option.type
-
-          if option.type.nil?
-            default_value = option.default_value ? "yes" : "no"
-          else
-            default_value = option.default_value
-          end
-
-          default_string = default_value ? " (default: #{default_value})" : nil
-          args << "#{option.description}#{default_string}"
-          c.option(*args)
-        end
+        add_options_for_command :report, c
 
         c.action do |args, options|
           defaults = available_options.reject { |o| o.default_value.nil? }.inject({}) do |defs, o|
@@ -193,6 +149,34 @@ EOF
       end
 
       run!
+    end
+
+    def add_options_for_command(name, c)
+      configuration_class = Object.const_get("BranchIOCLI")
+                                  .const_get("Configuration")
+                                  .const_get("#{name.to_s.capitalize}Configuration")
+      available_options = configuration_class.available_options
+      available_options.each do |option|
+        args = option.aliases
+        declaration = "--"
+        declaration += "[no-]" if option.negatable
+        declaration += "#{option.name.to_s.gsub(/_/, '-')} "
+        declaration += "[" if option.argument_optional
+        declaration += option.example if option.example
+        declaration += "]" if option.argument_optional
+        args << declaration
+        args << option.type if option.type
+
+        if option.type.nil?
+          default_value = option.default_value ? "yes" : "no"
+        else
+          default_value = option.default_value
+        end
+
+        default_string = default_value ? " (default: #{default_value})" : nil
+        args << "#{option.description}#{default_string}"
+        c.option(*args)
+      end
     end
   end
 end
