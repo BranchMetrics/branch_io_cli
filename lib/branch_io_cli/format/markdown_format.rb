@@ -11,20 +11,35 @@ module BranchIOCLI
         "`#{text}`"
       end
 
+      def table_options
+        @command.available_options.map { |o| table_option o }.join("\n")
+      end
+
       def table_option(option)
         text = "|#{option.aliases.join(', ')}"
+        text += ", " unless option.aliases.blank?
 
         text += "--"
         text += "[no-]" if option.negatable
-        text += "#{option.name.to_s.gsub(/_/, '-')} "
+        text += "#{option.name.to_s.gsub(/_/, '-')}"
 
-        text += "[" if option.argument_optional
-        text += option.example if option.example
-        text += "]" if option.argument_optional
+        if option.example
+          text += " "
+          text += "[" if option.argument_optional
+          text += option.example
+          text += "]" if option.argument_optional
+        end
 
         text += "|#{option.description}"
-        if option.default_value
-          text += " (default: #{option.default_value})"
+
+        if option.type.nil?
+          default_value = option.default_value ? "yes" : "no"
+        else
+          default_value = option.default_value
+        end
+
+        if default_value
+          text += " (default: #{default_value})"
         end
         text += "|"
         text

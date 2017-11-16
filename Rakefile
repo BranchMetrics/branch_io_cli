@@ -38,14 +38,14 @@ desc "Generate markdown documentation"
 task "readme" do
   include BranchIOCLI::Format::MarkdownFormat
 
-  text = '\1'
-  text += %i(setup validate report).inject("") do |command|
-    text + render_command(command)
+  text = "\\1\n"
+  text += %i(setup validate report).inject("") do |t, command|
+    t + render_command(command)
   end
-  text += '\2'
+  text += "\n\\2"
 
   PatternPatch::Patch.new(
-    regexp: /(<!-- BEGIN REFERENCE -->).*(<!-- END REFERENCE -->)/m,
+    regexp: /(\<!-- BEGIN COMMAND REFERENCE --\>).*(\<!-- END COMMAND REFERENCE --\>)/m,
     text: text,
     mode: :replace
   ).apply File.expand_path("../README.md", __FILE__)

@@ -1,7 +1,7 @@
 <%= header "#{@command.command_name} command", 3 %>
 
 ```bash
-branch_io @command.command_name [OPTIONS]
+branch_io <%= @command.command_name %> [OPTIONS]
 ```
 
 <%= render "#{@command.command_name}_description" %>
@@ -13,11 +13,9 @@ branch_io @command.command_name [OPTIONS]
 |-h, --help|Prints a list of commands or help for each command|
 |-v, --version|Prints the current version of the CLI|
 |-t, --trace|Prints a stack trace when exceptions are raised|
-<% @command.available_options.each do |option| %>
-<%= table_option option %>
-<% end %>
+<%= table_options %>
 
-<% if @command.responds_to?(:examples) && !@command.examples.blank? %>
+<% if @command.respond_to?(:examples) && !@command.examples.blank? %>
 <%= header "Examples", 4 %>
 <% @command.examples.each_key do |text| %>
 <% example = @command.examples[text] %>
@@ -29,5 +27,5 @@ branch_io @command.command_name [OPTIONS]
 <% end %>
 <% end %>
 
-<% if @command.responds_to?(:return_value) && !@command.return_value.nil? %>
+<% if @command.respond_to?(:return_value) && !@command.return_value.nil? %>
 <% end %>

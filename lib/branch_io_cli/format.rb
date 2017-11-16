@@ -1,4 +1,5 @@
 require "branch_io_cli/format/commander_format"
+require "branch_io_cli/format/markdown_format"
 
 module BranchIOCLI
   module Format

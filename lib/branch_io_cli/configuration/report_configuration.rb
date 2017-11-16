@@ -76,7 +76,7 @@ module BranchIOCLI
               name: :configuration,
               description: "The build configuration to use (default: Scheme-dependent)",
               type: String,
-              example: "Debug|Release|CustomConfigName"
+              example: "Debug/Release/CustomConfigName"
             ),
             Option.new(
               name: :sdk,
