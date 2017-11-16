@@ -137,15 +137,6 @@ module BranchIOCLI
 
       attr_reader :keys
       attr_reader :all_domains
-      attr_reader :carthage_command
-      attr_reader :uri_scheme
-      attr_reader :validate
-      attr_reader :add_sdk
-      attr_reader :force
-      attr_reader :patch_source
-      attr_reader :commit
-      attr_reader :setting
-      attr_reader :test_configurations
 
       def validate_options
         @validate = options.validate

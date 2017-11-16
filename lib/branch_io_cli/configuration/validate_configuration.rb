@@ -27,8 +27,6 @@ module BranchIOCLI
         end
       end
 
-      attr_reader :domains
-
       def initialize(options)
         super
         @domains = options.domains

@@ -125,13 +125,6 @@ module BranchIOCLI
         end
       end
 
-      attr_reader :clean
-      attr_reader :header_only
-      attr_reader :scheme
-      attr_reader :configuration
-      attr_reader :report_path
-      attr_reader :sdk
-
       def validate_options
         @clean = options.clean
         @header_only = options.header_only

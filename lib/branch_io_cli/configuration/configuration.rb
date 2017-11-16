@@ -25,7 +25,19 @@ module BranchIOCLI
       attr_reader :workspace_path
       attr_reader :pod_repo_update
 
+      def add_attrs_from_available_options
+        self.class.available_options.each do |option|
+          next if respond_to?(option.name)
+
+          define_method option.name do
+            instance_variable_get "@#{option.name}"
+          end
+        end
+      end
+
       def initialize(options)
+        add_attrs_from_available_options
+
         @options = options
         @pod_repo_update = options.pod_repo_update
         Configuration.current = self
