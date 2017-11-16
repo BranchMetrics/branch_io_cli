@@ -19,8 +19,8 @@ module BranchIOCLI
         return super unless option
 
         value = hash[method_sym]
-        return value unless add_defaults
-        value = option.default_value if value.nil?
+        return value unless add_defaults && value.nil?
+        option.default_value
       end
 
       def build_option_hash
