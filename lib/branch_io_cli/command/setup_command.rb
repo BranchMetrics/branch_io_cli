@@ -78,7 +78,7 @@ module BranchIOCLI
         commit_message = options.commit if options.commit.kind_of?(String)
         commit_message ||= "[branch_io_cli] Branch SDK integration #{config.relative_path(config.xcodeproj_path)} (#{config.target.name})"
 
-        sh ["git", "commit", "-qm", commit_message, changes]
+        sh ["git", "commit", "-qm", commit_message, *changes]
       end
       # rubocop: enable Metrics/PerceivedComplexity
 
