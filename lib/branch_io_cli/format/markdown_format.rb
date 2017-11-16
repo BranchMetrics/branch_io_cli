@@ -3,7 +3,7 @@ module BranchIOCLI
     module MarkdownFormat
       include Format
 
-      def header(text, level=1)
+      def header(text, level = 1)
         "#" * level + " #{text}"
       end
 
@@ -21,7 +21,7 @@ module BranchIOCLI
 
         text += "--"
         text += "[no-]" if option.negatable
-        text += "#{option.name.to_s.gsub(/_/, '-')}"
+        text += option.name.to_s.gsub(/_/, '-')
 
         if option.example
           text += " "
