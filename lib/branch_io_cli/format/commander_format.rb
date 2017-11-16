@@ -5,11 +5,7 @@ module BranchIOCLI
     module CommanderFormat
       include Format
 
-      def option(opt)
-        highlight "--#{opt.to_s.gsub(/_/, '-')}"
-      end
-
-      def header(text)
+      def header(text, level = 1)
         highlight text
       end
 

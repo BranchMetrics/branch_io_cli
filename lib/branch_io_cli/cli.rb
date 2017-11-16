@@ -19,11 +19,10 @@ module BranchIOCLI
 
         add_options_for_command :setup, c
 
-        c.example "Test without validation (can use dummy keys and domains)", "branch_io setup -L key_live_xxxx -D myapp.app.link --no-validate"
-        c.example "Use both live and test keys", "branch_io setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link"
-        c.example "Use custom or non-Branch domains", "branch_io setup -D myapp.app.link,example.com,www.example.com"
-        c.example "Avoid pod repo update", "branch_io setup --no-pod-repo-update"
-        c.example "Install using carthage bootstrap", "branch_io --carthage-command \"bootstrap --no-use-binaries\""
+        Command::SetupCommand.examples.each_key do |text|
+          example = Command::SetupCommand.examples[text]
+          c.example text, example
+        end
 
         c.action do |args, options|
           options.default(

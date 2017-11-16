@@ -1,0 +1,33 @@
+<%= header "#{@command.command_name} command", 3 %>
+
+```bash
+branch_io @command.command_name [OPTIONS]
+```
+
+<%= render "#{@command.command_name}_description" %>
+
+<%= header "Options", 4 %>
+
+|Option|Description|
+|------|-----------|
+|-h, --help|Prints a list of commands or help for each command|
+|-v, --version|Prints the current version of the CLI|
+|-t, --trace|Prints a stack trace when exceptions are raised|
+<% @command.available_options.each do |option| %>
+<%= table_option option %>
+<% end %>
+
+<% if @command.responds_to?(:examples) && !@command.examples.blank? %>
+<%= header "Examples", 4 %>
+<% @command.examples.each_key do |text| %>
+<% example = @command.examples[text] %>
+<%= header text, 5 %>
+
+```bash
+<%= example %>
+```
+<% end %>
+<% end %>
+
+<% if @command.responds_to?(:return_value) && !@command.return_value.nil? %>
+<% end %>

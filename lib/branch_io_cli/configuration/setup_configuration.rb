@@ -3,6 +3,16 @@ module BranchIOCLI
     # rubocop: disable Metrics/ClassLength
     class SetupConfiguration < Configuration
       class << self
+        def examples
+          {
+            "Test without validation (can use dummy keys and domains)" => "branch_io setup -L key_live_xxxx -D myapp.app.link --no-validate",
+            "Use both live and test keys" => "branch_io setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link",
+            "Use custom or non-Branch domains" => "branch_io setup -D myapp.app.link,example.com,www.example.com",
+            "Avoid pod repo update" => "branch_io setup --no-pod-repo-update",
+            "Install using carthage bootstrap" => "branch_io --carthage-command \"bootstrap --no-use-binaries\""
+          }
+        end
+
         def available_options
           [
             Option.new(

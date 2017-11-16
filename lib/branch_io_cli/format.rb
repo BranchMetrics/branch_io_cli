@@ -6,5 +6,9 @@ module BranchIOCLI
       path = File.expand_path(File.join("..", "..", "assets", "templates", "#{template}.erb"), __FILE__)
       ERB.new(File.read(path)).result binding
     end
+
+    def option(opt)
+      highlight "--#{opt.to_s.gsub(/_/, '-')}"
+    end
   end
 end
