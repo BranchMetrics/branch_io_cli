@@ -11,6 +11,10 @@ module BranchIOCLI
         "`#{text}`"
       end
 
+      def italics(text)
+        "_#{text}_"
+      end
+
       def table_options
         @command.available_options.map { |o| table_option o }.join("\n")
       end

@@ -237,7 +237,7 @@ See https://github.com/BranchMetrics/branch_io_cli#validate-command for more inf
 branch_io report [OPTIONS]
 ```
 
-`Work in progress`
+_Work in progress_
 
 This command optionally cleans and then builds a workspace or project, generating a verbose
 report with additional diagnostic information suitable for opening a support ticket.

@@ -12,6 +12,10 @@ module BranchIOCLI
       def highlight(text)
         "<%= color('#{text}', BOLD) %>"
       end
+
+      def italics(text)
+        highlight text
+      end
     end
   end
 end
