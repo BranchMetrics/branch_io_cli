@@ -1,8 +1,6 @@
 module BranchIOCLI
   module Command
     class ValidateCommand < Command
-      attr_reader :config
-
       def run!
         valid = true
 

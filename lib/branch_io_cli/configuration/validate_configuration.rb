@@ -1,7 +1,35 @@
 module BranchIOCLI
   module Configuration
     class ValidateConfiguration < Configuration
-      attr_reader :domains
+      class << self
+        def return_value
+          "If validation passes, this command returns 0. If validation fails, it returns 1."
+        end
+
+        def available_options
+          [
+            Option.new(
+              name: :domains,
+              description: "Comma-separated list of domains to validate (Branch domains or non-Branch domains)",
+              type: Array,
+              example: "example.com,www.example.com",
+              aliases: "-D"
+            ),
+            Option.new(
+              name: :xcodeproj,
+              description: "Path to an Xcode project to update",
+              type: String,
+              example: "MyProject.xcodeproj"
+            ),
+            Option.new(
+              name: :target,
+              description: "Name of a target to validate in the Xcode project",
+              type: String,
+              example: "MyAppTarget"
+            )
+          ]
+        end
+      end
 
       def initialize(options)
         super

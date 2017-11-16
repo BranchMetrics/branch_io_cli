@@ -7,6 +7,17 @@ module BranchIOCLI
     class Configuration
       class << self
         attr_accessor :current
+
+        def wrapper(hash, add_defaults = true)
+          OptionWrapper.new hash, available_options, add_defaults
+        end
+
+        def defaults
+          available_options.inject({}) do |defs, o|
+            next defs if o.default_value.nil?
+            defs.merge(o.name => o.default_value)
+          end
+        end
       end
 
       attr_reader :options
@@ -309,6 +320,19 @@ EOF
           imports << "#{line_no}: #{line.chomp}"
         end
         imports
+      end
+
+      def method_missing(method_sym, *arguments, &block)
+        all_options = self.class.available_options.map(&:name)
+        return super unless all_options.include?(method_sym)
+
+        self.class.send :define_method, method_sym do
+          ivar = "@#{method_sym}"
+          value = instance_variable_get ivar
+          value
+        end
+
+        send method_sym
       end
     end
   end

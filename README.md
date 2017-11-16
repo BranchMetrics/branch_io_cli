@@ -59,6 +59,9 @@ Currently command-line completion for bash is much more extensive than for zsh.
 
 ## Commands
 
+<!-- The following is generated. Do not edit by hand. Run rake readme to -->
+<!-- regenerate this section. -->
+<!-- BEGIN COMMAND REFERENCE -->
 ### Setup command
 
 ```bash
@@ -98,7 +101,9 @@ This can be suppressed using `--no-patch-source`.
 
 #### Prerequisites
 
-Before using this command, make sure to set up your app in the [Branch Dashboard](https://dashboard.branch.io). See https://docs.branch.io/pages/dashboard/integrate/ for details. To use the `setup` command, you need:
+Before using this command, make sure to set up your app in the Branch Dashboard
+(https://dashboard.branch.io). See https://docs.branch.io/pages/dashboard/integrate/
+for details. To use the `setup` command, you need:
 
 - Branch key(s), either live, test or both
 - Domain name(s) used for Branch links
@@ -109,6 +114,14 @@ the `pod` or `carthage` command may be required. If not found, the CLI will
 offer to install and set up these command-line tools for you. Alternately, you can arrange
 that the relevant commands are available in your `PATH`.
 
+All parameters are optional. A live key or test key, or both is required, as well
+as at least one domain. Specify `--live-key`, `--test-key` or both and `--app-link-subdomain`,
+`--domains` or both. If these are not specified, this command will prompt you
+for this information.
+
+See https://github.com/BranchMetrics/branch_io_cli#setup-command for more information.
+
+
 #### Options
 
 |Option|Description|
@@ -118,29 +131,27 @@ that the relevant commands are available in your `PATH`.
 |-t, --trace|Prints a stack trace when exceptions are raised|
 |-L, --live-key key_live_xxxx|Branch live key|
 |-T, --test-key key_test_yyyy|Branch test key|
-|--app-link-subdomain myapp|Branch app.link subdomain, e.g. myapp for myapp.app.link|
 |-D, --domains example.com,www.example.com|Comma-separated list of custom domain(s) or non-Branch domain(s)|
+|--app-link-subdomain myapp|Branch app.link subdomain, e.g. myapp for myapp.app.link|
 |-U, --uri-scheme myurischeme[://]|Custom URI scheme used in the Branch Dashboard for this app|
 |-s, --setting [BRANCH_KEY_SETTING]|Use a custom build setting for the Branch key (default: Use Info.plist)|
-|--test-configurations|List of configurations that use the test key with a custom build setting (default: Debug configurations)|
+|--test-configurations config1,config2|List of configurations that use the test key with a custom build setting (default: Debug configurations)|
 |--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|
 |--target MyAppTarget|Name of a target to modify in the Xcode project|
 |--podfile /path/to/Podfile|Path to the Podfile for the project|
 |--cartfile /path/to/Cartfile|Path to the Cartfile for the project|
-|--carthage-command <command>|Command to use when installing from Carthage (default: update --platform ios)|
+|--carthage-command <command>|Command to run when installing from Carthage (default: update --platform ios)|
 |--frameworks AdSupport,CoreSpotlight,SafariServices|Comma-separated list of system frameworks to add to the project|
 |--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|
 |--[no-]validate|Validate Universal Link configuration (default: yes)|
 |--[no-]force|Update project even if Universal Link validation fails (default: no)|
 |--[no-]add-sdk|Add the Branch framework to the project (default: yes)|
 |--[no-]patch-source|Add Branch SDK calls to the AppDelegate (default: yes)|
-|--[no-]commit [message]|Commit the results to Git (default: no)|
+|--[no-]commit|Commit the results to Git (default: no)|
 
-All parameters are optional. A live key or test key, or both is required, as well as at least one domain.
-Specify --live-key, --test-key or both and --app-link-subdomain, --domains or both. If these are not
-specified, this command will prompt you for the information.
 
 #### Examples
+
 
 ##### Test without validation (can use dummy keys and domains)
 
@@ -148,11 +159,13 @@ specified, this command will prompt you for the information.
 branch_io setup -L key_live_xxxx -D myapp.app.link --no-validate
 ```
 
+
 ##### Use both live and test keys
 
 ```bash
 branch_io setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link
 ```
+
 
 ##### Use custom or non-Branch domains
 
@@ -160,11 +173,13 @@ branch_io setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link
 branch_io setup -D myapp.app.link,example.com,www.example.com
 ```
 
+
 ##### Avoid pod repo update
 
 ```bash
 branch_io setup --no-pod-repo-update
 ```
+
 
 ##### Install using carthage bootstrap
 
@@ -172,22 +187,34 @@ branch_io setup --no-pod-repo-update
 branch_io --carthage-command "bootstrap --no-use-binaries"
 ```
 
+
+
+
 ### Validate command
 
 ```bash
 branch_io validate [OPTIONS]
 ```
 
-This command validates all Universal Link domains configured in a project without making any modification.
-It validates both Branch and non-Branch domains. Unlike web-based Universal Link validators,
-this command operates directly on the project. It finds the bundle and
-signing team identifiers in the project as well as the app's Associated Domains.
-It requests the apple-app-site-association file for each domain and validates
-the file against the project's settings.
+This command validates all Universal Link domains configured in a project without making any
+modification. It validates both Branch and non-Branch domains. Unlike web-based Universal
+Link validators, this command operates directly on the project. It finds the bundle and
+signing team identifiers in the project as well as the app's Associated Domains. It requests
+the apple-app-site-association file for each domain and validates the file against the
+project's settings.
 
 Only app targets are supported for this command. By default, it will validate the first.
 If your project has multiple app targets, specify the `--target` option to validate other
 targets.
+
+All parameters are optional. If `--domains` is specified, the list of Universal Link domains in
+the Associated Domains entitlement must exactly match this list, without regard to order. If
+no `--domains` are provided, validation passes if at least one Universal Link domain is
+configured and passes validation, and no Universal Link domain is present that does not pass
+validation.
+
+See https://github.com/BranchMetrics/branch_io_cli#validate-command for more information.
+
 
 #### Options
 
@@ -196,18 +223,13 @@ targets.
 |-h, --help|Prints a list of commands or help for each command|
 |-v, --version|Prints the current version of the CLI|
 |-t, --trace|Prints a stack trace when exceptions are raised|
-|-D, --domains example.com,www.example.com|Comma-separated list of domains. May include app.link subdomains.|
+|-D, --domains example.com,www.example.com|Comma-separated list of domains to validate (Branch domains or non-Branch domains)|
 |--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|
-|--target MyAppTarget|Name of a target to modify in the Xcode project|
+|--target MyAppTarget|Name of a target to validate in the Xcode project|
 
-All parameters are optional. If `--domains` is specified, the list of Universal Link domains in the
-Associated Domains entitlement must exactly match this list, without regard to order. If no `--domains`
-are provided, validation passes if at least one Universal Link domain is configured and passes validation,
-and no Universal Link domain is present that does not pass validation.
 
-#### Return value
 
-If validation passes, this command returns 0. If validation fails, it returns 1.
+
 
 ### Report command
 
@@ -215,10 +237,11 @@ If validation passes, this command returns 0. If validation fails, it returns 1.
 branch_io report [OPTIONS]
 ```
 
-_Work in progress_
+`Work in progress`
 
 This command optionally cleans and then builds a workspace or project, generating a verbose
 report with additional diagnostic information suitable for opening a support ticket.
+
 
 #### Options
 
@@ -229,16 +252,22 @@ report with additional diagnostic information suitable for opening a support tic
 |-t, --trace|Prints a stack trace when exceptions are raised|
 |--workspace MyProject.xcworkspace|Path to an Xcode workspace|
 |--xcodeproj MyProject.xcodeproj|Path to an Xcode project|
-|--target MyAppTarget|Name of a target to modify in the Xcode project|
-|--scheme MyAppScheme|Name of a scheme to build|
-|--configuration Debug/Release/CustomConfig|Name of a build configuration (default: Scheme-dependent)|
-|--sdk iphonesimulator|Name of an SDK to use with xcodebuild (default: iphonesimulator)|
-|--[no-]clean|Clean before building (default: yes)|
-|-H, --[no-]header-only|Show a diagnostic header and exit without cleaning or building (default: no)|
-|--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|
+|--scheme MyProjectScheme|A scheme from the project or workspace to build|
+|--target MyProjectTarget|A target to build|
+|--configuration Debug/Release/CustomConfigName|The build configuration to use (default: Scheme-dependent)|
+|--sdk iphoneos|Passed as -sdk to xcodebuild (default: iphonesimulator)|
 |--podfile /path/to/Podfile|Path to the Podfile for the project|
 |--cartfile /path/to/Cartfile|Path to the Cartfile for the project|
-|-o, --out ./report.txt|Path to use for the generated report (default: ./report.txt)|
+|--[no-]clean|Clean before attempting to build (default: yes)|
+|-H, --[no-]header-only|Write a report header to standard output and exit (default: no)|
+|--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|
+|-o, --out ./report.txt|Report output path (default: ./report.txt)|
+
+
+
+
+
+<!-- END COMMAND REFERENCE -->
 
 ## Examples
 

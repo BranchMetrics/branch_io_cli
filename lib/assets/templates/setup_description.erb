@@ -1,0 +1,52 @@
+Integrates the Branch SDK into a native app project. This currently supports iOS only.
+It will infer the project location if there is exactly one .xcodeproj anywhere under
+the current directory, excluding any in a Pods or Carthage folder. Otherwise, specify
+the project location using the <%= option :xcodeproj %> option, or the CLI will prompt you for the
+location.
+
+If a Podfile or Cartfile is detected, the Branch SDK will be added to the relevant
+configuration file and the dependencies updated to include the Branch framework.
+This behavior may be suppressed using <%= option :no_add_sdk %>. If no Podfile or Cartfile
+is found, and Branch.framework is not already among the project's dependencies,
+you will be prompted for a number of choices, including setting up CocoaPods or
+Carthage for the project or directly installing the Branch.framework.
+
+By default, all supplied Universal Link domains are validated. If validation passes,
+the setup continues. If validation fails, no further action is taken. Suppress
+validation using <%= option :no_validate %> or force changes when validation fails using
+<%= option :force %>.
+
+By default, this command will look for the first app target in the project. Test
+targets are not supported. To set up an extension target, supply the <%= option :target %> option.
+
+All relevant target settings are modified. The Branch keys are added to the Info.plist,
+along with the <%= highlight 'branch_universal_link_domains' %> key for custom domains (when <%= option :domains %>
+is used). For app targets, all domains are added to the project's Associated Domains
+entitlement. An entitlements file is also added for app targets if none is found.
+Optionally, if <%= option :frameworks %> is specified, this command can add a list of system
+frameworks to the target's dependencies (e.g., AdSupport, CoreSpotlight, SafariServices).
+
+A language-specific patch is applied to the AppDelegate (Swift or Objective-C).
+This can be suppressed using <%= option :no_patch_source %>.
+
+<%= header 'Prerequisites', 4 %>
+
+Before using this command, make sure to set up your app in the Branch Dashboard
+(https://dashboard.branch.io). See https://docs.branch.io/pages/dashboard/integrate/
+for details. To use the <%= highlight 'setup' %> command, you need:
+
+- Branch key(s), either live, test or both
+- Domain name(s) used for Branch links
+- Location of your Xcode project (may be inferred in simple projects)
+
+If using the <%= option :commit %> option, <%= highlight 'git' %> is required. If not using <%= option :no_add_sdk %>,
+the <%= highlight 'pod' %> or <%= highlight 'carthage' %> command may be required. If not found, the CLI will
+offer to install and set up these command-line tools for you. Alternately, you can arrange
+that the relevant commands are available in your <%= highlight 'PATH' %>.
+
+All parameters are optional. A live key or test key, or both is required, as well
+as at least one domain. Specify <%= option :live_key %>, <%= option :test_key %> or both and <%= option :app_link_subdomain %>,
+<%= option :domains %> or both. If these are not specified, this command will prompt you
+for this information.
+
+See https://github.com/BranchMetrics/branch_io_cli#setup-command for more information.

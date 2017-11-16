@@ -1,6 +1,140 @@
 module BranchIOCLI
   module Configuration
+    # rubocop: disable Metrics/ClassLength
     class SetupConfiguration < Configuration
+      class << self
+        def examples
+          {
+            "Test without validation (can use dummy keys and domains)" => "branch_io setup -L key_live_xxxx -D myapp.app.link --no-validate",
+            "Use both live and test keys" => "branch_io setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link",
+            "Use custom or non-Branch domains" => "branch_io setup -D myapp.app.link,example.com,www.example.com",
+            "Avoid pod repo update" => "branch_io setup --no-pod-repo-update",
+            "Install using carthage bootstrap" => "branch_io --carthage-command \"bootstrap --no-use-binaries\""
+          }
+        end
+
+        def available_options
+          [
+            Option.new(
+              name: :live_key,
+              description: "Branch live key",
+              example: "key_live_xxxx",
+              type: String,
+              aliases: "-L"
+            ),
+            Option.new(
+              name: :test_key,
+              description: "Branch test key",
+              example: "key_test_yyyy",
+              type: String,
+              aliases: "-T"
+            ),
+            Option.new(
+              name: :domains,
+              description: "Comma-separated list of custom domain(s) or non-Branch domain(s)",
+              example: "example.com,www.example.com",
+              type: Array,
+              aliases: "-D"
+            ),
+            Option.new(
+              name: :app_link_subdomain,
+              description: "Branch app.link subdomain, e.g. myapp for myapp.app.link",
+              example: "myapp",
+              type: String
+            ),
+            Option.new(
+              name: :uri_scheme,
+              description: "Custom URI scheme used in the Branch Dashboard for this app",
+              example: "myurischeme[://]",
+              type: String,
+              aliases: "-U"
+            ),
+            Option.new(
+              name: :setting,
+              description: "Use a custom build setting for the Branch key (default: Use Info.plist)",
+              example: "BRANCH_KEY_SETTING",
+              type: String,
+              argument_optional: true,
+              aliases: "-s"
+            ),
+            Option.new(
+              name: :test_configurations,
+              description: "List of configurations that use the test key with a custom build setting (default: Debug configurations)",
+              example: "config1,config2",
+              type: Array,
+              negatable: true
+            ),
+            Option.new(
+              name: :xcodeproj,
+              description: "Path to an Xcode project to update",
+              example: "MyProject.xcodeproj",
+              type: String
+            ),
+            Option.new(
+              name: :target,
+              description: "Name of a target to modify in the Xcode project",
+              example: "MyAppTarget",
+              type: String
+            ),
+            Option.new(
+              name: :podfile,
+              description: "Path to the Podfile for the project",
+              example: "/path/to/Podfile",
+              type: String
+            ),
+            Option.new(
+              name: :cartfile,
+              description: "Path to the Cartfile for the project",
+              example: "/path/to/Cartfile",
+              type: String
+            ),
+            Option.new(
+              name: :carthage_command,
+              description: "Command to run when installing from Carthage",
+              example: "<command>",
+              type: String,
+              default_value: "update --platform ios"
+            ),
+            Option.new(
+              name: :frameworks,
+              description: "Comma-separated list of system frameworks to add to the project",
+              example: "AdSupport,CoreSpotlight,SafariServices",
+              type: Array
+            ),
+            Option.new(
+              name: :pod_repo_update,
+              description: "Update the local podspec repo before installing",
+              default_value: true
+            ),
+            Option.new(
+              name: :validate,
+              description: "Validate Universal Link configuration",
+              default_value: true
+            ),
+            Option.new(
+              name: :force,
+              description: "Update project even if Universal Link validation fails",
+              default_value: false
+            ),
+            Option.new(
+              name: :add_sdk,
+              description: "Add the Branch framework to the project",
+              default_value: true
+            ),
+            Option.new(
+              name: :patch_source,
+              description: "Add Branch SDK calls to the AppDelegate",
+              default_value: true
+            ),
+            Option.new(
+              name: :commit,
+              description: "Commit the results to Git",
+              default_value: false
+            )
+          ]
+        end
+      end
+
       APP_LINK_REGEXP = /\.app\.link$|\.test-app\.link$/
       SDK_OPTIONS =
         {
@@ -13,15 +147,6 @@ module BranchIOCLI
 
       attr_reader :keys
       attr_reader :all_domains
-      attr_reader :carthage_command
-      attr_reader :uri_scheme
-      attr_reader :validate
-      attr_reader :add_sdk
-      attr_reader :force
-      attr_reader :patch_source
-      attr_reader :commit
-      attr_reader :setting
-      attr_reader :test_configurations
 
       def validate_options
         @validate = options.validate
@@ -294,5 +419,6 @@ module BranchIOCLI
         end
       end
     end
+    # rubocop: enable Metrics/ClassLength
   end
 end

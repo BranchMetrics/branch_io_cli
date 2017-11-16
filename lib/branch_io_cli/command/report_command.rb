@@ -44,7 +44,7 @@ module BranchIOCLI
         if config.workspace_path
           config.workspace.file_references.map(&:path).each do |project_path|
             path = File.join File.dirname(config.workspace_path), project_path
-            report.log_command "xcodebuild -list -project #{Shellwords.escape path}"
+            report.log_command ["xcodebuild", "-list", "-project", path]
           end
         end
 

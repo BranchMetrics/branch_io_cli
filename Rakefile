@@ -7,7 +7,10 @@ require 'rubocop/rake_task'
 RuboCop::RakeTask.new(:rubocop)
 
 require 'branch_io_cli/rake_task'
+require 'branch_io_cli/format'
 BranchIOCLI::RakeTask.new
+
+require 'pattern_patch'
 
 task default: [:spec, :rubocop]
 
@@ -29,4 +32,21 @@ end
 desc "Perform a full build of all examples in the repo"
 task "report:full" do
   Rake::Task["branch:report"].invoke all_projects, pod_repo_update: false
+end
+
+desc "Generate markdown documentation"
+task "readme" do
+  include BranchIOCLI::Format::MarkdownFormat
+
+  text = "\\1\n"
+  text += %i(setup validate report).inject("") do |t, command|
+    t + render_command(command)
+  end
+  text += "\n\\2"
+
+  PatternPatch::Patch.new(
+    regexp: /(\<!-- BEGIN COMMAND REFERENCE --\>).*(\<!-- END COMMAND REFERENCE --\>)/m,
+    text: text,
+    mode: :replace
+  ).apply File.expand_path("../README.md", __FILE__)
 end
