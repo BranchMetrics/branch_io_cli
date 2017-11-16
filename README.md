@@ -273,3 +273,21 @@ report with additional diagnostic information suitable for opening a support tic
 
 See the [examples](./examples) folder for several example projects that can be
 used to exercise the CLI.
+
+## Rake task
+
+You can use these commands easily with Rake:
+
+```Ruby
+require 'branch_io_cli/rake_task'
+BranchIOCLI::RakeTask.new
+```
+
+This defines the tasks `branch:report`, `branch:setup` and `branch:validate`.
+Each takes a path or an array of paths for a project directory as the first
+argument, followed by an options Hash with keys derived from the command-line
+arguments. For example:
+
+```Ruby
+Rake::Task["branch:validate"].invoke ".", domains: %w(example.com www.example.com)
+```
