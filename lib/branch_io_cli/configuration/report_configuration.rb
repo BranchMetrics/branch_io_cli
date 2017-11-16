@@ -125,6 +125,8 @@ module BranchIOCLI
         end
       end
 
+      attr_reader :report_path
+
       def validate_options
         @clean = options.clean
         @header_only = options.header_only

@@ -25,19 +25,7 @@ module BranchIOCLI
       attr_reader :workspace_path
       attr_reader :pod_repo_update
 
-      def add_attrs_from_available_options
-        self.class.available_options.each do |option|
-          next if respond_to?(option.name)
-
-          define_method option.name do
-            instance_variable_get "@#{option.name}"
-          end
-        end
-      end
-
       def initialize(options)
-        add_attrs_from_available_options
-
         @options = options
         @pod_repo_update = options.pod_repo_update
         Configuration.current = self
@@ -325,6 +313,19 @@ EOF
           imports << "#{line_no}: #{line.chomp}"
         end
         imports
+      end
+
+      def method_missing(method_sym, *arguments, &block)
+        all_options = self.class.available_options.map(&:name)
+        return super unless all_options.include?(method_sym)
+
+        self.class.send :define_method, method_sym do
+          ivar = "@#{method_sym}"
+          value = instance_variable_get ivar
+          value
+        end
+
+        send method_sym
       end
     end
   end
