@@ -1,4 +1,4 @@
-<%= header "#{@command.command_name} command", 3 %>
+<%= header "#{@command.command_name.to_s.capitalize} command", 3 %>
 
 ```bash
 branch_io <%= @command.command_name %> [OPTIONS]

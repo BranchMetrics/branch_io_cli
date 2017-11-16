@@ -62,7 +62,7 @@ Currently command-line completion for bash is much more extensive than for zsh.
 <!-- The following is generated. Do not edit by hand. Run rake readme to -->
 <!-- regenerate this section. -->
 <!-- BEGIN COMMAND REFERENCE -->
-### setup command
+### Setup command
 
 ```bash
 branch_io setup [OPTIONS]
@@ -190,7 +190,7 @@ branch_io --carthage-command "bootstrap --no-use-binaries"
 
 
 
-### validate command
+### Validate command
 
 ```bash
 branch_io validate [OPTIONS]
@@ -231,7 +231,7 @@ See https://github.com/BranchMetrics/branch_io_cli#validate-command for more inf
 
 
 
-### report command
+### Report command
 
 ```bash
 branch_io report [OPTIONS]
