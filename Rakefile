@@ -14,6 +14,10 @@ task default: [:spec, :rubocop]
 ALL_PROJECTS = Dir[File.expand_path("../examples/*Example*", __FILE__)]
 desc "Report on all examples in repo"
 task :report do
-  puts "All examples: #{ALL_PROJECTS}"
-  Rake::Task["branch:report"].invoke ALL_PROJECTS
+  Rake::Task["branch:report"].invoke ALL_PROJECTS, true, true
+end
+
+desc "Perform a full build of all examples in the repo"
+task "report:full" do
+  Rake::Task["branch:report"].invoke ALL_PROJECTS, true, false, "./report.txt", false
 end

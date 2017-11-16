@@ -15,7 +15,7 @@ module BranchIOCLI
 
         if config.header_only
           say report_helper.report_header
-          exit 0
+          return
         end
 
         if config.report_path == "stdout"
