@@ -30,9 +30,7 @@ module BranchIOCLI
           say "Universal Link configuration passed validation. ✅"
         end
 
-        begin
-          config.xcodeproj.build_configurations.first.debug?
-        rescue RuntimeError
+        if config.podfile_path && File.exist?(config.podfile_path) && config.pod_install_required?
           helper.verify_cocoapods
           say "Installing pods to resolve current build settings"
           Dir.chdir(File.dirname(config.podfile_path)) do
@@ -78,7 +76,10 @@ module BranchIOCLI
 
         changes = helper.changes.to_a.map { |c| Pathname.new(File.expand_path(c)).relative_path_from(Pathname.pwd).to_s }
 
-        sh "git commit -qm '[branch_io_cli] Branch SDK integration' #{changes.join(' ')}"
+        commit_message = options.commit if options.commit.kind_of?(String)
+        commit_message ||= "[branch_io_cli] Branch SDK integration #{config.relative_path(config.xcodeproj_path)} (#{config.target.name})"
+
+        sh "git commit -qm #{Shellwords.escape commit_message} #{changes.join(' ')}"
       end
       # rubocop: enable Metrics/PerceivedComplexity
 

@@ -92,7 +92,7 @@ EOF
         c.option "--[no-]force", "Update project even if Universal Link validation fails (default: no)"
         c.option "--[no-]add-sdk", "Add the Branch framework to the project (default: yes)"
         c.option "--[no-]patch-source", "Add Branch SDK calls to the AppDelegate (default: yes)"
-        c.option "--[no-]commit", "Commit the results to Git (default: no)"
+        c.option "--[no-]commit [message]", String, "Commit the results to Git (default: no)"
 
         c.example "Test without validation (can use dummy keys and domains)", "branch_io setup -L key_live_xxxx -D myapp.app.link --no-validate"
         c.example "Use both live and test keys", "branch_io setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link"
