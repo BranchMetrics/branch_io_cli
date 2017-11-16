@@ -7,6 +7,10 @@ module BranchIOCLI
         say "\n"
 
         say "Loading settings from Xcode"
+        # In case running in a non-CLI context (e.g., Rake or Fastlane) be sure
+        # to reset Xcode settings each time, since project, target and
+        # configurations will change.
+        Configuration::XcodeSettings.reset
         if Configuration::XcodeSettings.all_valid?
           say "Done ✅"
         else

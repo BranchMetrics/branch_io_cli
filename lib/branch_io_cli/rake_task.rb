@@ -20,7 +20,12 @@ module BranchIOCLI
       :workspace
     )
 
-    def initialize(*args, &b)
+    attr_reader :defaults
+
+    def initialize(defaults = {}, &b)
+      @defaults = defaults
+      @defaults[:report] ||= {}
+
       namespace :branch do
         report_task
       end
@@ -28,33 +33,56 @@ module BranchIOCLI
 
     def report_task
       desc "Generate a brief Branch report"
-      task :report, %i{paths clean header_only out pod_repo_update sdk} do |task, args|
+      task :report, %i{paths options} do |task, args|
         paths = args[:paths]
         paths = [paths] unless paths.respond_to?(:each)
-        clean = args[:clean].nil? ? true : args[:clean]
-        repo_update = args[:pod_repo_update].nil? ? true : args[:pod_repo_update]
-
-        options = ReportOptions.new(
-          nil,
-          clean,
-          nil,
-          args[:header_only],
-          args[:out] || "./report.txt",
-          repo_update,
-          nil,
-          nil,
-          args[:sdk] || "iphonesimulator",
-          nil,
-          nil,
-          nil
-        )
 
         paths.each do |path|
-          Dir.chdir(path) do
-            Command::ReportCommand.new(options).run!
+          Dir.chdir(path) do |p|
+            Command::ReportCommand.new(report_options(args[:options])).run!
           end
         end
       end
     end
+
+    # rubocop: disable Metrics/PerceivedComplexity
+    def report_options(options)
+      options ||= {}
+      defs = defaults[:report]
+
+      if options[:clean].nil? && defs[:clean].nil?
+        clean = true
+      else
+        clean = options[:clean] || defs[:clean]
+      end
+
+      if options[:pod_repo_update].nil? && defs[:pod_repo_update].nil?
+        repo_update = true
+      else
+        repo_update = options[:pod_repo_update] || defs[:pod_repo_update]
+      end
+
+      if options[:header_only].nil? && defs[:header_only].nil?
+        header_only = false
+      else
+        header_only = options[:header_only] || defs[:header_only]
+      end
+
+      ReportOptions.new(
+        options[:cartfile] || defs[:cartfile],
+        clean,
+        options[:configuration] || defs[:configuration],
+        header_only,
+        options[:out] || defs[:out] || "./report.txt",
+        repo_update,
+        options[:podfile] || defs[:podfile],
+        options[:scheme] || defs[:scheme],
+        options[:sdk] || defs[:sdk] || "iphonesimulator",
+        options[:target] || defs[:target],
+        options[:xcodeproj] || defs[:xcodeproj],
+        options[:workspace] || defs[:workspace]
+      )
+    end
+    # rubocop: enable Metrics/PerceivedComplexity
   end
 end

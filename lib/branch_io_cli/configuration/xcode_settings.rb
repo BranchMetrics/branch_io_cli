@@ -19,6 +19,10 @@ module BranchIOCLI
 
           @settings[configuration] = self.new configuration
         end
+
+        def reset
+          @settings = {}
+        end
       end
 
       attr_reader :configuration
