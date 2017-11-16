@@ -646,7 +646,7 @@ EOF
 
         # 4. Check if Pods folder is under SCM
         pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from Pathname.pwd
-        `git ls-files #{pods_folder_path.shellescape} --error-unmatch > /dev/null 2>&1`
+        `git ls-files #{pods_folder_path.to_s.shellescape} --error-unmatch > /dev/null 2>&1`
         return true unless $?.exitstatus == 0
 
         # 5. If so, add the Pods folder to the commit (in case :commit param specified)
@@ -693,7 +693,7 @@ EOF
 
         # 6. Check if Carthage folder is under SCM
         carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from Pathname.pwd
-        `git ls-files #{carthage_folder_path.shellescape} --error-unmatch > /dev/null 2>&1`
+        `git ls-files #{carthage_folder_path.to_s.shellescape} --error-unmatch > /dev/null 2>&1`
         return true unless $?.exitstatus == 0
 
         # 7. If so, add the Carthage folder to the commit (in case :commit param specified)

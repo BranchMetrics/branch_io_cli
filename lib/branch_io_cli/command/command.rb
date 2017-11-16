@@ -33,7 +33,7 @@ module BranchIOCLI
 
       def initialize(options)
         @options = options
-        configuration_class.new options
+        @config = self.class.configuration_class.new options
       end
 
       def run!
