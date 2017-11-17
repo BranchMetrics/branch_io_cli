@@ -5,7 +5,7 @@ require "branch_io_cli/format"
 module BranchIOCLI
   class CLI
     include Commander::Methods
-    include Format::CommanderFormat
+    include Format::HighlineFormat
 
     def run
       program :name, "Branch.io command-line interface"

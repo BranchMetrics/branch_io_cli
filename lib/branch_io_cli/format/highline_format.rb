@@ -2,7 +2,7 @@ require "erb"
 
 module BranchIOCLI
   module Format
-    module CommanderFormat
+    module HighlineFormat
       include Format
 
       def header(text, level = 1)
