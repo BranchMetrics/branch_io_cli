@@ -75,8 +75,7 @@ module BranchIOCLI
               example: "MyProject.xcodeproj",
               type: String,
               confirm_symbol: :xcodeproj_path,
-              validate_proc: ->(path) { Configuration.current.open_xcodeproj path }
-              convert_proc: ->(path) { Configuration.current.absolute_path(path.to_s) if Configuration.current }
+              validate_proc: ->(path) { Configuration.open_xcodeproj path }
             ),
             Option.new(
               name: :target,
@@ -92,8 +91,7 @@ module BranchIOCLI
               example: "/path/to/Podfile",
               type: String,
               confirm_symbol: :podfile_path,
-              validate_proc: ->(path) { Configuration.current.open_podfile path },
-              convert_proc: ->(path) { Configuration.current.absolute_path(path.to_s) if Configuration.current }
+              validate_proc: ->(path) { Configuration.open_podfile path }
             ),
             Option.new(
               name: :cartfile,
@@ -101,8 +99,8 @@ module BranchIOCLI
               example: "/path/to/Cartfile",
               type: String,
               confirm_symbol: :cartfile_path,
-              validate_proc: ->(path) { File.exist? path },
-              convert_proc: ->(path) { Configuration.current.absolute_path(path.to_s) if Configuration.current }
+              validate_proc: ->(path) { path && File.exist?(path.to_s) },
+              convert_proc: ->(path) { Configuration.absolute_path path.to_s }
             ),
             Option.new(
               name: :carthage_command,

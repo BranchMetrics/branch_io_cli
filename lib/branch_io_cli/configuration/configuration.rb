@@ -4,6 +4,7 @@ require "xcodeproj"
 
 module BranchIOCLI
   module Configuration
+    # rubocop: disable Metrics/ClassLength
     class Configuration
       class << self
         attr_accessor :current
@@ -21,6 +22,31 @@ module BranchIOCLI
 
             defs.merge(o.name => default_value)
           end
+        end
+
+        def absolute_path(path)
+          return path unless current
+          current.absolute_path path
+        end
+
+        def relative_path(path)
+          return path unless current
+          current.relative_path path
+        end
+
+        def open_podfile(path)
+          return false unless current
+          current.open_podfile absolute_path path
+        end
+
+        def open_xcodeproj(path)
+          return false unless current
+          current.open_xcodeproj absolute_path path
+        end
+
+        def root
+          return nil unless current
+          current.root
         end
       end
 
@@ -429,5 +455,6 @@ EOF
         true
       end
     end
+    # rubocop: enable Metrics/ClassLength
   end
 end
