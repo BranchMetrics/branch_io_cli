@@ -393,8 +393,8 @@ EOF
 
       # Prompt the user to confirm the configuration or edit.
       def confirm_with_user
-        confirmation = ask "Is this OK (Y/n)? "
-        return unless confirmation =~ /^n/i
+        confirmed = agree "Is this OK (Y/n)? "
+        return unless confirmed == false
 
         loop do
           say "\n<%= color('The following options may be adjusted before continuing.', BOLD) %>"
@@ -433,8 +433,9 @@ EOF
 
         valid_values = option.valid_values
 
-        if valid_values && option.type != Array
+        if valid_values && !option.type.nil? && option.type != Array
           new_value = choose do |menu|
+            menu.answer_type = option.type
             option.valid_values.each do |v|
               menu.choice v
             end
@@ -442,8 +443,13 @@ EOF
           end
 
           # Valid because chosen from list
+        elsif valid_values && option.type == Array
+          valid_values.each do |v|
+            say "#{v}\n"
+          end
+          new_value = ask "Please enter one or more of the above, separated by commas: ", Array
         elsif valid_values
-          # TODO: Select multiple items from a list
+          new_value = agree "#{option.name.to_s.gsub(/_/, ' ').capitalize}? "
         else
           new_value = ask "Please enter a new value for #{option.name.to_s.gsub(/_/, ' ').capitalize}: ", option.type
         end
@@ -451,7 +457,7 @@ EOF
         new_value = option.convert new_value
 
         return false unless option.valid?(new_value)
-        instance_variable_set "@#{option.name}", new_value
+        instance_variable_set "@#{option.confirm_symbol}", new_value
         true
       end
     end

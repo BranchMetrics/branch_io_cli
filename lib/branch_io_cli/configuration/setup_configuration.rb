@@ -67,7 +67,8 @@ module BranchIOCLI
               description: "List of configurations that use the test key with a custom build setting (default: Debug configurations)",
               example: "config1,config2",
               type: Array,
-              negatable: true
+              negatable: true,
+              valid_values_proc: ->() { Configuration.current.xcodeproj.build_configurations.map(&:name) }
             ),
             Option.new(
               name: :xcodeproj,
@@ -99,8 +100,8 @@ module BranchIOCLI
               example: "/path/to/Cartfile",
               type: String,
               confirm_symbol: :cartfile_path,
-              validate_proc: ->(path) { path && File.exist?(path.to_s) },
-              convert_proc: ->(path) { Configuration.absolute_path path.to_s }
+              validate_proc: ->(path) { !path.nil? && File.exist?(path.to_s) },
+              convert_proc: ->(path) { Configuration.absolute_path(path.to_s) unless path.nil? }
             ),
             Option.new(
               name: :carthage_command,

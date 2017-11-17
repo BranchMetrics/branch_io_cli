@@ -81,8 +81,10 @@ module BranchIOCLI
         return validate_proc.call(value) if validate_proc
 
         value = convert value
-        if valid_values
+        if valid_values && type != Array
           valid_values.include? value
+        elsif valid_values
+          value.all? { |v| valid_values.include?(v) }
         elsif type
           value.kind_of? type
         else

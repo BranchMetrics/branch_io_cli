@@ -713,8 +713,8 @@ EOF
           exit(-1)
         end
 
-        install = ask "'pod' command not available in PATH. Install cocoapods (may require a sudo password) (Y/n)? "
-        if install.downcase =~ /^n/
+        install = agree "'pod' command not available in PATH. Install cocoapods (may require a sudo password) (Y/n)? "
+        if install == false
           say "Please install cocoapods or use --no-add-sdk to continue."
           exit(-1)
         end
@@ -740,8 +740,8 @@ EOF
           exit(-1)
         end
 
-        install = ask "'carthage' command not available in PATH. Use Homebrew to install carthage (Y/n)? "
-        if install.downcase =~ /^n/
+        install = agree "'carthage' command not available in PATH. Use Homebrew to install carthage (Y/n)? "
+        if install == false
           say "Please install carthage or use --no-add-sdk to continue."
           exit(-1)
         end
@@ -761,8 +761,8 @@ EOF
           exit(-1)
         end
 
-        install = ask "'git' command not available in PATH. Install Xcode command-line tools (requires password) (Y/n)? "
-        if install.downcase =~ /^n/
+        install = agree "'git' command not available in PATH. Install Xcode command-line tools (requires password) (Y/n)? "
+        if install == false
           say "Please install Xcode command tools or leave out the --commit option to continue."
           exit(-1)
         end
