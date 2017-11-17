@@ -48,12 +48,12 @@ task :validate do
   projects = Dir[File.expand_path("../examples/*Example*", __FILE__)]
   Rake::Task["branch:validate"].invoke(
     projects,
-     domains: %w(
-       k272.app.link
-       k272-alternate.app.link
-       k272.test-app.link
-       k272-alternate.test-app.link
-     )
+    domains: %w(
+      k272.app.link
+      k272-alternate.app.link
+      k272.test-app.link
+      k272-alternate.test-app.link
+    )
   )
 end
 
