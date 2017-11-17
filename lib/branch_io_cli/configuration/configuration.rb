@@ -64,7 +64,8 @@ module BranchIOCLI
 
       def initialize(options)
         @options = options
-        @pod_repo_update = options.pod_repo_update if options.respond_to?(:pod_repo_update)
+        @pod_repo_update = options.pod_repo_update if self.class.available_options.map(&:name).include?(:pod_repo_update)
+
         Configuration.current = self
 
         print_identification self.class.name.sub(/^.*::(.*?)Configuration$/, '\1').downcase
@@ -382,10 +383,9 @@ EOF
         all_options = self.class.available_options.map(&:name)
         return super unless all_options.include?(method_sym)
 
+        # Define an attr_reader for this method
         self.class.send :define_method, method_sym do
-          ivar = "@#{method_sym}"
-          value = instance_variable_get ivar
-          value
+          instance_variable_get "@#{method_sym}"
         end
 
         send method_sym
@@ -448,7 +448,7 @@ EOF
             say "#{v}\n"
           end
           new_value = ask "Please enter one or more of the above, separated by commas: ", Array
-        elsif valid_values
+        elsif option.type.nil?
           new_value = agree "#{option.name.to_s.gsub(/_/, ' ').capitalize}? "
         else
           new_value = ask "Please enter a new value for #{option.name.to_s.gsub(/_/, ' ').capitalize}: ", option.type

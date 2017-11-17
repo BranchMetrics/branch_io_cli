@@ -84,18 +84,6 @@ describe BranchIOCLI::Configuration::Option do
       option = OPTION_CLASS.new env_name: false
       expect(option.env_value).to be_nil
     end
-
-    it 'converts the value of env_name' do
-      ENV["FOO"] = "a,b,c"
-      option = OPTION_CLASS.new env_name: "FOO", type: Array
-      expect(option.env_value).to eq %w(a b c)
-    end
-
-    it 'returns nil unless env_name is valid' do
-      ENV["FOO"] = "a,b,c"
-      option = OPTION_CLASS.new env_name: "FOO", type: Array, validate_proc: ->(v) { false }
-      expect(option.env_value).to be_nil
-    end
   end
 
   describe '#convert' do

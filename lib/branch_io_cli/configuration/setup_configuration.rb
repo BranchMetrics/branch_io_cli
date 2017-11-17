@@ -187,6 +187,7 @@ module BranchIOCLI
         @add_sdk = options.add_sdk
         @force = options.force
         @commit = options.commit
+        @check_repo_changes = options.check_repo_changes
 
         say "--force is ignored when --no-validate is used." if !options.validate && options.force
         if options.cartfile && options.podfile
@@ -292,6 +293,7 @@ module BranchIOCLI
           key = ask "Please enter your #{type} Branch key or use --#{type}-key [enter for none]: "
         end
         @keys[type] = key unless key.empty?
+        instance_variable_set "@#{type}_key", key
       end
 
       def validate_all_domains(options, required = true)
