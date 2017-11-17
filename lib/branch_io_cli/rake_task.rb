@@ -23,7 +23,7 @@ module BranchIOCLI
 
         paths.each do |path|
           Dir.chdir(path) do |p|
-            Command::ReportCommand.new(Configuration::ReportConfiguration.wrapper(args[:options] || {})).run!
+            Command::ReportCommand.new(Configuration::ReportConfiguration.wrapper(args[:options])).run!
           end
         end
       end
@@ -37,7 +37,7 @@ module BranchIOCLI
 
         paths.each do |path|
           Dir.chdir(path) do |p|
-            Command::SetupCommand.new(Configuration::SetupConfiguration.wrapper(args[:options] || {})).run!
+            Command::SetupCommand.new(Configuration::SetupConfiguration.wrapper(args[:options])).run!
           end
         end
       end

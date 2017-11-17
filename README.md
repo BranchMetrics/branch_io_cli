@@ -124,31 +124,31 @@ See https://github.com/BranchMetrics/branch_io_cli#setup-command for more inform
 
 #### Options
 
-|Option|Description|
-|------|-----------|
-|-h, --help|Prints a list of commands or help for each command|
-|-v, --version|Prints the current version of the CLI|
-|-t, --trace|Prints a stack trace when exceptions are raised|
-|-L, --live-key key_live_xxxx|Branch live key|
-|-T, --test-key key_test_yyyy|Branch test key|
-|-D, --domains example.com,www.example.com|Comma-separated list of custom domain(s) or non-Branch domain(s)|
-|--app-link-subdomain myapp|Branch app.link subdomain, e.g. myapp for myapp.app.link|
-|-U, --uri-scheme myurischeme[://]|Custom URI scheme used in the Branch Dashboard for this app|
-|-s, --setting [BRANCH_KEY_SETTING]|Use a custom build setting for the Branch key (default: Use Info.plist)|
-|--test-configurations config1,config2|List of configurations that use the test key with a custom build setting (default: Debug configurations)|
-|--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|
-|--target MyAppTarget|Name of a target to modify in the Xcode project|
-|--podfile /path/to/Podfile|Path to the Podfile for the project|
-|--cartfile /path/to/Cartfile|Path to the Cartfile for the project|
-|--carthage-command <command>|Command to run when installing from Carthage (default: update --platform ios)|
-|--frameworks AdSupport,CoreSpotlight,SafariServices|Comma-separated list of system frameworks to add to the project|
-|--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|
-|--[no-]validate|Validate Universal Link configuration (default: yes)|
-|--[no-]force|Update project even if Universal Link validation fails (default: no)|
-|--[no-]add-sdk|Add the Branch framework to the project (default: yes)|
-|--[no-]patch-source|Add Branch SDK calls to the AppDelegate (default: yes)|
-|--commit [message]|Commit the results to Git|
-|--[no-]check-repo-changes|Check for uncommitted changes to a git repo (default: yes)|
+|Option|Description|Env. var.|
+|------|-----------|---------|
+|-h, --help|Prints a list of commands or help for each command||
+|-v, --version|Prints the current version of the CLI||
+|-t, --trace|Prints a stack trace when exceptions are raised||
+|-L, --live-key key_live_xxxx|Branch live key|BRANCH_LIVE_KEY|
+|-T, --test-key key_test_yyyy|Branch test key|BRANCH_TEST_KEY|
+|-D, --domains example.com,www.example.com|Comma-separated list of custom domain(s) or non-Branch domain(s)|BRANCH_DOMAINS|
+|--app-link-subdomain myapp|Branch app.link subdomain, e.g. myapp for myapp.app.link|BRANCH_APP_LINK_SUBDOMAIN|
+|-U, --uri-scheme myurischeme[://]|Custom URI scheme used in the Branch Dashboard for this app|BRANCH_URI_SCHEME|
+|-s, --setting [BRANCH_KEY_SETTING]|Use a custom build setting for the Branch key (default: Use Info.plist)|BRANCH_SETTING|
+|--test-configurations config1,config2|List of configurations that use the test key with a custom build setting (default: Debug configurations)|BRANCH_TEST_CONFIGURATIONS|
+|--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|BRANCH_XCODEPROJ|
+|--target MyAppTarget|Name of a target to modify in the Xcode project|BRANCH_TARGET|
+|--podfile /path/to/Podfile|Path to the Podfile for the project|BRANCH_PODFILE|
+|--cartfile /path/to/Cartfile|Path to the Cartfile for the project|BRANCH_CARTFILE|
+|--carthage-command <command>|Command to run when installing from Carthage (default: update --platform ios)|BRANCH_CARTHAGE_COMMAND|
+|--frameworks AdSupport,CoreSpotlight,SafariServices|Comma-separated list of system frameworks to add to the project|BRANCH_FRAMEWORKS|
+|--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|BRANCH_POD_REPO_UPDATE|
+|--[no-]validate|Validate Universal Link configuration (default: yes)|BRANCH_VALIDATE|
+|--[no-]force|Update project even if Universal Link validation fails (default: no)|BRANCH_FORCE|
+|--[no-]add-sdk|Add the Branch framework to the project (default: yes)|BRANCH_ADD_SDK|
+|--[no-]patch-source|Add Branch SDK calls to the AppDelegate (default: yes)|BRANCH_PATCH_SOURCE|
+|--commit [message]|Commit the results to Git|BRANCH_COMMIT|
+|--[no-]check-repo-changes|Check for uncommitted changes to a git repo (default: yes)|BRANCH_CHECK_REPO_CHANGES|
 
 
 #### Examples
@@ -219,14 +219,14 @@ See https://github.com/BranchMetrics/branch_io_cli#validate-command for more inf
 
 #### Options
 
-|Option|Description|
-|------|-----------|
-|-h, --help|Prints a list of commands or help for each command|
-|-v, --version|Prints the current version of the CLI|
-|-t, --trace|Prints a stack trace when exceptions are raised|
-|-D, --domains example.com,www.example.com|Comma-separated list of domains to validate (Branch domains or non-Branch domains) (default: [])|
-|--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|
-|--target MyAppTarget|Name of a target to validate in the Xcode project|
+|Option|Description|Env. var.|
+|------|-----------|---------|
+|-h, --help|Prints a list of commands or help for each command||
+|-v, --version|Prints the current version of the CLI||
+|-t, --trace|Prints a stack trace when exceptions are raised||
+|-D, --domains example.com,www.example.com|Comma-separated list of domains to validate (Branch domains or non-Branch domains) (default: [])|BRANCH_DOMAINS|
+|--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|BRANCH_XCODEPROJ|
+|--target MyAppTarget|Name of a target to validate in the Xcode project|BRANCH_TARGET|
 
 
 
@@ -246,23 +246,23 @@ report with additional diagnostic information suitable for opening a support tic
 
 #### Options
 
-|Option|Description|
-|------|-----------|
-|-h, --help|Prints a list of commands or help for each command|
-|-v, --version|Prints the current version of the CLI|
-|-t, --trace|Prints a stack trace when exceptions are raised|
-|--workspace MyProject.xcworkspace|Path to an Xcode workspace|
-|--xcodeproj MyProject.xcodeproj|Path to an Xcode project|
-|--scheme MyProjectScheme|A scheme from the project or workspace to build|
-|--target MyProjectTarget|A target to build|
-|--configuration Debug/Release/CustomConfigName|The build configuration to use (default: Scheme-dependent)|
-|--sdk iphoneos|Passed as -sdk to xcodebuild (default: iphonesimulator)|
-|--podfile /path/to/Podfile|Path to the Podfile for the project|
-|--cartfile /path/to/Cartfile|Path to the Cartfile for the project|
-|--[no-]clean|Clean before attempting to build (default: yes)|
-|-H, --[no-]header-only|Write a report header to standard output and exit (default: no)|
-|--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|
-|-o, --out ./report.txt|Report output path (default: ./report.txt)|
+|Option|Description|Env. var.|
+|------|-----------|---------|
+|-h, --help|Prints a list of commands or help for each command||
+|-v, --version|Prints the current version of the CLI||
+|-t, --trace|Prints a stack trace when exceptions are raised||
+|--workspace MyProject.xcworkspace|Path to an Xcode workspace|BRANCH_WORKSPACE|
+|--xcodeproj MyProject.xcodeproj|Path to an Xcode project|BRANCH_XCODEPROJ|
+|--scheme MyProjectScheme|A scheme from the project or workspace to build|BRANCH_SCHEME|
+|--target MyProjectTarget|A target to build|BRANCH_TARGET|
+|--configuration Debug/Release/CustomConfigName|The build configuration to use (default: Scheme-dependent)|BRANCH_CONFIGURATION|
+|--sdk iphoneos|Passed as -sdk to xcodebuild (default: iphonesimulator)|BRANCH_SDK|
+|--podfile /path/to/Podfile|Path to the Podfile for the project|BRANCH_PODFILE|
+|--cartfile /path/to/Cartfile|Path to the Cartfile for the project|BRANCH_CARTFILE|
+|--[no-]clean|Clean before attempting to build (default: yes)|BRANCH_CLEAN|
+|-H, --[no-]header-only|Write a report header to standard output and exit (default: no)|BRANCH_HEADER_ONLY|
+|--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|BRANCH_POD_REPO_UPDATE|
+|-o, --out ./report.txt|Report output path (default: ./report.txt)|BRANCH_REPORT_PATH|
 
 
 

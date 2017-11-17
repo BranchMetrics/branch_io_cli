@@ -14,8 +14,12 @@ module BranchIOCLI
 
         def defaults
           available_options.inject({}) do |defs, o|
-            next defs if o.default_value.nil?
-            defs.merge(o.name => o.default_value)
+            default_value = o.env_value
+            default_value = o.default_value if default_value.nil?
+
+            next defs if default_value.nil?
+
+            defs.merge(o.name => default_value)
           end
         end
       end
