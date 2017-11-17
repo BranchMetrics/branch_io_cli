@@ -22,7 +22,7 @@ module BranchIOCLI
            !helper.validate_team_and_bundle_ids_from_aasa_files(@domains)
           say "Universal Link configuration failed validation."
           helper.errors.each { |error| say " #{error}" }
-          return unless options.force
+          return 1 unless options.force
         elsif is_app_target && options.validate
           say "Universal Link configuration passed validation. ✅"
         end
@@ -69,7 +69,7 @@ module BranchIOCLI
 
         patch_helper.patch_source xcodeproj if options.patch_source
 
-        return unless options.commit
+        return 0 unless options.commit
 
         changes = helper.changes.to_a.map { |c| Pathname.new(File.expand_path(c)).relative_path_from(Pathname.pwd).to_s }
 
@@ -77,6 +77,8 @@ module BranchIOCLI
         commit_message ||= "[branch_io_cli] Branch SDK integration #{config.relative_path(config.xcodeproj_path)} (#{config.target.name})"
 
         sh ["git", "commit", "-qm", commit_message, *changes]
+
+        0
       end
       # rubocop: enable Metrics/PerceivedComplexity
 

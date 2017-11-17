@@ -10,13 +10,6 @@ module BranchIOCLI
           "If validation passes, this command returns 0. If validation fails, it returns 1."
         end
 
-        def return_map
-          {
-            true => 0,
-            false => 1
-          }
-        end
-
         def available_options
           [
             Option.new(

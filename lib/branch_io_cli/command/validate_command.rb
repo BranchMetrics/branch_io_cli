@@ -27,7 +27,7 @@ module BranchIOCLI
 
         say "Universal Link configuration passed validation. ✅" if valid
 
-        valid
+        valid ? 0 : 1
       end
     end
   end

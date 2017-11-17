@@ -43,11 +43,7 @@ module BranchIOCLI
           c.action do |args, options|
             options.default configuration_class.defaults
             return_value = command_class.new(options).run!
-            exit(0) unless configuration_class.respond_to?(:return_map) &&
-                           configuration_class.return_map &&
-                           configuration_class.return_map.respond_to?(:[])
-
-            exit configuration_class.return_map[return_value]
+            exit(return_value.respond_to?(:to_i) ? return_value.to_i : 0)
           end
         end
       end

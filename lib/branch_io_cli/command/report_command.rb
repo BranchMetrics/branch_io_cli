@@ -19,7 +19,7 @@ module BranchIOCLI
 
         if config.header_only
           say report_helper.report_header
-          return
+          return 0
         end
 
         if config.report_path == "stdout"
@@ -28,6 +28,8 @@ module BranchIOCLI
           File.open(config.report_path, "w") { |f| write_report f }
           say "Report generated in #{config.report_path}"
         end
+
+        0
       end
 
       def write_report(report)
