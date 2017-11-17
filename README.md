@@ -292,3 +292,11 @@ arguments. For example:
 ```Ruby
 Rake::Task["branch:validate"].invoke ".", domains: %w(example.com www.example.com)
 ```
+
+Try the following Rake tasks in this repo:
+
+```Ruby
+bundle exec rake setup
+bundle exec rake validate
+bundle exec rake report
+```
