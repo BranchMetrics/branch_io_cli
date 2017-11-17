@@ -38,7 +38,8 @@ module BranchIOCLI
               description: "Comma-separated list of custom domain(s) or non-Branch domain(s)",
               example: "example.com,www.example.com",
               type: Array,
-              aliases: "-D"
+              aliases: "-D",
+              confirm_symbol: :all_domains
             ),
             Option.new(
               name: :app_link_subdomain,
@@ -72,25 +73,36 @@ module BranchIOCLI
               name: :xcodeproj,
               description: "Path to an Xcode project to update",
               example: "MyProject.xcodeproj",
-              type: String
+              type: String,
+              confirm_symbol: :xcodeproj_path,
+              validate_proc: ->(path) { Configuration.current.open_xcodeproj path }
+              convert_proc: ->(path) { Configuration.current.absolute_path(path.to_s) if Configuration.current }
             ),
             Option.new(
               name: :target,
               description: "Name of a target to modify in the Xcode project",
               example: "MyAppTarget",
-              type: String
+              type: String,
+              confirm_symbol: :target_name,
+              valid_values_proc: ->() { Configuration.current.xcodeproj.targets.map(&:name) }
             ),
             Option.new(
               name: :podfile,
               description: "Path to the Podfile for the project",
               example: "/path/to/Podfile",
-              type: String
+              type: String,
+              confirm_symbol: :podfile_path,
+              validate_proc: ->(path) { Configuration.current.open_podfile path },
+              convert_proc: ->(path) { Configuration.current.absolute_path(path.to_s) if Configuration.current }
             ),
             Option.new(
               name: :cartfile,
               description: "Path to the Cartfile for the project",
               example: "/path/to/Cartfile",
-              type: String
+              type: String,
+              confirm_symbol: :cartfile_path,
+              validate_proc: ->(path) { File.exist? path },
+              convert_proc: ->(path) { Configuration.current.absolute_path(path.to_s) if Configuration.current }
             ),
             Option.new(
               name: :carthage_command,
@@ -141,6 +153,11 @@ module BranchIOCLI
               name: :check_repo_changes,
               description: "Check for uncommitted changes to a git repo",
               default_value: true
+            ),
+            Option.new(
+              name: :confirm,
+              description: "Confirm configuration before proceeding",
+              default_value: true
             )
           ]
         end
@@ -158,6 +175,12 @@ module BranchIOCLI
 
       attr_reader :keys
       attr_reader :all_domains
+
+      def initialize(options)
+        super
+        # Configuration has been validated and logged to the screen.
+        confirm_with_user if options.confirm
+      end
 
       def validate_options
         @validate = options.validate

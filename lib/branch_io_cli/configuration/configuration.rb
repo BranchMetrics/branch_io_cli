@@ -70,21 +70,36 @@ EOF
         Helper::BranchHelper
       end
 
+      def target_name
+        target.name.nil? ? nil : target.name
+      end
+
+      def root
+        return @root if @root
+        if workspace
+          @root = Pathname.new(workspace_path).dirname
+        else
+          @root = Pathname.new(xcodeproj_path).dirname
+        end
+        @root
+      end
+
+      def absolute_path(path)
+        return nil if path.nil?
+
+        path = Pathname.new(path) unless path.kind_of? Pathname
+        return path.to_s if path.absolute?
+
+        (root + path).to_s
+      end
+
       def relative_path(path)
         return nil if path.nil?
 
         path = Pathname.new(path) unless path.kind_of? Pathname
         return path.to_s unless path.absolute?
 
-        unless @root
-          if workspace
-            @root = Pathname.new(workspace_path).dirname
-          else
-            @root = Pathname.new(xcodeproj_path).dirname
-          end
-        end
-
-        path.relative_path_from(@root).to_s
+        path.relative_path_from(root).to_s
       end
 
       # 1. Look for options.xcodeproj.
@@ -171,12 +186,21 @@ EOF
         @sdk_integration_mode = filename == "Podfile" ? :cocoapods : :carthage
       end
 
-      def open_podfile(path = @podfile_path)
+      def open_podfile(path = podfile_path)
         @podfile = Pod::Podfile.from_file path
         @podfile_path = path
         @sdk_integration_mode = :cocoapods
         true
-      rescue RuntimeError => e
+      rescue Pod::PlainInformative => e
+        say e.message
+        false
+      end
+
+      def open_xcodeproj(path = xcodeproj_path)
+        @xcodeproj = Xcodeproj::Project.open path
+        @xcodeproj_path = path
+        true
+      rescue Xcodeproj::PlainInformative => e
         say e.message
         false
       end
@@ -339,6 +363,70 @@ EOF
         end
 
         send method_sym
+      end
+
+      # Prompt the user to confirm the configuration or edit.
+      def confirm_with_user
+        confirmation = ask "Is this OK (Y/n)? "
+        return unless confirmation =~ /^n/i
+
+        loop do
+          say "\n<%= color('The following options may be adjusted before continuing.', BOLD) %>"
+          choice = choose do |menu|
+            self.class.available_options.reject { |o| o.name == :confirm }.each do |option|
+              value = send option.confirm_symbol
+              menu.choice "#{option.name.to_s.gsub(/_/, ' ').capitalize}: #{value.nil? ? '(none)' : value}"
+            end
+
+            menu.choice "Accept and continue"
+            menu.choice "Quit"
+            menu.prompt = "What would you like to do?"
+          end
+
+          selected_sym = choice.sub(/:.*$/, '').gsub(/\s/, '_').downcase.to_sym
+
+          if (option = self.class.available_options.find { |o| o.name == selected_sym })
+            loop do
+              break if prompt_for_option(option)
+              say "Invalid value for option."
+            end
+          elsif choice =~ /^Accept/
+            return
+          else
+            exit(0)
+          end
+        end
+      end
+
+      def prompt_for_option(option)
+        say "\n<%= color('#{option.name.to_s.gsub(/_/, ' ').capitalize}', BOLD) %>\n\n"
+        say "#{option.description}\n\n"
+        value = send option.confirm_symbol
+        say "<%= color('Type', BOLD) %>: #{option.ui_type}\n"
+        say "<%= color('Current value', BOLD) %>: #{value.nil? ? '(none)' : value}\n\n"
+
+        valid_values = option.valid_values
+
+        if valid_values && option.type != Array
+          new_value = choose do |menu|
+            option.valid_values.each do |v|
+              menu.choice v
+            end
+            menu.prompt = "Please choose from this list. "
+          end
+
+          # Valid because chosen from list
+        elsif valid_values
+          # TODO: Select multiple items from a list
+        else
+          new_value = ask "Please enter a new value for #{option.name.to_s.gsub(/_/, ' ').capitalize}: ", option.type
+        end
+
+        new_value = option.convert new_value
+
+        return false unless option.valid?(new_value)
+        instance_variable_set "@#{option.name}", new_value
+        true
       end
     end
   end
