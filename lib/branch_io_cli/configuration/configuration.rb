@@ -417,6 +417,7 @@ EOF
               say "Invalid value for option."
             end
           elsif choice =~ /^Accept/
+            log
             return
           else
             exit(0)

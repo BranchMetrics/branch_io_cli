@@ -461,30 +461,30 @@ module BranchIOCLI
       def add_cocoapods(options)
         verify_cocoapods
 
-        podfile_path = config.podfile_path
+        podfile_path = options.podfile_path
 
         install_command = "pod install"
         install_command += " --repo-update" if options.pod_repo_update
         Dir.chdir(File.dirname(podfile_path)) do
           sh "pod init"
           PatternPatch::Patch.new(
-            regexp: /^(\s*)# Pods for #{config.target.name}$/,
+            regexp: /^(\s*)# Pods for #{options.target.name}$/,
             mode: :append,
             text: "\n\\1pod \"Branch\""
           ).apply podfile_path
           # Store a Pod::Podfile representation of this file.
-          config.open_podfile
+          options.open_podfile
           sh install_command
         end
 
-        return unless config.commit
+        return unless options.commit
 
         add_change podfile_path
         add_change "#{podfile_path}.lock"
 
         # For now, add Pods folder to SCM.
         pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from Pathname.pwd
-        workspace_path = Pathname.new(File.expand_path(config.xcodeproj_path.sub(/.xcodeproj$/, ".xcworkspace"))).relative_path_from Pathname.pwd
+        workspace_path = Pathname.new(File.expand_path(options.xcodeproj_path.sub(/.xcodeproj$/, ".xcworkspace"))).relative_path_from Pathname.pwd
         podfile_pathname = Pathname.new(podfile_path).relative_path_from Pathname.pwd
         add_change pods_folder_path
         add_change workspace_path
@@ -504,7 +504,7 @@ module BranchIOCLI
         verify_carthage
 
         # 1. Generate Cartfile
-        cartfile_path = config.cartfile_path
+        cartfile_path = options.cartfile_path
         File.open(cartfile_path, "w") do |file|
           file.write <<EOF
 github "BranchMetrics/ios-branch-deep-linking"
@@ -513,18 +513,18 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          sh "carthage #{config.carthage_command}"
+          sh "carthage #{options.carthage_command}"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
         add_change cartfile_path
         add_change "#{cartfile_path}.resolved"
-        add_change config.xcodeproj_path
+        add_change options.xcodeproj_path
 
         # 4. Add to target dependencies
-        frameworks_group = config.xcodeproj.frameworks_group
+        frameworks_group = options.xcodeproj.frameworks_group
         branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
-        target = config.target
+        target = options.target
         target.frameworks_build_phase.add_file_reference branch_framework
 
         # 5. Create a copy-frameworks build phase
@@ -536,9 +536,9 @@ EOF
 
         update_framework_search_paths "$(SRCROOT)/Carthage/Build/iOS"
 
-        config.xcodeproj.save
+        options.xcodeproj.save
 
-        return unless config.commit
+        return unless options.commit
 
         # For now, add Carthage folder to SCM
 
@@ -551,7 +551,7 @@ EOF
 
       def add_direct(options)
         # Put the framework in the path for any existing Frameworks group in the project.
-        frameworks_group = config.xcodeproj.frameworks_group
+        frameworks_group = options.xcodeproj.frameworks_group
         framework_path = File.join frameworks_group.real_path, "Branch.framework"
         raise "#{framework_path} exists." if File.exist? framework_path
 
@@ -589,17 +589,17 @@ EOF
 
         # Now the current framework is in framework_path
 
-        say "Adding to #{config.xcodeproj_path}"
+        say "Adding to #{options.xcodeproj_path}"
 
         # Add as a dependency in the Frameworks group
         framework = frameworks_group.new_file "Branch.framework" # relative to frameworks_group.real_path
-        config.target.frameworks_build_phase.add_file_reference framework, true
+        options.target.frameworks_build_phase.add_file_reference framework, true
 
         update_framework_search_paths "$(SRCROOT)"
 
-        config.xcodeproj.save
+        options.xcodeproj.save
 
-        add_change config.xcodeproj_path
+        add_change options.xcodeproj_path
         add_change framework_path
         sh ["git", "add", framework_path] if options.commit
 
@@ -625,7 +625,7 @@ EOF
       def update_podfile(options)
         verify_cocoapods
 
-        podfile_path = config.podfile_path
+        podfile_path = options.podfile_path
         return false if podfile_path.nil?
 
         # 1. Patch Podfile. Return if no change (Branch pod already present).
@@ -659,7 +659,7 @@ EOF
       def update_cartfile(options, project)
         verify_carthage
 
-        cartfile_path = config.cartfile_path
+        cartfile_path = options.cartfile_path
         return false if cartfile_path.nil?
 
         # 1. Patch Cartfile. Return if no change (Branch already present).
@@ -667,18 +667,18 @@ EOF
 
         # 2. carthage update
         Dir.chdir(File.dirname(cartfile_path)) do
-          sh "carthage #{config.carthage_command} ios-branch-deep-linking"
+          sh "carthage #{options.carthage_command} ios-branch-deep-linking"
         end
 
         # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
         add_change cartfile_path
         add_change "#{cartfile_path}.resolved"
-        add_change config.xcodeproj_path
+        add_change options.xcodeproj_path
 
         # 4. Add to target dependencies
         frameworks_group = project.frameworks_group
         branch_framework = frameworks_group.new_file "Carthage/Build/iOS/Branch.framework"
-        target = config.target
+        target = options.target
         target.frameworks_build_phase.add_file_reference branch_framework
 
         # 5. Add to copy-frameworks build phase

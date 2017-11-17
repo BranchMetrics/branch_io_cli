@@ -18,12 +18,12 @@ module BranchIOCLI
 
         is_app_target = !config.target.extension_target_type?
 
-        if is_app_target && options.validate &&
+        if is_app_target && config.validate &&
            !helper.validate_team_and_bundle_ids_from_aasa_files(@domains)
           say "Universal Link configuration failed validation."
           helper.errors.each { |error| say " #{error}" }
-          return 1 unless options.force
-        elsif is_app_target && options.validate
+          return 1 unless config.force
+        elsif is_app_target && config.validate
           say "Universal Link configuration passed validation. ✅"
         end
 
@@ -44,36 +44,36 @@ module BranchIOCLI
         helper.ensure_uri_scheme_in_info_plist if is_app_target # does nothing if already present
 
         new_path = helper.add_universal_links_to_project @domains, false if is_app_target
-        sh ["git", "add", new_path] if options.commit && new_path
+        sh ["git", "add", new_path] if config.commit && new_path
 
-        config_helper.target.add_system_frameworks options.frameworks unless options.frameworks.nil? || options.frameworks.empty?
+        config_helper.target.add_system_frameworks config.frameworks unless config.frameworks.nil? || config.frameworks.empty?
 
         xcodeproj.save
 
         case config.sdk_integration_mode
         when :cocoapods
           if File.exist? config.podfile_path
-            helper.update_podfile options
+            helper.update_podfile config
           else
-            helper.add_cocoapods options
+            helper.add_cocoapods config
           end
         when :carthage
           if File.exist? config.cartfile_path
-            helper.update_cartfile options, xcodeproj
+            helper.update_cartfile config, xcodeproj
           else
-            helper.add_carthage options
+            helper.add_carthage config
           end
         when :direct
-          helper.add_direct options
+          helper.add_direct config
         end
 
-        patch_helper.patch_source xcodeproj if options.patch_source
+        patch_helper.patch_source xcodeproj if config.patch_source
 
-        return 0 unless options.commit
+        return 0 unless config.commit
 
         changes = helper.changes.to_a.map { |c| Pathname.new(File.expand_path(c)).relative_path_from(Pathname.pwd).to_s }
 
-        commit_message = options.commit if options.commit.kind_of?(String)
+        commit_message = config.commit if config.commit.kind_of?(String)
         commit_message ||= "[branch_io_cli] Branch SDK integration #{config.relative_path(config.xcodeproj_path)} (#{config.target.name})"
 
         sh ["git", "commit", "-qm", commit_message, *changes]
