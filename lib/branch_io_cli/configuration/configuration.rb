@@ -2,10 +2,13 @@ require "cocoapods-core"
 require "pathname"
 require "xcodeproj"
 
+require "branch_io_cli/helper/methods"
+
 module BranchIOCLI
   module Configuration
     # rubocop: disable Metrics/ClassLength
     class Configuration
+
       class << self
         attr_accessor :current
 
@@ -397,7 +400,8 @@ EOF
         return unless confirmed == false
 
         loop do
-          say "\n<%= color('The following options may be adjusted before continuing.', BOLD) %>"
+          clear
+          say "<%= color('The following options may be adjusted before continuing.', BOLD) %>"
           choice = choose do |menu|
             self.class.available_options.reject { |o| o.name == :confirm }.each do |option|
               value = send option.confirm_symbol
@@ -426,7 +430,8 @@ EOF
       end
 
       def prompt_for_option(option)
-        say "\n<%= color('#{option.name.to_s.gsub(/_/, ' ').capitalize}', BOLD) %>\n\n"
+        clear
+        say "<%= color('#{option.name.to_s.gsub(/_/, ' ').capitalize}', BOLD) %>\n\n"
         say "#{option.description}\n\n"
         value = send option.confirm_symbol
         say "<%= color('Type', BOLD) %>: #{option.ui_type}\n"
