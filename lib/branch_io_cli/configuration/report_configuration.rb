@@ -46,6 +46,10 @@ module BranchIOCLI
     # rubocop: disable Metrics/ClassLength
     class ReportConfiguration < Configuration
       class << self
+        def summary
+          "Generate and optionally submit a build diagnostic report."
+        end
+
         def available_options
           [
             Option.new(

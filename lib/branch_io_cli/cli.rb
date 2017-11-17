@@ -12,59 +12,72 @@ module BranchIOCLI
       program :version, VERSION
       program :description, render(:program_description)
 
-      command :setup do |c|
-        c.syntax = "branch_io setup [OPTIONS]"
-        c.summary = "Integrates the Branch SDK into a native app project"
-        c.description = render :setup_description
-
-        add_options_for_command :setup, c
-
-        Command::SetupCommand.examples.each_key do |text|
-          example = Command::SetupCommand.examples[text]
-          c.example text, example
-        end
-
-        c.action do |args, options|
-          options.default Configuration::SetupConfiguration.defaults
-          Command::SetupCommand.new(options).run!
-        end
+      # Automatically detect all commands from branch_io_cli/command.
+      all_commands = Dir[File.expand_path(File.join("..", "command", "*_command.rb"), __FILE__)].map do |path|
+        File.basename(path, ".rb").sub(/_command$/, "")
       end
 
-      command :validate do |c|
-        c.syntax = "branch_io validate [OPTIONS]"
-        c.summary = "Validates all Universal Link domains configured in a project"
-        c.description = render :validate_description
+      all_commands.each do |command_name|
+        configuration_class = configuration_class command_name
+        command_class = command_class command_name
+        next unless configuration_class && command_class
 
-        add_options_for_command :validate, c
+        command command_name do |c|
+          c.syntax = "branch_io #{c.name} [OPTIONS]"
+          c.summary = configuration_class.summary if configuration_class.respond_to?(:summary)
 
-        c.action do |args, options|
-          options.default Configuration::ValidateConfiguration.defaults
-          valid = Command::ValidateCommand.new(options).run!
-          exit_code = valid ? 0 : 1
-          exit exit_code
-        end
-      end
+          begin
+            c.description = render "#{c.name}_description"
+          rescue Errno::ENOENT
+          end
 
-      command :report do |c|
-        c.syntax = "branch_io report [OPTIONS]"
-        c.summary = "Generate and optionally submit a build diagnostic report."
-        c.description = render :report_description
+          add_options_for_command c
 
-        add_options_for_command :report, c
+          if configuration_class.respond_to?(:examples) && configuration_class.examples
+            configuration_class.examples.each_key do |text|
+              example = configuration_class.examples[text]
+              c.example text, example
+            end
+          end
 
-        c.action do |args, options|
-          options.default Configuration::ReportConfiguration.defaults
-          Command::ReportCommand.new(options).run!
+          c.action do |args, options|
+            options.default configuration_class.defaults
+            return_value = command_class.new(options).run!
+            exit(0) unless configuration_class.respond_to?(:return_value_map) &&
+                           configuration_class.return_value_map &&
+                           configuration_class.return_value_map.respond_to?(:[])
+
+            exit configuration_class.return_value_map[return_value]
+          end
         end
       end
 
       run!
     end
 
-    def add_options_for_command(name, c)
-      configuration_class = Object.const_get("BranchIOCLI")
-                                  .const_get("Configuration")
-                                  .const_get("#{name.to_s.capitalize}Configuration")
+    def configuration_class(name)
+      class_for_command name, :configuration
+    end
+
+    def command_class(name)
+      class_for_command name, :command
+    end
+
+    def class_for_command(name, type)
+      type_name = type.to_s.capitalize
+      type_module = Object.const_get("BranchIOCLI").const_get(type_name)
+      candidate = type_module.const_get("#{name.to_s.capitalize}#{type_name}")
+      return nil unless candidate
+
+      base = type_module.const_get(type_name)
+      return nil unless candidate.superclass == base
+      candidate
+    end
+
+    def add_options_for_command(c)
+      configuration_class = configuration_class(c.name)
+      return unless configuration_class.respond_to?(:available_options)
+
       available_options = configuration_class.available_options
       available_options.each do |option|
         args = option.aliases

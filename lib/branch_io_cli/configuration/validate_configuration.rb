@@ -2,8 +2,19 @@ module BranchIOCLI
   module Configuration
     class ValidateConfiguration < Configuration
       class << self
+        def summary
+          "Validates all Universal Link domains configured in a project"
+        end
+
         def return_value
           "If validation passes, this command returns 0. If validation fails, it returns 1."
+        end
+
+        def return_map(value)
+          {
+            true => 0,
+            false => -1
+          }
         end
 
         def available_options

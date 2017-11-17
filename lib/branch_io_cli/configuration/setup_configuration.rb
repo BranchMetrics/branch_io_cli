@@ -3,6 +3,10 @@ module BranchIOCLI
     # rubocop: disable Metrics/ClassLength
     class SetupConfiguration < Configuration
       class << self
+        def summary
+          "Integrates the Branch SDK into a native app project"
+        end
+
         def examples
           {
             "Test without validation (can use dummy keys and domains)" => "branch_io setup -L key_live_xxxx -D myapp.app.link --no-validate",
