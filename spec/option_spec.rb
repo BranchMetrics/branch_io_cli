@@ -74,13 +74,26 @@ describe BranchIOCLI::Configuration::Option do
   end
 
   describe '#env_value' do
-    it 'returns the value of the named env. var. if set' do
-      option = OPTION_CLASS.new env_name: "USER"
-      expect(option.env_value).to eq ENV["USER"]
+    it 'returns the value of the named env. var. if set and valid' do
+      ENV["FOO"] = "bar"
+      option = OPTION_CLASS.new env_name: "FOO", type: String
+      expect(option.env_value).to eq "bar"
     end
 
     it 'returns nil if env_name is falsy' do
       option = OPTION_CLASS.new env_name: false
+      expect(option.env_value).to be_nil
+    end
+
+    it 'converts the value of env_name' do
+      ENV["FOO"] = "a,b,c"
+      option = OPTION_CLASS.new env_name: "FOO", type: Array
+      expect(option.env_value).to eq %w(a b c)
+    end
+
+    it 'returns nil unless env_name is valid' do
+      ENV["FOO"] = "a,b,c"
+      option = OPTION_CLASS.new env_name: "FOO", type: Array, validate_proc: ->(v) { false }
       expect(option.env_value).to be_nil
     end
   end

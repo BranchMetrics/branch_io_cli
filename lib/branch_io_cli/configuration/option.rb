@@ -54,7 +54,8 @@ module BranchIOCLI
 
       def env_value
         return nil unless env_name
-        convert ENV[env_name]
+        value = convert ENV[env_name]
+        value if valid?(value)
       end
 
       def convert(value)
