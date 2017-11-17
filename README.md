@@ -147,7 +147,7 @@ See https://github.com/BranchMetrics/branch_io_cli#setup-command for more inform
 |--[no-]force|Update project even if Universal Link validation fails (default: no)|
 |--[no-]add-sdk|Add the Branch framework to the project (default: yes)|
 |--[no-]patch-source|Add Branch SDK calls to the AppDelegate (default: yes)|
-|--[no-]commit|Commit the results to Git (default: no)|
+|--commit [message]|Commit the results to Git|
 |--[no-]check-repo-changes|Check for uncommitted changes to a git repo (default: yes)|
 
 

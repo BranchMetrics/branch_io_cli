@@ -129,7 +129,9 @@ module BranchIOCLI
             Option.new(
               name: :commit,
               description: "Commit the results to Git",
-              default_value: false
+              type: String,
+              example: "message",
+              argument_optional: true
             ),
             Option.new(
               name: :check_repo_changes,
