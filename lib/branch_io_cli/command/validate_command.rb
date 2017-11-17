@@ -4,8 +4,8 @@ module BranchIOCLI
       def run!
         valid = true
 
-        unless options.domains.nil? || options.domains.empty?
-          domains_valid = helper.validate_project_domains(options.domains)
+        unless config.domains.nil? || config.domains.empty?
+          domains_valid = helper.validate_project_domains(config.domains)
 
           if domains_valid
             say "Project domains match :domains parameter: ✅"
