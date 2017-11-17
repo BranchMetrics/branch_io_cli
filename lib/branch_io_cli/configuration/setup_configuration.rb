@@ -130,6 +130,11 @@ module BranchIOCLI
               name: :commit,
               description: "Commit the results to Git",
               default_value: false
+            ),
+            Option.new(
+              name: :ignore_repo_changes,
+              description: "Don't check for uncommitted changes to a git repo",
+              default_value: false
             )
           ]
         end

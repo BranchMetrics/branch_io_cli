@@ -35,17 +35,26 @@ task :setup do
     projects,
     live_key: "key_live_xxxx",
     test_key: "key_test_yyyy",
-    domains: %w(myapp.app.link),
-    validate: false,
+    domains: %w(k272.app.link),
+    validate: true,
     pod_repo_update: false,
-    setting: true
+    setting: true,
+    ignore_repo_changes: true
   )
 end
 
 desc "Validate repo examples"
 task :validate do
   projects = Dir[File.expand_path("../examples/*Example*", __FILE__)]
-  Rake::Task["branch:validate"].invoke projects
+  Rake::Task["branch:validate"].invoke(
+    projects,
+     domains: %(
+       k272.app.link
+       k272-alternate.app.link
+       k272.test-app.link
+       k272-alternate.test-app.link
+     )
+  )
 end
 
 desc "Report on all examples in repo"

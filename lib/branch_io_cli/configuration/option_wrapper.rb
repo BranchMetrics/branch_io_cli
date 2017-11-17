@@ -7,6 +7,8 @@ module BranchIOCLI
       attr_reader :add_defaults
 
       def initialize(hash, options, add_defaults = true)
+        raise ArgumentError if hash.nil?
+
         @hash = hash
         @options = options
         @add_defaults = add_defaults

@@ -34,7 +34,7 @@ module BranchIOCLI
 
       def initialize(options)
         @options = options
-        @pod_repo_update = options.pod_repo_update
+        @pod_repo_update = options.pod_repo_update if options.respond_to?(:pod_repo_update)
         Configuration.current = self
 
         print_identification self.class.name.sub(/^.*::(.*?)Configuration$/, '\1').downcase
