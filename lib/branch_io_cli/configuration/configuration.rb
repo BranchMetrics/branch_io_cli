@@ -401,6 +401,7 @@ EOF
 
         loop do
           clear
+
           say "<%= color('The following options may be adjusted before continuing.', BOLD) %>"
           choice = choose do |menu|
             self.class.available_options.reject { |o| o.name == :confirm }.each do |option|
@@ -413,12 +414,14 @@ EOF
             menu.prompt = "What would you like to do?"
           end
 
+          clear
+
           selected_sym = choice.sub(/:.*$/, '').gsub(/\s/, '_').downcase.to_sym
 
           if (option = self.class.available_options.find { |o| o.name == selected_sym })
             loop do
               break if prompt_for_option(option)
-              say "Invalid value for option."
+              say "Invalid value for option.\n\n"
             end
           elsif choice =~ /^Accept/
             log
@@ -430,7 +433,6 @@ EOF
       end
 
       def prompt_for_option(option)
-        clear
         say "<%= color('#{option.name.to_s.gsub(/_/, ' ').capitalize}', BOLD) %>\n\n"
         say "#{option.description}\n\n"
         value = send option.confirm_symbol
