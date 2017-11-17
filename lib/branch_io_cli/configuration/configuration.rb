@@ -119,6 +119,8 @@ EOF
       end
 
       def validate_target(allow_extensions = true)
+        return if @target
+
         non_test_targets = xcodeproj.targets.reject(&:test_target_type?)
         raise "No non-test target found in project" if non_test_targets.empty?
 
