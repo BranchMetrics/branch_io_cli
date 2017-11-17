@@ -292,9 +292,8 @@ EOF
         return if options.target || xcscheme.nil?
 
         # Find the target used when running the scheme if the user didn't specify one.
-        # This will be picked up in #validate_target
         entry = xcscheme.build_action.entries.select(&:build_for_running?).first
-        options.target = entry.buildable_references.first.target_name
+        @target = xcodeproj.targets.find { |t| t.name == entry.buildable_references.first.target_name }
       end
 
       def all_schemes
