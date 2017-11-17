@@ -14,6 +14,10 @@ require 'pattern_patch'
 
 task default: [:spec, :rubocop]
 
+#
+# Example tasks
+#
+
 IOS_REPO_DIR = File.expand_path "../../ios-branch-deep-linking", __FILE__
 
 def all_projects
@@ -22,6 +26,35 @@ def all_projects
     projects += Dir[File.expand_path("{Branch-TestBed*,Examples/*}", IOS_REPO_DIR)].reject { |p| p =~ /Xcode-7|README/ }
   end
   projects
+end
+
+desc "Set up all repo examples"
+task :setup do
+  projects = Dir[File.expand_path("../examples/*Example*", __FILE__)]
+  Rake::Task["branch:setup"].invoke(
+    projects,
+    live_key: "key_live_xxxx",
+    test_key: "key_test_yyyy",
+    domains: %w(k272.app.link),
+    validate: true,
+    pod_repo_update: false,
+    setting: true,
+    check_repo_changes: false
+  )
+end
+
+desc "Validate repo examples"
+task :validate do
+  projects = Dir[File.expand_path("../examples/*Example*", __FILE__)]
+  Rake::Task["branch:validate"].invoke(
+    projects,
+    domains: %w(
+      k272.app.link
+      k272-alternate.app.link
+      k272.test-app.link
+      k272-alternate.test-app.link
+    )
+  )
 end
 
 desc "Report on all examples in repo"
@@ -34,7 +67,11 @@ task "report:full" do
   Rake::Task["branch:report"].invoke all_projects, pod_repo_update: false
 end
 
-desc "Generate markdown documentation"
+#
+# Repo maintenance
+#
+
+desc "Regenerate reference documentation in the repo"
 task "readme" do
   include BranchIOCLI::Format::MarkdownFormat
 

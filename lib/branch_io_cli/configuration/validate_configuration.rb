@@ -13,7 +13,8 @@ module BranchIOCLI
               description: "Comma-separated list of domains to validate (Branch domains or non-Branch domains)",
               type: Array,
               example: "example.com,www.example.com",
-              aliases: "-D"
+              aliases: "-D",
+              default_value: []
             ),
             Option.new(
               name: :xcodeproj,

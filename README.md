@@ -148,6 +148,7 @@ See https://github.com/BranchMetrics/branch_io_cli#setup-command for more inform
 |--[no-]add-sdk|Add the Branch framework to the project (default: yes)|
 |--[no-]patch-source|Add Branch SDK calls to the AppDelegate (default: yes)|
 |--[no-]commit|Commit the results to Git (default: no)|
+|--[no-]check-repo-changes|Check for uncommitted changes to a git repo (default: yes)|
 
 
 #### Examples
@@ -223,7 +224,7 @@ See https://github.com/BranchMetrics/branch_io_cli#validate-command for more inf
 |-h, --help|Prints a list of commands or help for each command|
 |-v, --version|Prints the current version of the CLI|
 |-t, --trace|Prints a stack trace when exceptions are raised|
-|-D, --domains example.com,www.example.com|Comma-separated list of domains to validate (Branch domains or non-Branch domains)|
+|-D, --domains example.com,www.example.com|Comma-separated list of domains to validate (Branch domains or non-Branch domains) (default: [])|
 |--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|
 |--target MyAppTarget|Name of a target to validate in the Xcode project|
 
