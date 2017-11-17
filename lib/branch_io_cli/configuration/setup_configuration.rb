@@ -132,9 +132,9 @@ module BranchIOCLI
               default_value: false
             ),
             Option.new(
-              name: :ignore_repo_changes,
-              description: "Don't check for uncommitted changes to a git repo",
-              default_value: false
+              name: :check_repo_changes,
+              description: "Check for uncommitted changes to a git repo",
+              default_value: true
             )
           ]
         end
