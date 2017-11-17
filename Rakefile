@@ -71,7 +71,7 @@ end
 # Repo maintenance
 #
 
-desc "Generate markdown documentation"
+desc "Regenerate reference documentation in the repo"
 task "readme" do
   include BranchIOCLI::Format::MarkdownFormat
 
