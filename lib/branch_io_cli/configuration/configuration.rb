@@ -449,7 +449,7 @@ EOF
           end
           new_value = ask "Please enter one or more of the above, separated by commas: ", Array
         elsif option.type.nil?
-          new_value = agree "#{option.name.to_s.gsub(/_/, ' ').capitalize}? "
+          new_value = agree "#{option.name.to_s.gsub(/_/, ' ').capitalize} (y/n)? "
         else
           new_value = ask "Please enter a new value for #{option.name.to_s.gsub(/_/, ' ').capitalize}: ", option.type
         end
