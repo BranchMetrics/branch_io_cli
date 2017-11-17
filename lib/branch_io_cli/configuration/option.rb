@@ -25,6 +25,7 @@ module BranchIOCLI
         @argument_optional = options[:argument_optional] || false
         @aliases = options[:aliases] || []
         @aliases = [@aliases] unless @aliases.kind_of?(Array)
+        @negatable = options[:negatable]
         @negatable = options[:type].nil? if options[:negatable].nil?
         @confirm_symbol = options[:confirm_symbol] || @name
         @valid_values_proc = options[:valid_values_proc]
@@ -38,18 +39,13 @@ module BranchIOCLI
       end
 
       def valid_values
-        if valid_values_proc && valid_values_proc.kind_of?(Proc)
-          valid_values_proc.call
-        elsif type.nil?
-          [true, false]
-        end
+        return valid_values_proc.call if valid_values_proc && valid_values_proc.kind_of?(Proc)
       end
 
       def ui_type
-        case type
-        when nil
+        if type.nil?
           "Boolean"
-        when Array
+        elsif type == Array
           "Comma-separated list"
         else
           type.to_s
@@ -64,12 +60,11 @@ module BranchIOCLI
       def convert(value)
         return convert_proc.call(value) if convert_proc
 
-        case type
-        when Array
+        if type == Array
           value = value.split(",") if value.kind_of?(String)
-        when String
+        elsif type == String
           value = value.strip
-        when nil
+        elsif type.nil?
           value = true if value.kind_of?(String) && value =~ /^(true|yes)$/i
           value = false if value.kind_of?(String) && value =~ /^(false|no)$/i
         end
@@ -80,7 +75,6 @@ module BranchIOCLI
       def valid?(value)
         return validate_proc.call(value) if validate_proc
 
-        value = convert value
         if valid_values && type != Array
           valid_values.include? value
         elsif valid_values
