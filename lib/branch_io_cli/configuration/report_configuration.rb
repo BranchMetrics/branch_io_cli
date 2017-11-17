@@ -119,7 +119,8 @@ module BranchIOCLI
               default_value: "./report.txt",
               aliases: "-o",
               example: "./report.txt",
-              type: String
+              type: String,
+              env_name: "BRANCH_REPORT_PATH"
             )
           ]
         end

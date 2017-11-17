@@ -45,6 +45,10 @@ module BranchIOCLI
         if default_value
           text += " (default: #{default_value})"
         end
+
+        text += "|"
+        text += option.env_name if option.env_name
+
         text += "|"
         text
       end
