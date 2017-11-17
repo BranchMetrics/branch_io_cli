@@ -7,7 +7,7 @@ module BranchIOCLI
       attr_reader :add_defaults
 
       def initialize(hash, options, add_defaults = true)
-        raise ArgumentError if hash.nil?
+        hash ||= {}
 
         @hash = hash
         @options = options
@@ -22,7 +22,9 @@ module BranchIOCLI
 
         value = hash[method_sym]
         return value unless add_defaults && value.nil?
-        option.default_value
+        default_value = option.env_value
+        default_value = option.default_value if default_value.nil?
+        default_value
       end
 
       def build_option_hash
