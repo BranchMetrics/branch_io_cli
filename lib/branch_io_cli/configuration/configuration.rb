@@ -8,7 +8,6 @@ module BranchIOCLI
   module Configuration
     # rubocop: disable Metrics/ClassLength
     class Configuration
-
       class << self
         attr_accessor :current
 
