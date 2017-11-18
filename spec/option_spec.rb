@@ -139,6 +139,11 @@ describe BranchIOCLI::Configuration::Option do
       expect(option.valid?("c")).to be false
     end
 
+    it 'accepts nil if argument_optional is set' do
+      option = OPTION_CLASS.new type: String, argument_optional: true
+      expect(option.valid?(nil)).to be true
+    end
+
     it 'checks all values of an Array argument' do
       option = OPTION_CLASS.new type: Array, valid_values_proc: ->() { %w(a b) }
       expect(option.valid?(%w(a))).to be true
