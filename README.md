@@ -135,7 +135,7 @@ See https://github.com/BranchMetrics/branch_io_cli#setup-command for more inform
 |--app-link-subdomain myapp|Branch app.link subdomain, e.g. myapp for myapp.app.link|BRANCH_APP_LINK_SUBDOMAIN|
 |-U, --uri-scheme myurischeme[://]|Custom URI scheme used in the Branch Dashboard for this app|BRANCH_URI_SCHEME|
 |-s, --setting [BRANCH_KEY_SETTING]|Use a custom build setting for the Branch key (default: Use Info.plist)|BRANCH_SETTING|
-|--test-configurations config1,config2|List of configurations that use the test key with a custom build setting (default: Debug configurations)|BRANCH_TEST_CONFIGURATIONS|
+|--[no-]test-configurations [config1,config2]|List of configurations that use the test key with a custom build setting (default: Debug configurations)|BRANCH_TEST_CONFIGURATIONS|
 |--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|BRANCH_XCODEPROJ|
 |--target MyAppTarget|Name of a target to modify in the Xcode project|BRANCH_TARGET|
 |--podfile /path/to/Podfile|Path to the Podfile for the project|BRANCH_PODFILE|
@@ -149,6 +149,7 @@ See https://github.com/BranchMetrics/branch_io_cli#setup-command for more inform
 |--[no-]patch-source|Add Branch SDK calls to the AppDelegate (default: yes)|BRANCH_PATCH_SOURCE|
 |--commit [message]|Commit the results to Git|BRANCH_COMMIT|
 |--[no-]check-repo-changes|Check for uncommitted changes to a git repo (default: yes)|BRANCH_CHECK_REPO_CHANGES|
+|--[no-]confirm|Confirm configuration before proceeding (default: yes)|BRANCH_CONFIRM|
 
 
 #### Examples

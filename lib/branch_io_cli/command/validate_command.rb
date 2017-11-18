@@ -4,8 +4,8 @@ module BranchIOCLI
       def run!
         valid = true
 
-        unless options.domains.nil? || options.domains.empty?
-          domains_valid = helper.validate_project_domains(options.domains)
+        unless config.domains.nil? || config.domains.empty?
+          domains_valid = helper.validate_project_domains(config.domains)
 
           if domains_valid
             say "Project domains match :domains parameter: ✅"
@@ -27,7 +27,7 @@ module BranchIOCLI
 
         say "Universal Link configuration passed validation. ✅" if valid
 
-        valid
+        valid ? 0 : 1
       end
     end
   end

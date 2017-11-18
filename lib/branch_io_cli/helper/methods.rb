@@ -25,6 +25,11 @@ module BranchIOCLI
         status = output.log_command command
         raise CommandError, [%{Error executing "#{command}": #{status}.}, status] unless status.success?
       end
+
+      # Clear the screen and move the cursor to the top using highline
+      def clear
+        say "\e[2J\e[H"
+      end
     end
   end
 end

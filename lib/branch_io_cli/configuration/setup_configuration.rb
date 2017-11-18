@@ -3,6 +3,10 @@ module BranchIOCLI
     # rubocop: disable Metrics/ClassLength
     class SetupConfiguration < Configuration
       class << self
+        def summary
+          "Integrates the Branch SDK into a native app project"
+        end
+
         def examples
           {
             "Test without validation (can use dummy keys and domains)" => "branch_io setup -L key_live_xxxx -D myapp.app.link --no-validate",
@@ -34,7 +38,8 @@ module BranchIOCLI
               description: "Comma-separated list of custom domain(s) or non-Branch domain(s)",
               example: "example.com,www.example.com",
               type: Array,
-              aliases: "-D"
+              aliases: "-D",
+              confirm_symbol: :all_domains
             ),
             Option.new(
               name: :app_link_subdomain,
@@ -62,31 +67,41 @@ module BranchIOCLI
               description: "List of configurations that use the test key with a custom build setting (default: Debug configurations)",
               example: "config1,config2",
               type: Array,
-              negatable: true
+              negatable: true,
+              valid_values_proc: ->() { Configuration.current.xcodeproj.build_configurations.map(&:name) }
             ),
             Option.new(
               name: :xcodeproj,
               description: "Path to an Xcode project to update",
               example: "MyProject.xcodeproj",
-              type: String
+              type: String,
+              confirm_symbol: :xcodeproj_path,
+              validate_proc: ->(path) { Configuration.open_xcodeproj path }
             ),
             Option.new(
               name: :target,
               description: "Name of a target to modify in the Xcode project",
               example: "MyAppTarget",
-              type: String
+              type: String,
+              confirm_symbol: :target_name,
+              valid_values_proc: ->() { Configuration.current.xcodeproj.targets.map(&:name) }
             ),
             Option.new(
               name: :podfile,
               description: "Path to the Podfile for the project",
               example: "/path/to/Podfile",
-              type: String
+              type: String,
+              confirm_symbol: :podfile_path,
+              validate_proc: ->(path) { Configuration.open_podfile path }
             ),
             Option.new(
               name: :cartfile,
               description: "Path to the Cartfile for the project",
               example: "/path/to/Cartfile",
-              type: String
+              type: String,
+              confirm_symbol: :cartfile_path,
+              validate_proc: ->(path) { !path.nil? && File.exist?(path.to_s) },
+              convert_proc: ->(path) { Configuration.absolute_path(path.to_s) unless path.nil? }
             ),
             Option.new(
               name: :carthage_command,
@@ -137,6 +152,11 @@ module BranchIOCLI
               name: :check_repo_changes,
               description: "Check for uncommitted changes to a git repo",
               default_value: true
+            ),
+            Option.new(
+              name: :confirm,
+              description: "Confirm configuration before proceeding",
+              default_value: true
             )
           ]
         end
@@ -155,12 +175,19 @@ module BranchIOCLI
       attr_reader :keys
       attr_reader :all_domains
 
+      def initialize(options)
+        super
+        # Configuration has been validated and logged to the screen.
+        confirm_with_user if options.confirm
+      end
+
       def validate_options
         @validate = options.validate
         @patch_source = options.patch_source
         @add_sdk = options.add_sdk
         @force = options.force
         @commit = options.commit
+        @check_repo_changes = options.check_repo_changes
 
         say "--force is ignored when --no-validate is used." if !options.validate && options.force
         if options.cartfile && options.podfile
@@ -266,6 +293,7 @@ module BranchIOCLI
           key = ask "Please enter your #{type} Branch key or use --#{type}-key [enter for none]: "
         end
         @keys[type] = key unless key.empty?
+        instance_variable_set "@#{type}_key", key
       end
 
       def validate_all_domains(options, required = true)

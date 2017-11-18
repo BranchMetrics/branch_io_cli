@@ -215,8 +215,8 @@ module BranchIOCLI
           return unless config.pod_install_required?
           # Only if a Podfile is detected/supplied at the command line.
           say "pod install required in order to build."
-          install = ask %{Run "pod install" now (Y/n)? }
-          if install.downcase =~ /^n/
+          install = agree %{Run "pod install" now (Y/n)? }
+          if install == false
             say %{Please run "pod install" or "pod update" first in order to continue.}
             exit(-1)
           end
