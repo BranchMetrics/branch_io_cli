@@ -15,6 +15,8 @@ require "branch_io_cli/helper/methods"
 module BranchIOCLI
   module Helper
     module IOSHelper
+      include Methods
+
       APPLINKS = "applinks"
       ASSOCIATED_DOMAINS = "com.apple.developer.associated-domains"
       CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS"
@@ -713,8 +715,8 @@ EOF
           exit(-1)
         end
 
-        install = agree "'pod' command not available in PATH. Install cocoapods (may require a sudo password) (Y/n)? "
-        if install == false
+        install = confirm "'pod' command not available in PATH. Install cocoapods (may require a sudo password)?", true
+        unless install
           say "Please install cocoapods or use --no-add-sdk to continue."
           exit(-1)
         end
@@ -740,8 +742,8 @@ EOF
           exit(-1)
         end
 
-        install = agree "'carthage' command not available in PATH. Use Homebrew to install carthage (Y/n)? "
-        if install == false
+        install = confirm "'carthage' command not available in PATH. Use Homebrew to install carthage?", true
+        unless install
           say "Please install carthage or use --no-add-sdk to continue."
           exit(-1)
         end
@@ -761,8 +763,8 @@ EOF
           exit(-1)
         end
 
-        install = agree "'git' command not available in PATH. Install Xcode command-line tools (requires password) (Y/n)? "
-        if install == false
+        install = confirm "'git' command not available in PATH. Install Xcode command-line tools (requires password)?", true
+        unless install
           say "Please install Xcode command tools or leave out the --commit option to continue."
           exit(-1)
         end

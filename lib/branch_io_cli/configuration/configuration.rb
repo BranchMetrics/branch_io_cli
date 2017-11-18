@@ -2,8 +2,6 @@ require "cocoapods-core"
 require "pathname"
 require "xcodeproj"
 
-require "branch_io_cli/helper/methods"
-
 module BranchIOCLI
   module Configuration
     # rubocop: disable Metrics/ClassLength
@@ -395,11 +393,13 @@ EOF
 
       # Prompt the user to confirm the configuration or edit.
       def confirm_with_user
-        confirmed = agree "Is this OK (Y/n)? "
-        return unless confirmed == false
+        @util = Helper::Util.new
+
+        confirmed = @util.confirm "Is this OK? ", true
+        return if confirmed
 
         loop do
-          clear
+          @util.clear
 
           say "<%= color('The following options may be adjusted before continuing.', BOLD) %>"
           choice = choose do |menu|
@@ -413,7 +413,7 @@ EOF
             menu.prompt = "What would you like to do?"
           end
 
-          clear
+          @util.clear
 
           selected_sym = choice.sub(/:.*$/, '').gsub(/\s/, '_').downcase.to_sym
 
@@ -456,7 +456,7 @@ EOF
           end
           new_value = ask "Please enter one or more of the above, separated by commas: ", Array
         elsif option.type.nil?
-          new_value = agree "#{option.name.to_s.gsub(/_/, ' ').capitalize} (y/n)? "
+          new_value = @util.confirm "#{option.name.to_s.gsub(/_/, ' ').capitalize}? ", value
         else
           new_value = ask "Please enter a new value for #{option.name.to_s.gsub(/_/, ' ').capitalize}: ", option.type
         end

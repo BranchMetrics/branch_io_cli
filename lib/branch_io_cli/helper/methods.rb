@@ -30,8 +30,14 @@ module BranchIOCLI
       def clear
         say "\e[2J\e[H"
       end
+
+      # Ask a yes/no question with a default
+      def confirm(question, default_value)
+        yn_opts = default_value ? "Y/n" : "y/N"
+        value = ask "#{question} (#{yn_opts}) ", nil
+        return default_value if value.nil?
+        value
+      end
     end
   end
 end
-
-include BranchIOCLI::Helper::Methods
