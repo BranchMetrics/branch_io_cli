@@ -410,6 +410,7 @@ EOF
 
             menu.choice "Accept and continue"
             menu.choice "Quit"
+            menu.readline = true
             menu.prompt = "What would you like to do?"
           end
 
@@ -443,20 +444,21 @@ EOF
         valid_values = option.valid_values
 
         if valid_values && !option.type.nil? && option.type != Array
-          new_value = choose do |menu|
-            menu.answer_type = option.type
-            option.valid_values.each do |v|
-              menu.choice v
-            end
+          new_value = choose *valid_values do |menu|
+            menu.readline = true
             menu.prompt = "Please choose from this list. "
           end
 
           # Valid because chosen from list
         elsif valid_values && option.type == Array
+          # There seems to be a problem with using menu.gather, so we do this.
           valid_values.each do |v|
             say "#{v}\n"
           end
-          new_value = ask "Please enter one or more of the above, separated by commas: ", Array
+          new_value = ask "Please enter one or more of the above, separated by commas: " do |q|
+            q.readline = true
+            q.completion = valid_values
+          end.split(",") # comma-split with Array not working
         elsif option.type.nil?
           new_value = Helper::Util.confirm "#{option.label}? ", value
         else
