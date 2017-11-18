@@ -403,9 +403,9 @@ EOF
 
           say "<%= color('The following options may be adjusted before continuing.', BOLD) %>"
           choice = choose do |menu|
-            self.class.available_options.reject { |o| o.name == :confirm }.each do |option|
+            self.class.available_options.reject(&:skip_confirmation).each do |option|
               value = send option.confirm_symbol
-              menu.choice "#{option.name.to_s.gsub(/_/, ' ').capitalize}: #{option.display_value(value)}"
+              menu.choice "#{option.label}: #{option.display_value(value)}"
             end
 
             menu.choice "Accept and continue"
@@ -417,9 +417,7 @@ EOF
 
           print_identification
 
-          selected_sym = choice.sub(/:.*$/, '').gsub(/\s/, '_').downcase.to_sym
-
-          if (option = self.class.available_options.find { |o| o.name == selected_sym })
+          if (option = self.class.available_options.find { |o| choice =~ /^#{Regexp.quote(o.label)}/ })
             loop do
               break if prompt_for_option(option)
               say "Invalid value for option.\n\n"
@@ -434,7 +432,7 @@ EOF
       end
 
       def prompt_for_option(option)
-        say "<%= color('#{option.name.to_s.gsub(/_/, ' ').capitalize}', BOLD) %>\n\n"
+        say "<%= color('#{option.label}', BOLD) %>\n\n"
         say "#{option.description}\n\n"
         value = send option.confirm_symbol
         say "<%= color('Type', BOLD) %>: #{option.ui_type}\n"
@@ -460,9 +458,9 @@ EOF
           end
           new_value = ask "Please enter one or more of the above, separated by commas: ", Array
         elsif option.type.nil?
-          new_value = Helper::Util.confirm "#{option.name.to_s.gsub(/_/, ' ').capitalize}? ", value
+          new_value = Helper::Util.confirm "#{option.label}? ", value
         else
-          new_value = ask "Please enter a new value for #{option.name.to_s.gsub(/_/, ' ').capitalize}: ", option.type
+          new_value = ask "Please enter a new value for #{option.label}: ", option.type
         end
 
         new_value = option.convert new_value

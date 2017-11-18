@@ -14,6 +14,8 @@ module BranchIOCLI
       attr_accessor :valid_values_proc
       attr_accessor :validate_proc
       attr_accessor :convert_proc
+      attr_accessor :label
+      attr_accessor :skip_confirmation
 
       def initialize(options)
         @name = options[:name]
@@ -31,6 +33,8 @@ module BranchIOCLI
         @valid_values_proc = options[:valid_values_proc]
         @validate_proc = options[:validate_proc]
         @convert_proc = options[:convert_proc]
+        @label = options[:label] || @name.to_s.capitalize.gsub(/_/, ' ')
+        @skip_confirmation = options[:skip_confirmation]
 
         raise ArgumentError, "Use :validate_proc or :valid_values_proc, but not both." if @valid_values_proc && @validate_proc
 

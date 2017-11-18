@@ -45,14 +45,17 @@ module BranchIOCLI
               name: :app_link_subdomain,
               description: "Branch app.link subdomain, e.g. myapp for myapp.app.link",
               example: "myapp",
-              type: String
+              type: String,
+              label: "app.link subdomain",
+              skip_confirmation: true
             ),
             Option.new(
               name: :uri_scheme,
               description: "Custom URI scheme used in the Branch Dashboard for this app",
               example: "myurischeme[://]",
               type: String,
-              aliases: "-U"
+              aliases: "-U",
+              label: "URI scheme"
             ),
             Option.new(
               name: :setting,
@@ -60,11 +63,12 @@ module BranchIOCLI
               example: "BRANCH_KEY_SETTING",
               type: String,
               argument_optional: true,
-              aliases: "-s"
+              aliases: "-s",
+              label: "User-defined setting for Branch key"
             ),
             Option.new(
               name: :test_configurations,
-              description: "List of configurations that use the test key with a custom build setting (default: Debug configurations)",
+              description: "List of configurations that use the test key with a user-defined setting (default: Debug configurations)",
               example: "config1,config2",
               type: Array,
               negatable: true,
@@ -143,15 +147,17 @@ module BranchIOCLI
             ),
             Option.new(
               name: :commit,
-              description: "Commit the results to Git",
+              description: "Commit the results to Git if non-blank",
               type: String,
               example: "message",
-              argument_optional: true
+              argument_optional: true,
+              label: "Commit message"
             ),
             Option.new(
               name: :confirm,
               description: "Confirm configuration before proceeding",
-              default_value: true
+              default_value: true,
+              skip_confirmation: true
             )
           ]
         end

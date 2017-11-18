@@ -42,6 +42,11 @@ describe BranchIOCLI::Configuration::Option do
       option = OPTION_CLASS.new name: :foo
       expect(option.env_name).to eq "BRANCH_FOO"
     end
+
+    it 'sets the label to a default value' do
+      option = OPTION_CLASS.new name: :pod_repo_update
+      expect(option.label).to eq "Pod repo update"
+    end
   end
 
   describe '#valid_values' do
