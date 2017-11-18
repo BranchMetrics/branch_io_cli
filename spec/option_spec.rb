@@ -118,6 +118,11 @@ describe BranchIOCLI::Configuration::Option do
       option = OPTION_CLASS.new type: String
       expect(option.convert(" abc  ")).to eq "abc"
     end
+
+    it 'returns nil for an empty string' do
+      option = OPTION_CLASS.new type: String
+      expect(option.convert("")).to be_nil
+    end
   end
 
   describe '#valid?' do

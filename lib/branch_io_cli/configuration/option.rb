@@ -61,8 +61,9 @@ module BranchIOCLI
 
         if type == Array
           value = value.split(",") if value.kind_of?(String)
-        elsif type == String
-          value = value.strip if value.kind_of?(String)
+        elsif type == String && value.kind_of?(String)
+          value = value.strip
+          value = nil if value.empty?
         elsif type.nil?
           value = true if value.kind_of?(String) && value =~ /^(true|yes)$/i
           value = false if value.kind_of?(String) && value =~ /^(false|no)$/i
