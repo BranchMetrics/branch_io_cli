@@ -1,7 +1,7 @@
 module BranchIOCLI
   module Helper
     class Util
-      include Methods
+      extend Methods
     end
   end
 end
