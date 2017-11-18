@@ -39,7 +39,6 @@ task :setup do
     validate: true,
     pod_repo_update: false,
     setting: true,
-    check_repo_changes: false,
     confirm: false
   )
 end
