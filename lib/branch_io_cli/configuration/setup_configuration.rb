@@ -188,7 +188,6 @@ module BranchIOCLI
         @add_sdk = options.add_sdk
         @force = options.force
         @commit = options.commit
-        @check_repo_changes = options.check_repo_changes
 
         say "--force is ignored when --no-validate is used." if !options.validate && options.force
         if options.cartfile && options.podfile
