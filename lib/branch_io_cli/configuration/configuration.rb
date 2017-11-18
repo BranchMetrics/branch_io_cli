@@ -444,7 +444,7 @@ EOF
         valid_values = option.valid_values
 
         if valid_values && !option.type.nil? && option.type != Array
-          new_value = choose *valid_values do |menu|
+          new_value = choose(*valid_values) do |menu|
             menu.readline = true
             menu.prompt = "Please choose from this list. "
           end
@@ -455,6 +455,7 @@ EOF
           valid_values.each do |v|
             say "#{v}\n"
           end
+
           new_value = ask "Please enter one or more of the above, separated by commas: " do |q|
             q.readline = true
             q.completion = valid_values
