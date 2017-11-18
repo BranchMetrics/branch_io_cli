@@ -46,7 +46,7 @@ module Xcodeproj
         def fixed_build_settings
           {
             "SRCROOT" => ".",
-            "TARGET_NAME" => name.clone
+            "TARGET_NAME" => name
           }
         end
 
@@ -61,7 +61,7 @@ module Xcodeproj
         # @return [String, nil] The build setting value with all embedded settings expanded or nil if not found
         def expanded_build_setting(setting_name, configuration)
           fixed_setting = fixed_build_settings[setting_name]
-          return fixed_setting if fixed_setting
+          return fixed_setting.clone if fixed_setting
 
           # second arg true means if there is an xcconfig, also consult that
           begin
