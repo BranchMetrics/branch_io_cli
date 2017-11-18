@@ -41,6 +41,13 @@ module Xcodeproj
     module Object
       class PBXNativeTarget
         def expanded_build_setting(setting_name, configuration)
+          case setting_name
+          when "SRCROOT"
+            return "."
+          when "TARGET_NAME"
+            return name.clone
+          end
+
           # second arg true means if there is an xcconfig, also consult that
           begin
             setting_value = resolved_build_setting(setting_name, true)[configuration]
@@ -56,9 +63,6 @@ module Xcodeproj
 
         def expand_build_settings(string, configuration)
           search_position = 0
-          # It's safest to make a copy of this string, though we probably get a
-          # copy from PBXNativeTarget#resolve_build_setting anyway. Copying here
-          # avoids a copy on every match.
           string = string.clone
 
           # HACK: When matching against an xcconfig, as here, sometimes the macro is just returned
@@ -78,15 +82,7 @@ module Xcodeproj
               macro_name = original_macro
             end
 
-            case macro_name
-            when "SRCROOT"
-              expanded_macro = "."
-            when "TARGET_NAME"
-              # Clone in case of modifier processing
-              expanded_macro = name.clone
-            else
-              expanded_macro = expanded_build_setting(macro_name, configuration)
-            end
+            expanded_macro = expanded_build_setting(macro_name, configuration)
 
             search_position += original_macro.length + delimiter_length and next if expanded_macro.nil?
 
