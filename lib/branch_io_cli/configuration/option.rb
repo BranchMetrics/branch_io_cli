@@ -53,7 +53,7 @@ module BranchIOCLI
       end
 
       def env_value
-        ENV[env_name] if env_name
+        convert(ENV[env_name]) if env_name
       end
 
       def convert(value)

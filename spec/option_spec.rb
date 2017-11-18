@@ -84,6 +84,12 @@ describe BranchIOCLI::Configuration::Option do
       option = OPTION_CLASS.new env_name: false
       expect(option.env_value).to be_nil
     end
+
+    it 'converts the value' do
+      ENV["FOO"] = "YES"
+      option = OPTION_CLASS.new env_name: "FOO"
+      expect(option.env_value).to be true
+    end
   end
 
   describe '#convert' do
