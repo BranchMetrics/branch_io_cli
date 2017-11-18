@@ -340,7 +340,7 @@ EOF
         return @bridging_header_path if @bridging_header_path
 
         return nil unless target
-        path = helper.expanded_build_setting target, "SWIFT_OBJC_BRIDGING_HEADER", configuration
+        path = target.expanded_build_setting "SWIFT_OBJC_BRIDGING_HEADER", configuration
         return nil unless path
 
         @bridging_header_path = File.expand_path path, File.dirname(xcodeproj_path)

@@ -30,7 +30,7 @@ module BranchIOCLI
 
       def has_multiple_info_plists?
         config.xcodeproj.build_configurations.inject([]) do |files, c|
-          files + [expanded_build_setting(config.target, "INFOPLIST_FILE", c.name)]
+          files + [config.target.expanded_build_setting("INFOPLIST_FILE", c.name)]
         end.uniq.count > 1
       end
 
@@ -119,7 +119,7 @@ module BranchIOCLI
 
       def update_info_plist_setting(configuration = RELEASE_CONFIGURATION, &b)
         # find the Info.plist paths for this configuration
-        info_plist_path = expanded_build_setting config.target, "INFOPLIST_FILE", configuration
+        info_plist_path = config.target.expanded_build_setting "INFOPLIST_FILE", configuration
 
         raise "Info.plist not found for configuration #{configuration}" if info_plist_path.nil?
 
@@ -141,7 +141,7 @@ module BranchIOCLI
         project = config.xcodeproj
         target = config.target
 
-        relative_entitlements_path = expanded_build_setting target, CODE_SIGN_ENTITLEMENTS, configuration
+        relative_entitlements_path = target.expanded_build_setting CODE_SIGN_ENTITLEMENTS, configuration
         project_parent = File.dirname project.path
 
         if relative_entitlements_path.nil?
@@ -314,8 +314,8 @@ module BranchIOCLI
       def validate_team_and_bundle_ids(domain, configuration)
         target = config.target
 
-        product_bundle_identifier = expanded_build_setting target, PRODUCT_BUNDLE_IDENTIFIER, configuration
-        development_team = expanded_build_setting target, DEVELOPMENT_TEAM, configuration
+        product_bundle_identifier = target.expanded_build_setting PRODUCT_BUNDLE_IDENTIFIER, configuration
+        development_team = target.expanded_build_setting DEVELOPMENT_TEAM, configuration
 
         identifiers = app_ids_from_aasa_file domain
         return false if identifiers.nil?
@@ -382,7 +382,7 @@ module BranchIOCLI
         project = config.xcodeproj
         target = config.target
 
-        relative_entitlements_path = expanded_build_setting target, CODE_SIGN_ENTITLEMENTS, configuration
+        relative_entitlements_path = target.expanded_build_setting CODE_SIGN_ENTITLEMENTS, configuration
         return [] if relative_entitlements_path.nil?
 
         project_parent = File.dirname project.path
@@ -393,71 +393,6 @@ module BranchIOCLI
         raise "Failed to parse entitlements file #{entitlements_path}" if entitlements.nil?
 
         entitlements[ASSOCIATED_DOMAINS].select { |d| d =~ /^applinks:/ }.map { |d| d.sub(/^applinks:/, "") }
-      end
-
-      def expanded_build_setting(target, setting_name, configuration)
-        # second arg true means if there is an xcconfig, also consult that
-        begin
-          setting_value = target.resolved_build_setting(setting_name, true)[configuration]
-        rescue Errno::ENOENT
-          # If not found, look up without it
-          setting_value = target.resolved_build_setting(setting_name, false)[configuration]
-        end
-
-        return if setting_value.nil?
-
-        expand_build_settings setting_value, target, configuration
-      end
-
-      def expand_build_settings(string, target, configuration)
-        search_position = 0
-        # It's safest to make a copy of this string, though we probably get a
-        # copy from PBXNativeTarget#resolve_build_setting anyway. Copying here
-        # avoids a copy on every match.
-        string = string.clone
-
-        # HACK: When matching against an xcconfig, as here, sometimes the macro is just returned
-        # without delimiters, e.g. TARGET_NAME or BUILT_PRODUCTS_DIR/Branch.framework. We allow
-        # these two patterns for now.
-        while (matches = %r{\$\(([^(){}]*)\)|\$\{([^(){}]*)\}|^([A-Z_]+)(/.*)?$}.match(string, search_position))
-          original_macro = matches[1] || matches[2] || matches[3]
-          delimiter_length = matches[3] ? 0 : 3 # $() or ${}
-          delimiter_offset = matches[3] ? 0 : 2 # $( or ${
-          search_position = string.index(original_macro) - delimiter_offset
-
-          modifier_regexp = /^(.+):(.+)$/
-          if (matches = modifier_regexp.match original_macro)
-            macro_name = matches[1]
-            modifier = matches[2]
-          else
-            macro_name = original_macro
-          end
-
-          case macro_name
-          when "SRCROOT"
-            expanded_macro = "."
-          when "TARGET_NAME"
-            # Clone in case of modifier processing
-            expanded_macro = target.name.clone
-          else
-            expanded_macro = expanded_build_setting(target, macro_name, configuration)
-          end
-
-          search_position += original_macro.length + delimiter_length and next if expanded_macro.nil?
-
-          if modifier == "rfc1034identifier"
-            # From the Apple dev portal when creating a new app ID:
-            # You cannot use special characters such as @, &, *, ', "
-            # From trial and error with Xcode, it appears that only letters, digits and hyphens are allowed.
-            # Everything else becomes a hyphen, including underscores.
-            special_chars = /[^A-Za-z0-9-]/
-            expanded_macro.gsub!(special_chars, '-')
-          end
-
-          string.gsub!(/\$\(#{original_macro}\)|\$\{#{original_macro}\}|^#{original_macro}/, expanded_macro)
-          search_position += expanded_macro.length
-        end
-        string
       end
 
       def add_cocoapods(options)
