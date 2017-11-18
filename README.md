@@ -148,7 +148,6 @@ See https://github.com/BranchMetrics/branch_io_cli#setup-command for more inform
 |--[no-]add-sdk|Add the Branch framework to the project (default: yes)|BRANCH_ADD_SDK|
 |--[no-]patch-source|Add Branch SDK calls to the AppDelegate (default: yes)|BRANCH_PATCH_SOURCE|
 |--commit [message]|Commit the results to Git|BRANCH_COMMIT|
-|--[no-]check-repo-changes|Check for uncommitted changes to a git repo (default: yes)|BRANCH_CHECK_REPO_CHANGES|
 |--[no-]confirm|Confirm configuration before proceeding (default: yes)|BRANCH_CONFIRM|
 
 

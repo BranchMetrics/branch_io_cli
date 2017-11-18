@@ -149,11 +149,6 @@ module BranchIOCLI
               argument_optional: true
             ),
             Option.new(
-              name: :check_repo_changes,
-              description: "Check for uncommitted changes to a git repo",
-              default_value: true
-            ),
-            Option.new(
               name: :confirm,
               description: "Confirm configuration before proceeding",
               default_value: true
