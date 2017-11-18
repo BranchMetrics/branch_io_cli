@@ -58,7 +58,7 @@ module Xcodeproj
         #
         # @param setting_name [String] Name of any valid build setting for this target
         # @param configuration [String] Name of any valid configuration for this target
-        # @return [String] A copy of the build setting value with all embedded settings expanded
+        # @return [String, nil] The build setting value with all embedded settings expanded or nil if not found
         def expanded_build_setting(setting_name, configuration)
           fixed_setting = fixed_build_settings[setting_name]
           return fixed_setting if fixed_setting
@@ -79,7 +79,8 @@ module Xcodeproj
 
         # Recursively resolves build settings in any string for the given
         # configuration. This includes xcconfig expansion and handling for the
-        # :rfc1034identifier.
+        # :rfc1034identifier. Unresolved settings are passed unchanged, e.g.
+        # $(UNRESOLVED_SETTING_NAME).
         #
         # @param string [String] Any string that may include build settings to be resolved
         # @param configuration [String] Name of any valid configuration for this target
