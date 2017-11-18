@@ -1,46 +1,6 @@
 require "plist"
 require "xcodeproj"
 
-module Xcodeproj
-  class Project
-    # Local override to allow for user schemes.
-    #
-    # Get list of shared and user schemes in project
-    #
-    # @param [String] path
-    #         project path
-    #
-    # @return [Array]
-    #
-    def self.schemes(project_path)
-      base_dirs = [File.join(project_path, 'xcshareddata', 'xcschemes'),
-                   File.join(project_path, 'xcuserdata', "#{ENV['USER']}.xcuserdatad", 'xcschemes')]
-
-      # Take any .xcscheme file from base_dirs
-      schemes = base_dirs.inject([]) { |memo, dir| memo + Dir[File.join dir, '*.xcscheme'] }
-                         .map { |f| File.basename(f, '.xcscheme') }
-
-      # Include any scheme defined in the xcschememanagement.plist, if it exists.
-      base_dirs.map { |d| File.join d, 'xcschememanagement.plist' }
-               .select { |f| File.exist? f }.each do |plist_path|
-        plist = File.open(plist_path) { |f| ::Plist.parse_xml f }
-        scheme_user_state = plist["SchemeUserState"]
-        schemes += scheme_user_state.keys.map { |k| File.basename k, '.xcscheme' }
-      end
-
-      schemes.uniq!
-      if schemes.empty? && File.exist?(project_path)
-        # Open the project, get all targets. Add one scheme per target.
-        project = self.open project_path
-        schemes += project.targets.reject(&:test_target_type?).map(&:name)
-      elsif schemes.empty?
-        schemes << File.basename(project_path, '.xcodeproj')
-      end
-      schemes
-    end
-  end
-end
-
 module BranchIOCLI
   module Configuration
     # rubocop: disable Metrics/ClassLength
@@ -461,7 +421,7 @@ EOF
       def branch_key_setting_from_info_plist(config = configuration || "Release")
         return @branch_key_setting_from_info_plist if @branch_key_setting_from_info_plist
 
-        infoplist_path = helper.expanded_build_setting target, "INFOPLIST_FILE", config
+        infoplist_path = target.expanded_build_setting "INFOPLIST_FILE", config
         infoplist_path = File.expand_path infoplist_path, File.dirname(xcodeproj_path)
         info_plist = File.open(infoplist_path) { |f| Plist.parse_xml f }
         branch_key = info_plist["branch_key"]

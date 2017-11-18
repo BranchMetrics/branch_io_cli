@@ -59,9 +59,9 @@ module BranchIOCLI
           configuration = config.configuration || config.configurations_from_scheme.first
           configurations = config.configuration ? [config.configuration] : config.configurations_from_scheme
 
-          bundle_identifier = helper.expanded_build_setting config.target, "PRODUCT_BUNDLE_IDENTIFIER", configuration
-          dev_team = helper.expanded_build_setting config.target, "DEVELOPMENT_TEAM", configuration
-          entitlements_path = helper.expanded_build_setting config.target, "CODE_SIGN_ENTITLEMENTS", configuration
+          bundle_identifier = config.target.expanded_build_setting "PRODUCT_BUNDLE_IDENTIFIER", configuration
+          dev_team = config.target.expanded_build_setting "DEVELOPMENT_TEAM", configuration
+          entitlements_path = config.target.expanded_build_setting "CODE_SIGN_ENTITLEMENTS", configuration
 
           header += "\nTarget #{config.target.name}:\n"
           header += " Bundle identifier: #{bundle_identifier || '(none)'}\n"
@@ -73,7 +73,7 @@ module BranchIOCLI
 
           header += " Info.plist\n"
           configurations.each do |c|
-            header += "  #{c}: #{helper.expanded_build_setting config.target, 'INFOPLIST_FILE', c}\n"
+            header += "  #{c}: #{config.target.expanded_build_setting 'INFOPLIST_FILE', c}\n"
           end
 
           header += " Entitlements file: #{config.relative_path(entitlements_path) || '(none)'}\n"
@@ -153,7 +153,7 @@ module BranchIOCLI
 
           configurations.each do |configuration|
             report += " #{configuration}:\n"
-            infoplist_path = helper.expanded_build_setting config.target, "INFOPLIST_FILE", configuration
+            infoplist_path = config.target.expanded_build_setting "INFOPLIST_FILE", configuration
             infoplist_path = File.expand_path infoplist_path, File.dirname(config.xcodeproj_path)
 
             begin

@@ -88,7 +88,7 @@ module BranchIOCLI
         # If the git command is not installed, there's not much we can do.
         # Don't want to use verify_git here, which will insist on installing
         # the command. The logic of that method could change.
-        return if `which git`.empty? || !config.check_repo_changes
+        return if `which git`.empty? || !config.confirm
 
         unless Dir.exist? ".git"
           `git rev-parse --git-dir > /dev/null 2>&1`

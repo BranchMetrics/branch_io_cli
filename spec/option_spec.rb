@@ -42,6 +42,11 @@ describe BranchIOCLI::Configuration::Option do
       option = OPTION_CLASS.new name: :foo
       expect(option.env_name).to eq "BRANCH_FOO"
     end
+
+    it 'sets the label to a default value' do
+      option = OPTION_CLASS.new name: :pod_repo_update
+      expect(option.label).to eq "Pod repo update"
+    end
   end
 
   describe '#valid_values' do
@@ -137,6 +142,11 @@ describe BranchIOCLI::Configuration::Option do
       expect(option.valid?("a")).to be true
       expect(option.valid?("b")).to be true
       expect(option.valid?("c")).to be false
+    end
+
+    it 'accepts nil for all types' do
+      option = OPTION_CLASS.new type: String
+      expect(option.valid?(nil)).to be true
     end
 
     it 'checks all values of an Array argument' do

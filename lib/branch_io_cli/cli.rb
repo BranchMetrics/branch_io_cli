@@ -79,8 +79,9 @@ module BranchIOCLI
         args = option.aliases
         declaration = "--"
         declaration += "[no-]" if option.negatable
-        declaration += "#{option.name.to_s.gsub(/_/, '-')} "
+        declaration += option.name.to_s.gsub(/_/, '-')
         if option.example
+          declaration += " "
           declaration += "[" if option.argument_optional
           declaration += option.example
           declaration += "]" if option.argument_optional
@@ -96,6 +97,7 @@ module BranchIOCLI
 
         default_string = default_value ? " (default: #{default_value})" : nil
         args << "#{option.description}#{default_string}"
+
         c.option(*args)
       end
     end

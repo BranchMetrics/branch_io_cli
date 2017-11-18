@@ -68,7 +68,8 @@ module BranchIOCLI
 
         Configuration.current = self
 
-        print_identification self.class.name.sub(/^.*::(.*?)Configuration$/, '\1').downcase
+        say "\n"
+        print_identification
         validate_options
         log
       end
@@ -85,10 +86,9 @@ EOF
         # subclass implementation follows
       end
 
-      def print_identification(command)
+      def print_identification
         say <<EOF
-
-<%= color("branch_io #{command} v. #{VERSION}", BOLD) %>
+<%= color("branch_io #{self.class.name.sub(/^.*::(.*?)Configuration$/, '\1').downcase} v. #{VERSION}", BOLD) %>
 
 EOF
       end
@@ -340,7 +340,7 @@ EOF
         return @bridging_header_path if @bridging_header_path
 
         return nil unless target
-        path = helper.expanded_build_setting target, "SWIFT_OBJC_BRIDGING_HEADER", configuration
+        path = target.expanded_build_setting "SWIFT_OBJC_BRIDGING_HEADER", configuration
         return nil unless path
 
         @bridging_header_path = File.expand_path path, File.dirname(xcodeproj_path)
@@ -399,11 +399,13 @@ EOF
         loop do
           Helper::Util.clear
 
+          print_identification
+
           say "<%= color('The following options may be adjusted before continuing.', BOLD) %>"
           choice = choose do |menu|
-            self.class.available_options.reject { |o| o.name == :confirm }.each do |option|
+            self.class.available_options.reject(&:skip_confirmation).each do |option|
               value = send option.confirm_symbol
-              menu.choice "#{option.name.to_s.gsub(/_/, ' ').capitalize}: #{option.display_value(value)}"
+              menu.choice "#{option.label}: #{option.display_value(value)}"
             end
 
             menu.choice "Accept and continue"
@@ -413,9 +415,9 @@ EOF
 
           Helper::Util.clear
 
-          selected_sym = choice.sub(/:.*$/, '').gsub(/\s/, '_').downcase.to_sym
+          print_identification
 
-          if (option = self.class.available_options.find { |o| o.name == selected_sym })
+          if (option = self.class.available_options.find { |o| choice =~ /^#{Regexp.quote(o.label)}/ })
             loop do
               break if prompt_for_option(option)
               say "Invalid value for option.\n\n"
@@ -430,11 +432,13 @@ EOF
       end
 
       def prompt_for_option(option)
-        say "<%= color('#{option.name.to_s.gsub(/_/, ' ').capitalize}', BOLD) %>\n\n"
+        say "<%= color('#{option.label}', BOLD) %>\n\n"
         say "#{option.description}\n\n"
         value = send option.confirm_symbol
         say "<%= color('Type', BOLD) %>: #{option.ui_type}\n"
-        say "<%= color('Current value', BOLD) %>: #{option.display_value(value)}\n\n"
+        say "<%= color('Current value', BOLD) %>: #{option.display_value(value)}"
+        say "<%= color('Example', BOLD) %>: #{option.example}" if option.example
+        say "\n"
 
         valid_values = option.valid_values
 
@@ -454,9 +458,9 @@ EOF
           end
           new_value = ask "Please enter one or more of the above, separated by commas: ", Array
         elsif option.type.nil?
-          new_value = Helper::Util.confirm "#{option.name.to_s.gsub(/_/, ' ').capitalize}? ", value
+          new_value = Helper::Util.confirm "#{option.label}? ", value
         else
-          new_value = ask "Please enter a new value for #{option.name.to_s.gsub(/_/, ' ').capitalize}: ", option.type
+          new_value = ask "Please enter a new value for #{option.label}: ", option.type
         end
 
         new_value = option.convert new_value
