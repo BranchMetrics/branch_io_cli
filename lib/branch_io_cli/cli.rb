@@ -79,7 +79,7 @@ module BranchIOCLI
         args = option.aliases
         declaration = "--"
         declaration += "[no-]" if option.negatable
-        declaration += "#{option.name.to_s.gsub(/_/, '-')}"
+        declaration += option.name.to_s.gsub(/_/, '-')
         if option.example
           declaration += " "
           declaration += "[" if option.argument_optional
