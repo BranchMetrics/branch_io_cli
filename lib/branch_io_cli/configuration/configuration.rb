@@ -68,7 +68,8 @@ module BranchIOCLI
 
         Configuration.current = self
 
-        print_identification self.class.name.sub(/^.*::(.*?)Configuration$/, '\1').downcase
+        say "\n"
+        print_identification
         validate_options
         log
       end
@@ -85,10 +86,9 @@ EOF
         # subclass implementation follows
       end
 
-      def print_identification(command)
+      def print_identification
         say <<EOF
-
-<%= color("branch_io #{command} v. #{VERSION}", BOLD) %>
+<%= color("branch_io #{self.class.name.sub(/^.*::(.*?)Configuration$/, '\1').downcase} v. #{VERSION}", BOLD) %>
 
 EOF
       end
@@ -399,6 +399,8 @@ EOF
         loop do
           Helper::Util.clear
 
+          print_identification
+
           say "<%= color('The following options may be adjusted before continuing.', BOLD) %>"
           choice = choose do |menu|
             self.class.available_options.reject { |o| o.name == :confirm }.each do |option|
@@ -412,6 +414,8 @@ EOF
           end
 
           Helper::Util.clear
+
+          print_identification
 
           selected_sym = choice.sub(/:.*$/, '').gsub(/\s/, '_').downcase.to_sym
 
