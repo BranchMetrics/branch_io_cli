@@ -35,7 +35,12 @@ module BranchIOCLI
       def confirm(question, default_value)
         yn_opts = default_value ? "Y/n" : "y/N"
         value = ask "#{question} (#{yn_opts}) ", nil
-        return default_value if value.nil?
+
+        # Convert to true/false
+        dummy_option = Configuration::Option.new({})
+        value = dummy_option.convert(value)
+
+        return default_value if value.nil? || value.kind_of?(String)
         value
       end
     end
