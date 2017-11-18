@@ -65,8 +65,8 @@ module BranchIOCLI
           value = value.strip
           value = nil if value.empty?
         elsif type.nil?
-          value = true if value.kind_of?(String) && value =~ /^(true|yes)$/i
-          value = false if value.kind_of?(String) && value =~ /^(false|no)$/i
+          value = true if value.kind_of?(String) && value =~ /^[ty]/i
+          value = false if value.kind_of?(String) && value =~ /^[fn]/i
         end
 
         value

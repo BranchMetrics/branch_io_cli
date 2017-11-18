@@ -6,6 +6,8 @@ module BranchIOCLI
   module Helper
     class ReportHelper
       class << self
+        include Methods
+
         def report_imports
           report = "Branch imports:\n"
           config.branch_imports.each_key do |path|
@@ -215,9 +217,10 @@ module BranchIOCLI
           return unless config.pod_install_required?
           # Only if a Podfile is detected/supplied at the command line.
           say "pod install required in order to build."
-          install = agree %{Run "pod install" now (Y/n)? }
-          if install == false
-            say %{Please run "pod install" or "pod update" first in order to continue.}
+          install = confirm 'Run "pod install" now?', true
+
+          unless install
+            say 'Please run "pod install" or "pod update" first in order to continue.'
             exit(-1)
           end
 

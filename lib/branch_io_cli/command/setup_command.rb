@@ -1,8 +1,10 @@
-require "branch_io_cli/helper/methods"
+require "branch_io_cli/helper"
 
 module BranchIOCLI
   module Command
     class SetupCommand < Command
+      include Helper::Methods
+
       def initialize(options)
         super
         @keys = config.keys
