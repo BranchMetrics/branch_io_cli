@@ -85,7 +85,7 @@ module BranchIOCLI
       def valid?(value)
         return validate_proc.call(value) if validate_proc
 
-        return true if value.nil? && argument_optional
+        return true if value.nil?
 
         if valid_values && type != Array
           valid_values.include? value

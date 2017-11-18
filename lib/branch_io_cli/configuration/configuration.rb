@@ -438,7 +438,9 @@ EOF
         say "#{option.description}\n\n"
         value = send option.confirm_symbol
         say "<%= color('Type', BOLD) %>: #{option.ui_type}\n"
-        say "<%= color('Current value', BOLD) %>: #{option.display_value(value)}\n\n"
+        say "<%= color('Current value', BOLD) %>: #{option.display_value(value)}"
+        say "<%= color('Example', BOLD) %>: #{option.example}" if option.example
+        say "\n"
 
         valid_values = option.valid_values
 

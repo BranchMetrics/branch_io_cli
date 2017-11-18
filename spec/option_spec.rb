@@ -139,8 +139,8 @@ describe BranchIOCLI::Configuration::Option do
       expect(option.valid?("c")).to be false
     end
 
-    it 'accepts nil if argument_optional is set' do
-      option = OPTION_CLASS.new type: String, argument_optional: true
+    it 'accepts nil for all types' do
+      option = OPTION_CLASS.new type: String
       expect(option.valid?(nil)).to be true
     end
 
