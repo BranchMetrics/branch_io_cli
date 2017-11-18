@@ -148,4 +148,22 @@ describe BranchIOCLI::Configuration::Option do
       expect(option.valid?("foo")).to be false
     end
   end
+
+  describe '#display_value' do
+    it 'returns yes and no when type is nil' do
+      option = OPTION_CLASS.new({})
+      expect(option.display_value(true)).to eq "yes"
+      expect(option.display_value(false)).to eq "no"
+    end
+
+    it 'converts to a string for other types' do
+      option = OPTION_CLASS.new(type: Integer)
+      expect(option.display_value(1)).to eq "1"
+    end
+
+    it 'returns "(none)" for nil' do
+      option = OPTION_CLASS.new(type: String)
+      expect(option.display_value(nil)).to eq "(none)"
+    end
+  end
 end

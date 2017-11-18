@@ -405,7 +405,7 @@ EOF
           choice = choose do |menu|
             self.class.available_options.reject { |o| o.name == :confirm }.each do |option|
               value = send option.confirm_symbol
-              menu.choice "#{option.name.to_s.gsub(/_/, ' ').capitalize}: #{value.nil? ? '(none)' : value}"
+              menu.choice "#{option.name.to_s.gsub(/_/, ' ').capitalize}: #{option.display_value(value)}"
             end
 
             menu.choice "Accept and continue"
@@ -436,7 +436,7 @@ EOF
         say "#{option.description}\n\n"
         value = send option.confirm_symbol
         say "<%= color('Type', BOLD) %>: #{option.ui_type}\n"
-        say "<%= color('Current value', BOLD) %>: #{value.nil? ? '(none)' : value}\n\n"
+        say "<%= color('Current value', BOLD) %>: #{option.display_value(value)}\n\n"
 
         valid_values = option.valid_values
 

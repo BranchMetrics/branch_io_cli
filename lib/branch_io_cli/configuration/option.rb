@@ -71,6 +71,16 @@ module BranchIOCLI
         value
       end
 
+      def display_value(value)
+        if type.nil?
+          value ? "yes" : "no"
+        elsif value.nil?
+          "(none)"
+        else
+          value.to_s
+        end
+      end
+
       def valid?(value)
         return validate_proc.call(value) if validate_proc
 
