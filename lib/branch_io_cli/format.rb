@@ -1,5 +1,6 @@
 require "branch_io_cli/format/highline_format"
 require "branch_io_cli/format/markdown_format"
+require "branch_io_cli/format/shell_format"
 
 module BranchIOCLI
   module Format

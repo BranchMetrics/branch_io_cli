@@ -86,4 +86,19 @@ task "readme" do
     text: text,
     mode: :replace
   ).apply File.expand_path("../README.md", __FILE__)
+
+  Rake::Task["completions"].invoke
+end
+
+desc "Generate completion scripts"
+task "completions" do
+  require "erb"
+  include BranchIOCLI::Format::ShellFormat
+
+  %w(bash zsh).each do |shell|
+    template = File.expand_path(File.join("..", "lib", "assets", "templates", "completion.#{shell}.erb"), __FILE__)
+    script = File.expand_path(File.join("..", "lib", "assets", "completions", "completion.#{shell}"), __FILE__)
+    output = ERB.new(File.read(template)).result binding
+    File.write script, output
+  end
 end

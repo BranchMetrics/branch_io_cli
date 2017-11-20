@@ -1,0 +1,13 @@
+#!/bin/zsh
+# This file is generated. Run rake readme to regenerate it.
+
+_branch_io_complete() {
+  local word opts
+  word="$1"
+  opts="-h --help -t --trace -v --version"
+  <%= %(opts = "$opts #{options_for_command 'setup'}") %>
+
+  reply=( "${(ps: :)opts}" )
+}
+
+compctl -K _branch_io_complete branch_io
