@@ -4,7 +4,7 @@ module BranchIOCLI
       include Format
 
       def option(opt)
-        o = @configuration.available_options.find { |o| o.name == opt.to_sym }
+        o = @configuration.available_options.find { |o1| o1.name == opt.to_sym }
 
         cli_opt = opt.to_s.gsub(/_/, '-')
 
