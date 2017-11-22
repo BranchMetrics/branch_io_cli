@@ -198,12 +198,13 @@ module BranchIOCLI
 
           unless config.target.extension_target_type?
             begin
-              # This isn't likely to vary by configuration, so just report for one, either
-              # whatever was passed or Release.
-              domains = helper.domains_from_project config.configuration || config.configurations_from_scheme.first
-              report += " Universal Link domains (entitlements):\n"
-              domains.each do |domain|
-                report += "  #{domain}\n"
+              configurations = config.configuration ? [config.configuration] : config.configurations_from_scheme
+              configurations.each do |configuration|
+                domains = helper.domains_from_project configuration
+                report += " Universal Link domains (entitlements:#{configuration}):\n"
+                domains.each do |domain|
+                  report += "  #{domain}\n"
+                end
               end
             rescue StandardError => e
               report += " (Failed to get Universal Link domains from entitlements file: #{e.message})\n"
