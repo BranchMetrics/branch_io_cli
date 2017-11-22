@@ -31,6 +31,12 @@ module BranchIOCLI
               description: "Name of a target to validate in the Xcode project",
               type: String,
               example: "MyAppTarget"
+            ),
+            Option.new(
+              name: :configurations,
+              description: "Comma-separated list of configurations to validate (default: all)",
+              type: Array,
+              example: "Debug,Release"
             )
           ]
         end

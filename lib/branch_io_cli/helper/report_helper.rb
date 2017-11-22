@@ -61,7 +61,6 @@ module BranchIOCLI
 
           bundle_identifier = config.target.expanded_build_setting "PRODUCT_BUNDLE_IDENTIFIER", configuration
           dev_team = config.target.expanded_build_setting "DEVELOPMENT_TEAM", configuration
-          entitlements_path = config.target.expanded_build_setting "CODE_SIGN_ENTITLEMENTS", configuration
 
           header += "\nTarget #{config.target.name}:\n"
           header += " Bundle identifier: #{bundle_identifier || '(none)'}\n"
@@ -76,7 +75,10 @@ module BranchIOCLI
             header += "  #{c}: #{config.target.expanded_build_setting 'INFOPLIST_FILE', c}\n"
           end
 
-          header += " Entitlements file: #{config.relative_path(entitlements_path) || '(none)'}\n"
+          header += " Entitlements file\n"
+          configurations.each do |c|
+            header += "  #{c}: #{config.target.expanded_build_setting 'CODE_SIGN_ENTITLEMENTS', c}\n"
+          end
 
           if config.podfile_path
             begin

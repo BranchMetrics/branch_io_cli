@@ -45,8 +45,12 @@ module BranchIOCLI
         helper.add_branch_universal_link_domains_to_info_plist @domains if is_app_target
         helper.ensure_uri_scheme_in_info_plist if is_app_target # does nothing if already present
 
-        new_path = helper.add_universal_links_to_project @domains, false if is_app_target
-        sh ["git", "add", new_path] if config.commit && new_path
+        if is_app_target
+          config.xcodeproj.build_configurations.each do |c|
+            new_path = helper.add_universal_links_to_project @domains, false, c.name
+            sh ["git", "add", new_path] if config.commit && new_path
+          end
+        end
 
         config_helper.target.add_system_frameworks config.frameworks unless config.frameworks.nil? || config.frameworks.empty?
 

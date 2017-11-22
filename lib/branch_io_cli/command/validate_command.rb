@@ -4,28 +4,38 @@ module BranchIOCLI
       def run!
         valid = true
 
-        unless config.domains.nil? || config.domains.empty?
-          domains_valid = helper.validate_project_domains(config.domains)
+        configurations = config.configurations || config.xcodeproj.build_configurations.map(&:name)
 
-          if domains_valid
-            say "Project domains match :domains parameter: ✅"
-          else
-            say "Project domains do not match specified :domains"
+        configurations.each do |configuration|
+          say "Validating #{configuration} configuration"
+
+          config_valid = true
+
+          unless config.domains.blank?
+            domains_valid = helper.validate_project_domains(config.domains, configuration)
+
+            if domains_valid
+              say " Project domains match :domains parameter: ✅"
+            else
+              say " Project domains do not match specified :domains"
+              helper.errors.each { |error| say "  #{error}" }
+            end
+
+            config_valid &&= domains_valid
+          end
+
+          entitlements_valid = helper.validate_team_and_bundle_ids_from_aasa_files [], false, configuration
+          unless entitlements_valid
+            say "Universal Link configuration failed validation for #{configuration} configuration."
             helper.errors.each { |error| say " #{error}" }
           end
 
-          valid &&= domains_valid
+          config_valid &&= entitlements_valid
+
+          say "Universal Link configuration passed validation for #{configuration} configuration. ✅" if config_valid
+
+          valid &&= config_valid
         end
-
-        configuration_valid = helper.validate_team_and_bundle_ids_from_aasa_files
-        unless configuration_valid
-          say "Universal Link configuration failed validation."
-          helper.errors.each { |error| say " #{error}" }
-        end
-
-        valid &&= configuration_valid
-
-        say "Universal Link configuration passed validation. ✅" if valid
 
         valid ? 0 : 1
       end
