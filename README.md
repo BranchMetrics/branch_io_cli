@@ -245,10 +245,11 @@ See https://github.com/BranchMetrics/branch_io_cli#validate-command for more inf
 branch_io report [OPTIONS]
 ```
 
-_Work in progress_
-
 This command optionally cleans and then builds a workspace or project, generating a verbose
 report with additional diagnostic information suitable for opening a support ticket.
+
+Use the `--header-only` option to output only a brief diagnostic report without
+building.
 
 
 #### Options
