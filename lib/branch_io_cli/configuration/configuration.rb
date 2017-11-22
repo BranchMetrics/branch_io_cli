@@ -359,7 +359,7 @@ EOF
         return @branch_imports if @branch_imports
 
         source_files = target.source_build_phase.files.map { |f| f.file_ref.real_path.to_s }
-        source_files << bridging_header_path if bridging_header_path
+        source_files << bridging_header_path if bridging_header_path && File.exist?(bridging_header_path)
         @branch_imports = source_files.compact.map do |f|
           imports = branch_imports_from_file f
           next {} if imports.empty?
@@ -377,6 +377,10 @@ EOF
           imports << "#{line_no}: #{line.chomp}"
         end
         imports
+      rescue StandardError
+        # Quietly ignore anything that can't be opened for now.
+        # TODO: Get these errors into report output.
+        []
       end
 
       def method_missing(method_sym, *arguments, &block)
