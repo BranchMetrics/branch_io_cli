@@ -7,7 +7,8 @@ module BranchIOCLI
       extend PatternPatch::Methods
 
       # Set the patch_dir for PatternPatch
-      @patch_dir = File.expand_path(File.join('..', '..', '..', 'assets', 'patches'), __FILE__)
+      self.patch_dir = File.expand_path(File.join('..', '..', '..', 'assets', 'patches'), __FILE__)
+      self.trim_mode = "<>"
 
       class << self
         def config
