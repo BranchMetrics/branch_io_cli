@@ -18,6 +18,9 @@ task default: [:spec, :rubocop]
 # Example tasks
 #
 
+desc "Run setup, validate, report and report:full in order"
+task all: [:setup, :validate, :report, "report:full"]
+
 IOS_REPO_DIR = File.expand_path "../../ios-branch-deep-linking", __FILE__
 
 def all_projects
