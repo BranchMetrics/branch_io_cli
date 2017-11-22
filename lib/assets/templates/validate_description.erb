@@ -9,10 +9,16 @@ Only app targets are supported for this command. By default, it will validate th
 If your project has multiple app targets, specify the <%= option :target %> option to validate other
 targets.
 
-All parameters are optional. If <%= option :domains %> is specified, the list of Universal Link domains in
-the Associated Domains entitlement must exactly match this list, without regard to order. If
-no <%= option :domains %> are provided, validation passes if at least one Universal Link domain is
-configured and passes validation, and no Universal Link domain is present that does not pass
-validation.
+By default, all build configurations in the project are validated. To validate a different list
+of configurations, including a single configuration, specify the <%= option :configurations %> option.
+
+If <%= option :domains %> is specified, the list of Universal Link domains in the Associated
+Domains entitlement must exactly match this list, without regard to order, for all
+configurations under validation. If no <%= option :domains %> are provided, validation passes
+if at least one Universal Link domain is configured for each configuration and passes
+validation, and no Universal Link domain is present in anyconfiguration that does not
+pass validation.
+
+All parameters are optional.
 
 See https://github.com/BranchMetrics/branch_io_cli#validate-command for more information.

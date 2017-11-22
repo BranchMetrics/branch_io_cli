@@ -31,6 +31,12 @@ module BranchIOCLI
               description: "Name of a target to validate in the Xcode project",
               type: String,
               example: "MyAppTarget"
+            ),
+            Option.new(
+              name: :configurations,
+              description: "Comma-separated list of configurations to validate (default: all)",
+              type: Array,
+              example: "Debug,Release"
             )
           ]
         end
@@ -52,6 +58,7 @@ module BranchIOCLI
 <%= color('Xcode project:', BOLD) %> #{xcodeproj_path}
 <%= color('Target:', BOLD) %> #{target.name}
 <%= color('Domains:', BOLD) %> #{domains || '(none)'}
+<%= color('Configurations:', BOLD) %> #{(configurations || xcodeproj.build_configurations.map(&:name)).join(',')}
 EOF
       end
     end

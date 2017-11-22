@@ -208,11 +208,17 @@ Only app targets are supported for this command. By default, it will validate th
 If your project has multiple app targets, specify the `--target` option to validate other
 targets.
 
-All parameters are optional. If `--domains` is specified, the list of Universal Link domains in
-the Associated Domains entitlement must exactly match this list, without regard to order. If
-no `--domains` are provided, validation passes if at least one Universal Link domain is
-configured and passes validation, and no Universal Link domain is present that does not pass
-validation.
+By default, all build configurations in the project are validated. To validate a different list
+of configurations, including a single configuration, specify the `--configurations` option.
+
+If `--domains` is specified, the list of Universal Link domains in the Associated
+Domains entitlement must exactly match this list, without regard to order, for all
+configurations under validation. If no `--domains` are provided, validation passes
+if at least one Universal Link domain is configured for each configuration and passes
+validation, and no Universal Link domain is present in anyconfiguration that does not
+pass validation.
+
+All parameters are optional.
 
 See https://github.com/BranchMetrics/branch_io_cli#validate-command for more information.
 
@@ -227,6 +233,7 @@ See https://github.com/BranchMetrics/branch_io_cli#validate-command for more inf
 |-D, --domains example.com,www.example.com|Comma-separated list of domains to validate (Branch domains or non-Branch domains) (default: [])|BRANCH_DOMAINS|
 |--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|BRANCH_XCODEPROJ|
 |--target MyAppTarget|Name of a target to validate in the Xcode project|BRANCH_TARGET|
+|--configurations Debug,Release|Comma-separated list of configurations to validate (default: all)|BRANCH_CONFIGURATIONS|
 
 
 

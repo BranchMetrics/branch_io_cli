@@ -61,7 +61,6 @@ module BranchIOCLI
 
           bundle_identifier = config.target.expanded_build_setting "PRODUCT_BUNDLE_IDENTIFIER", configuration
           dev_team = config.target.expanded_build_setting "DEVELOPMENT_TEAM", configuration
-          entitlements_path = config.target.expanded_build_setting "CODE_SIGN_ENTITLEMENTS", configuration
 
           header += "\nTarget #{config.target.name}:\n"
           header += " Bundle identifier: #{bundle_identifier || '(none)'}\n"
@@ -76,7 +75,10 @@ module BranchIOCLI
             header += "  #{c}: #{config.target.expanded_build_setting 'INFOPLIST_FILE', c}\n"
           end
 
-          header += " Entitlements file: #{config.relative_path(entitlements_path) || '(none)'}\n"
+          header += " Entitlements file\n"
+          configurations.each do |c|
+            header += "  #{c}: #{config.target.expanded_build_setting 'CODE_SIGN_ENTITLEMENTS', c}\n"
+          end
 
           if config.podfile_path
             begin
@@ -196,12 +198,13 @@ module BranchIOCLI
 
           unless config.target.extension_target_type?
             begin
-              # This isn't likely to vary by configuration, so just report for one, either
-              # whatever was passed or Release.
-              domains = helper.domains_from_project config.configuration || config.configurations_from_scheme.first
-              report += " Universal Link domains (entitlements):\n"
-              domains.each do |domain|
-                report += "  #{domain}\n"
+              configurations = config.configuration ? [config.configuration] : config.configurations_from_scheme
+              configurations.each do |configuration|
+                domains = helper.domains_from_project configuration
+                report += " Universal Link domains (entitlements:#{configuration}):\n"
+                domains.each do |domain|
+                  report += "  #{domain}\n"
+                end
               end
             rescue StandardError => e
               report += " (Failed to get Universal Link domains from entitlements file: #{e.message})\n"

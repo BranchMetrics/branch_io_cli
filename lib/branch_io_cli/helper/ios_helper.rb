@@ -392,7 +392,10 @@ module BranchIOCLI
         entitlements = File.open(entitlements_path) { |f| Plist.parse_xml f }
         raise "Failed to parse entitlements file #{entitlements_path}" if entitlements.nil?
 
-        entitlements[ASSOCIATED_DOMAINS].select { |d| d =~ /^applinks:/ }.map { |d| d.sub(/^applinks:/, "") }
+        associated_domains = entitlements[ASSOCIATED_DOMAINS]
+        return [] if associated_domains.nil?
+
+        associated_domains.select { |d| d =~ /^applinks:/ }.map { |d| d.sub(/^applinks:/, "") }
       end
 
       def add_cocoapods(options)
