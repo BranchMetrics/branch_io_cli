@@ -214,6 +214,10 @@ no `--domains` are provided, validation passes if at least one Universal Link do
 configured and passes validation, and no Universal Link domain is present that does not pass
 validation.
 
+By default, all build configurations in the project are validated. To validate a different list
+of configurations, including a single configuration, specify the `--configurations`
+option.
+
 See https://github.com/BranchMetrics/branch_io_cli#validate-command for more information.
 
 

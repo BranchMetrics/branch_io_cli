@@ -58,6 +58,7 @@ module BranchIOCLI
 <%= color('Xcode project:', BOLD) %> #{xcodeproj_path}
 <%= color('Target:', BOLD) %> #{target.name}
 <%= color('Domains:', BOLD) %> #{domains || '(none)'}
+<%= color('Configurations:', BOLD) %> #{(configurations || xcodeproj.build_configurations.map(&:name)).join(',')}
 EOF
       end
     end
