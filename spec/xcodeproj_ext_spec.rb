@@ -29,10 +29,10 @@ describe 'Xcodeproj extensions' do
       expect(target.expanded_build_setting("SETTING_WITH_NESTED_VALUE", "Release")).to eq "value"
     end
 
-    it "expands the first component of a path as a setting if all-caps" do
-      expect(target).to receive(:resolved_build_setting).with("SETTING_WITH_NESTED_VALUE", true) { { "Release" => "SETTING_VALUE/file.txt" } }
-      expect(target).to receive(:resolved_build_setting).with("SETTING_VALUE", true) { { "Release" => "value" } }
-      expect(target.expanded_build_setting("SETTING_WITH_NESTED_VALUE", "Release")).to eq "value/file.txt"
+    it "expands any component of a path as a setting if all-caps" do
+      expect(target).to receive(:resolved_build_setting).with("SETTING_WITH_NESTED_VALUE", true) { { "Release" => "SETTING_VALUE/SETTING_VALUE/file.txt" } }
+      expect(target).to receive(:resolved_build_setting).with("SETTING_VALUE", true).at_least(:once) { { "Release" => "value" } }
+      expect(target.expanded_build_setting("SETTING_WITH_NESTED_VALUE", "Release")).to eq "value/value/file.txt"
     end
 
     it "resolves without an xcconfig if the xcconfig is not found" do

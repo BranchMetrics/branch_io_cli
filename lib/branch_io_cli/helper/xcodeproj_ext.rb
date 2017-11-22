@@ -95,13 +95,10 @@ module Xcodeproj
           search_position = 0
           string = string.clone
 
-          # HACK: When matching against an xcconfig, as here, sometimes the macro is just returned
-          # without delimiters, e.g. TARGET_NAME or BUILT_PRODUCTS_DIR/Branch.framework. We allow
-          # these two patterns for now.
-          while (matches = %r{\$\(([^(){}]*)\)|\$\{([^(){}]*)\}|^([A-Z_]+)(/.*)?$}.match(string, search_position))
-            original_macro = matches[1] || matches[2] || matches[3]
-            delimiter_length = matches[3] ? 0 : 3 # $() or ${}
-            delimiter_offset = matches[3] ? 0 : 2 # $( or ${
+          while (matches = /\$\(([^(){}]*)\)|\$\{([^(){}]*)\}/.match(string, search_position))
+            original_macro = matches[1] || matches[2]
+            delimiter_length = 3 # $() or ${}
+            delimiter_offset = 2 # $( or ${
             search_position = string.index(original_macro) - delimiter_offset
 
             if (m = /^(.+):(.+)$/.match original_macro)
@@ -124,6 +121,15 @@ module Xcodeproj
             string.gsub!(/\$\(#{original_macro}\)|\$\{#{original_macro}\}|^#{original_macro}/, expanded_macro)
             search_position += expanded_macro.length
           end
+
+          # HACK: When matching against an xcconfig, as here, sometimes the macro is just returned
+          # without delimiters, e.g. TARGET_NAME or PROJECT_DIR/PROJECT_NAME/BridgingHeader.h. We allow
+          # these two patterns for now.
+          string = string.split("/").map do |component|
+            next component unless component =~ /^[A-Z0-9_]+$/
+            expanded_build_setting(component, configuration) || component
+          end.join("/")
+
           string
         end
       end
