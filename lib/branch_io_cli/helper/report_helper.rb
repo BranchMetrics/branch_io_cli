@@ -168,11 +168,11 @@ module BranchIOCLI
               report += "  Branch key(s) #{annotation}:\n"
               if branch_key.kind_of? Hash
                 branch_key.each_key do |key|
-                  resolved_key = helper.expand_build_settings branch_key[key], config.target, configuration
+                  resolved_key = config.target.expand_build_settings branch_key[key], configuration
                   report += "   #{key.capitalize}: #{resolved_key}\n"
                 end
               elsif branch_key
-                resolved_key = helper.expand_build_settings branch_key, config.target, configuration
+                resolved_key = config.target.expand_build_settings branch_key, configuration
                 report += "   #{resolved_key}\n"
               else
                 report += "   (none found)\n"
