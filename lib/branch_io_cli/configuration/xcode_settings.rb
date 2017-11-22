@@ -29,7 +29,13 @@ module BranchIOCLI
 
       def initialize(configuration)
         @configuration = configuration
-        load_settings_from_xcode
+
+        if config.respond_to?(:sdk)
+          # For now, limit this to the report command
+          load_settings_from_xcode
+        else
+          @xcode_settings = {}
+        end
       end
 
       def valid?
