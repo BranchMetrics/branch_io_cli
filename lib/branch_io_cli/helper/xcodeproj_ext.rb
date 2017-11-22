@@ -72,7 +72,13 @@ module Xcodeproj
             setting_value = resolved_build_setting(setting_name, false)[configuration]
           end
 
-          return if setting_value.nil?
+          # TODO: What is the correct resolution order here? Which overrides which in
+          # Xcode?
+          if setting_value.nil? && defined?(BranchIOCLI::Configuration::XcodeSettings)
+            setting_value = BranchIOCLI::Configuration::XcodeSettings[configuration][setting_name]
+          end
+
+          return nil if setting_value.nil?
 
           expand_build_settings setting_value, configuration
         end
