@@ -29,6 +29,7 @@ module BranchIOCLI
 
       def initialize(configuration)
         @configuration = configuration
+
         load_settings_from_xcode
       end
 

@@ -61,10 +61,12 @@ module BranchIOCLI
       attr_reader :workspace
       attr_reader :workspace_path
       attr_reader :pod_repo_update
+      attr_reader :sdk
 
       def initialize(options)
         @options = options
         @pod_repo_update = options.pod_repo_update if self.class.available_options.map(&:name).include?(:pod_repo_update)
+        @sdk = "iphonesimulator" # to load Xcode build settings for commands without a --sdk option
 
         Configuration.current = self
 
