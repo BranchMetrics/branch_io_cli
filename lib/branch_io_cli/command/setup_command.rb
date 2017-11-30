@@ -48,7 +48,7 @@ module BranchIOCLI
         if is_app_target
           config.xcodeproj.build_configurations.each do |c|
             new_path = helper.add_universal_links_to_project @domains, false, c.name
-            sh ["git", "add", new_path] if config.commit && new_path
+            sh "git", "add", new_path if config.commit && new_path
           end
         end
 
@@ -82,7 +82,7 @@ module BranchIOCLI
         commit_message = config.commit if config.commit.kind_of?(String)
         commit_message ||= "[branch_io_cli] Branch SDK integration #{config.relative_path(config.xcodeproj_path)} (#{config.target.name})"
 
-        sh ["git", "commit", "-qm", commit_message, *changes]
+        sh "git", "commit", "-qm", commit_message, *changes
 
         0
       end
@@ -120,7 +120,7 @@ module BranchIOCLI
           sh "git stash -q"
         when /^Commit/
           message = ask "Please enter a commit message: "
-          sh ["git", "commit", "-aqm", message]
+          sh "git", "commit", "-aqm", message
         when /^Quit/
           say "Please stash or commit your changes before continuing."
           exit(-1)

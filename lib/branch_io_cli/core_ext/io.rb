@@ -8,8 +8,14 @@ class IO
   # object.
   #
   # @param command [String, Array] a shell command to execute and report
-  def log_command(command)
-    command = command.shelljoin if command.kind_of? Array
+  def log_command(*args)
+    if args.count == 1
+      command = args.first
+      command = command.shelljoin if command.kind_of? Array
+    else
+      command = args.shelljoin
+    end
+
     write "$ #{command}\n\n"
 
     Open3.popen2e(command) do |stdin, output, thread|
@@ -34,8 +40,14 @@ end
 # Returns a Process::Status object.
 #
 # @param command [String, Array] a shell command to execute and report
-def STDOUT.log_command(command)
-  command = command.shelljoin if command.kind_of? Array
+def STDOUT.log_command(*args)
+  if args.count == 1
+    command = args.first
+    command = command.shelljoin if command.kind_of? Array
+  else
+    command = args.shelljoin
+  end
+
   # TODO: Improve this implementation?
   say "<%= color(%q{$ #{command}}, [MAGENTA, BOLD]) %>\n\n"
   # May also write to stderr

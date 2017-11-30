@@ -40,13 +40,13 @@ module BranchIOCLI
         report_helper.pod_install_if_required report
 
         # run xcodebuild -list
-        report.log_command [*report_helper.base_xcodebuild_cmd, "-list"]
+        report.log_command(*report_helper.base_xcodebuild_cmd, "-list")
 
         # If using a workspace, -list all the projects as well
         if config.workspace_path
           config.workspace.file_references.map(&:path).each do |project_path|
             path = File.join File.dirname(config.workspace_path), project_path
-            report.log_command ["xcodebuild", "-list", "-project", path]
+            report.log_command "xcodebuild", "-list", "-project", path
           end
         end
 
@@ -68,7 +68,7 @@ module BranchIOCLI
 
         if config.clean
           say "Cleaning"
-          if report.log_command([*base_cmd, "clean"]).success?
+          if report.log_command(*base_cmd, "clean").success?
             say "Done ✅"
           else
             say "Clean failed."
@@ -76,7 +76,7 @@ module BranchIOCLI
         end
 
         say "Building"
-        if report.log_command([*base_cmd, "-verbose"]).success?
+        if report.log_command(*base_cmd, "-verbose").success?
           say "Done ✅"
         else
           say "Build failed."
