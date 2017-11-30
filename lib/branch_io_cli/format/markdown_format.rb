@@ -54,9 +54,7 @@ module BranchIOCLI
       end
 
       def render_command(name)
-        @command = Object.const_get("BranchIOCLI")
-                         .const_get("Command")
-                         .const_get("#{name.to_s.capitalize}Command")
+        @command = BranchIOCLI::Command.const_get("#{name.to_s.capitalize}Command")
         render :command
       end
     end

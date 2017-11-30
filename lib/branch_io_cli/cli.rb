@@ -61,7 +61,7 @@ module BranchIOCLI
 
     def class_for_command(name, type)
       type_name = type.to_s.capitalize
-      type_module = Object.const_get("BranchIOCLI").const_get(type_name)
+      type_module = BranchIOCLI.const_get(type_name)
       candidate = type_module.const_get("#{name.to_s.capitalize}#{type_name}")
       return nil unless candidate
 
