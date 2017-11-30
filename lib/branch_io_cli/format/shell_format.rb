@@ -24,9 +24,7 @@ module BranchIOCLI
       end
 
       def options_for_command(command)
-        @configuration = Object.const_get("BranchIOCLI")
-                               .const_get("Configuration")
-                               .const_get("#{command.capitalize}Configuration")
+        @configuration = BranchIOCLI::Configuration.const_get("#{command.capitalize}Configuration")
         @configuration.available_options.map { |o| option(o.name) }.join(" ")
       end
     end

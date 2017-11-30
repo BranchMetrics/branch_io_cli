@@ -46,13 +46,18 @@ module BranchIOCLI
       end
 
       def xcodebuild_cmd
-        cmd = "xcodebuild"
-        cmd += " -showBuildSettings"
-        cmd += " -project #{Shellwords.escape config.xcodeproj_path}"
-        cmd += " -target #{Shellwords.escape config.target.name}"
-        cmd += " -sdk #{Shellwords.escape config.sdk}"
-        cmd += " -configuration #{Shellwords.escape configuration}"
-        cmd
+        [
+          "xcodebuild",
+          "-showBuildSettings",
+          "-project",
+          config.xcodeproj_path,
+          "-target",
+          config.target.name,
+          "-sdk",
+          config.sdk,
+          "-configuration",
+          configuration
+        ].shelljoin
       end
 
       def load_settings_from_xcode

@@ -23,7 +23,7 @@ module BranchIOCLI
         end
 
         def helper
-          Helper::BranchHelper
+          BranchHelper
         end
 
         def xcode_settings
@@ -31,13 +31,11 @@ module BranchIOCLI
         end
 
         def base_xcodebuild_cmd
-          cmd = "xcodebuild"
           if config.workspace_path
-            cmd = "#{cmd} -workspace #{Shellwords.escape config.workspace_path}"
+            ["xcodebuild", "-workspace", config.workspace_path]
           else
-            cmd = "#{cmd} -project #{Shellwords.escape config.xcodeproj_path}"
+            ["xcodebuild", "-project", config.xcodeproj_path]
           end
-          cmd
         end
 
         def report_scheme
@@ -227,7 +225,7 @@ module BranchIOCLI
             exit(-1)
           end
 
-          helper.verify_cocoapods
+          ToolHelper.verify_cocoapods
 
           install_command = "pod install"
 

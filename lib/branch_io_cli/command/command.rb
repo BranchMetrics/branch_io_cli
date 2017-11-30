@@ -10,9 +10,7 @@ module BranchIOCLI
         def configuration_class
           root = command_name.capitalize
 
-          Object.const_get("BranchIOCLI")
-                .const_get("Configuration")
-                .const_get("#{root}Configuration")
+          BranchIOCLI::Configuration.const_get("#{root}Configuration")
         end
 
         def available_options
@@ -46,6 +44,10 @@ module BranchIOCLI
 
       def patch_helper
         Helper::PatchHelper
+      end
+
+      def tool_helper
+        Helper::ToolHelper
       end
     end
   end
