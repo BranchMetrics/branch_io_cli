@@ -59,18 +59,18 @@ module BranchIOCLI
         case config.sdk_integration_mode
         when :cocoapods
           if File.exist? config.podfile_path
-            helper.update_podfile config
+            tool_helper.update_podfile config
           else
-            helper.add_cocoapods config
+            tool_helper.add_cocoapods config
           end
         when :carthage
           if File.exist? config.cartfile_path
-            helper.update_cartfile config, xcodeproj
+            tool_helper.update_cartfile config, xcodeproj
           else
-            helper.add_carthage config
+            tool_helper.add_carthage config
           end
         when :direct
-          helper.add_direct config
+          tool_helper.add_direct config
         end
 
         patch_helper.patch_source xcodeproj if config.patch_source

@@ -23,7 +23,7 @@ module BranchIOCLI
         end
 
         def helper
-          Helper::BranchHelper
+          BranchHelper
         end
 
         def xcode_settings
@@ -227,7 +227,7 @@ module BranchIOCLI
             exit(-1)
           end
 
-          helper.verify_cocoapods
+          ToolHelper.verify_cocoapods
 
           install_command = "pod install"
 
