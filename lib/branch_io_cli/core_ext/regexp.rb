@@ -11,4 +11,8 @@ class Regexp
 
     match contents
   end
+
+  def match_file?(file)
+    !match_file(file).nil?
+  end
 end

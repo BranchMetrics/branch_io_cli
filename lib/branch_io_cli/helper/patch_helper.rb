@@ -31,7 +31,7 @@ module BranchIOCLI
           # Can't just check for the import here, since there may be a bridging header.
           # This may match branch.initSession (if the Branch instance is stored) or
           # Branch.getInstance().initSession, etc.
-          !/branch.*initsession|^\s*import\s+branch/i.match_file(path).nil?
+          /branch.*initsession|^\s*import\s+branch/i.match_file? path
         end
 
         def patch_bridging_header
@@ -53,10 +53,10 @@ module BranchIOCLI
 
           say "Patching #{config.bridging_header_path}"
 
-          if /^\s*(#import|#include|@import)/.match_file config.bridging_header_path
+          if /^\s*(#import|#include|@import)/.match_file? config.bridging_header_path
             # Add among other imports
             patch(:objc_import).apply config.bridging_header_path
-          elsif /\n\s*#ifndef\s+(\w+).*\n\s*#define\s+\1.*?\n/m.match_file config.bridging_header_path
+          elsif /\n\s*#ifndef\s+(\w+).*\n\s*#define\s+\1.*?\n/m.match_file? config.bridging_header_path
             # Has an include guard. Add inside.
             patch(:objc_import_include_guard).apply config.bridging_header_path
           else
@@ -202,14 +202,14 @@ module BranchIOCLI
               patch(:swift_import).apply path
             end
 
-            is_new_method = !/didBecomeActive\(with.*?\{[^\n]*\n/m.match_file(path)
+            is_new_method = !/didBecomeActive\(with.*?\{[^\n]*\n/m.match_file?(path)
             patch_name += "#{is_new_method ? 'new_' : ''}swift"
           else
-            return false if %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}.match_file(path)
+            return false if %r{^\s+#import\s+<Branch/Branch.h>|^\s+@import\s+Branch\s*;}.match_file?(path)
 
             patch(:objc_import).apply path
 
-            is_new_method = !/didBecomeActiveWithConversation.*?\{[^\n]*\n/m.match_file(path)
+            is_new_method = !/didBecomeActiveWithConversation.*?\{[^\n]*\n/m.match_file?(path)
             patch_name += "#{is_new_method ? 'new_' : ''}objc"
           end
 

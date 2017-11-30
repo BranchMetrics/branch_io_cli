@@ -9,7 +9,7 @@ class IO
   #
   # @param command [String, Array] a shell command to execute and report
   def log_command(command)
-    command = command.map(&:to_s).map(&:shellescape).join(" ") if command.kind_of? Array
+    command = command.shelljoin if command.kind_of? Array
     write "$ #{command}\n\n"
 
     Open3.popen2e(command) do |stdin, output, thread|
@@ -35,7 +35,7 @@ end
 #
 # @param command [String, Array] a shell command to execute and report
 def STDOUT.log_command(command)
-  command = command.map(&:to_s).map(&:shellescape).join(" ") if command.kind_of? Array
+  command = command.shelljoin if command.kind_of? Array
   # TODO: Improve this implementation?
   say "<%= color(%q{$ #{command}}, [MAGENTA, BOLD]) %>\n\n"
   # May also write to stderr
