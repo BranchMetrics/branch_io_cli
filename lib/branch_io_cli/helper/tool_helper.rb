@@ -13,6 +13,10 @@ module BranchIOCLI
           Configuration::Configuration.current
         end
 
+        def helper
+          BranchHelper
+        end
+
         def add_cocoapods(options)
           verify_cocoapods
 
@@ -101,7 +105,7 @@ github "BranchMetrics/ios-branch-deep-linking"
           carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from(Pathname.pwd)
           cartfile_pathname = Pathname.new(cartfile_path).relative_path_from Pathname.pwd
           helper.add_change carthage_folder_path
-          sh ["git", "add", cartfile_pathname, "#{cartfile_pathname}.resolved", carthage_folder_path]
+          sh "git", "add", cartfile_pathname, "#{cartfile_pathname}.resolved", carthage_folder_path
         end
 
         def add_direct(options)
@@ -156,7 +160,7 @@ github "BranchMetrics/ios-branch-deep-linking"
 
           helper.add_change options.xcodeproj_path
           helper.add_change framework_path
-          sh ["git", "add", framework_path] if options.commit
+          sh "git", "add", framework_path if options.commit
 
           say "Done. ✅"
         end
@@ -206,7 +210,7 @@ github "BranchMetrics/ios-branch-deep-linking"
 
           # 5. If so, add the Pods folder to the commit (in case :commit param specified)
           helper.add_change pods_folder_path
-          sh ["git", "add", pods_folder_path] if options.commit
+          sh "git", "add", pods_folder_path if options.commit
 
           true
         end
@@ -253,7 +257,7 @@ github "BranchMetrics/ios-branch-deep-linking"
 
           # 7. If so, add the Carthage folder to the commit (in case :commit param specified)
           helper.add_change carthage_folder_path
-          sh ["git", "add", carthage_folder_path] if options.commit
+          sh "git", "add", carthage_folder_path if options.commit
 
           true
         end

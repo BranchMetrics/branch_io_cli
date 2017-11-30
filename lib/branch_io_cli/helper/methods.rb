@@ -20,9 +20,8 @@ module BranchIOCLI
       # In these cases, formatting (colors, highlights) may be lost.
       #
       # @param command [String, Array] A shell command to execute
-      # @param output [IO] An optional IO object to receive stdout and stderr from the command
-      def sh(command, output = STDOUT)
-        status = output.log_command command
+      def sh(command)
+        status = STDOUT.log_command command
         raise CommandError, [%{Error executing "#{command}": #{status}.}, status] unless status.success?
       end
 
