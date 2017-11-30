@@ -6,6 +6,8 @@ require "zip"
 module BranchIOCLI
   module Helper
     class ToolHelper
+      extend Methods
+
       class << self
         def config
           Configuration::Configuration.current
@@ -32,15 +34,15 @@ module BranchIOCLI
 
           return unless options.commit
 
-          add_change podfile_path
-          add_change "#{podfile_path}.lock"
+          helper.add_change podfile_path
+          helper.add_change "#{podfile_path}.lock"
 
           # For now, add Pods folder to SCM.
           pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from Pathname.pwd
           workspace_path = Pathname.new(File.expand_path(options.xcodeproj_path.sub(/.xcodeproj$/, ".xcworkspace"))).relative_path_from Pathname.pwd
           podfile_pathname = Pathname.new(podfile_path).relative_path_from Pathname.pwd
-          add_change pods_folder_path
-          add_change workspace_path
+          helper.add_change pods_folder_path
+          helper.add_change workspace_path
 
           sh [
             "git",
@@ -70,9 +72,9 @@ github "BranchMetrics/ios-branch-deep-linking"
           end
 
           # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
-          add_change cartfile_path
-          add_change "#{cartfile_path}.resolved"
-          add_change options.xcodeproj_path
+          helper.add_change cartfile_path
+          helper.add_change "#{cartfile_path}.resolved"
+          helper.add_change options.xcodeproj_path
 
           # 4. Add to target dependencies
           frameworks_group = options.xcodeproj.frameworks_group
@@ -98,7 +100,7 @@ github "BranchMetrics/ios-branch-deep-linking"
           # 6. Add the Carthage folder to the commit (in case :commit param specified)
           carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from(Pathname.pwd)
           cartfile_pathname = Pathname.new(cartfile_path).relative_path_from Pathname.pwd
-          add_change carthage_folder_path
+          helper.add_change carthage_folder_path
           sh ["git", "add", cartfile_pathname, "#{cartfile_pathname}.resolved", carthage_folder_path]
         end
 
@@ -152,8 +154,8 @@ github "BranchMetrics/ios-branch-deep-linking"
 
           options.xcodeproj.save
 
-          add_change options.xcodeproj_path
-          add_change framework_path
+          helper.add_change options.xcodeproj_path
+          helper.add_change framework_path
           sh ["git", "add", framework_path] if options.commit
 
           say "Done. ✅"
@@ -194,8 +196,8 @@ github "BranchMetrics/ios-branch-deep-linking"
           end
 
           # 3. Add Podfile and Podfile.lock to commit (in case :commit param specified)
-          add_change podfile_path
-          add_change "#{podfile_path}.lock"
+          helper.add_change podfile_path
+          helper.add_change "#{podfile_path}.lock"
 
           # 4. Check if Pods folder is under SCM
           pods_folder_path = Pathname.new(File.expand_path("../Pods", podfile_path)).relative_path_from Pathname.pwd
@@ -203,7 +205,7 @@ github "BranchMetrics/ios-branch-deep-linking"
           return true unless $?.exitstatus == 0
 
           # 5. If so, add the Pods folder to the commit (in case :commit param specified)
-          add_change pods_folder_path
+          helper.add_change pods_folder_path
           sh ["git", "add", pods_folder_path] if options.commit
 
           true
@@ -224,9 +226,9 @@ github "BranchMetrics/ios-branch-deep-linking"
           end
 
           # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
-          add_change cartfile_path
-          add_change "#{cartfile_path}.resolved"
-          add_change options.xcodeproj_path
+          helper.add_change cartfile_path
+          helper.add_change "#{cartfile_path}.resolved"
+          helper.add_change options.xcodeproj_path
 
           # 4. Add to target dependencies
           frameworks_group = project.frameworks_group
@@ -250,7 +252,7 @@ github "BranchMetrics/ios-branch-deep-linking"
           return true unless $?.exitstatus == 0
 
           # 7. If so, add the Carthage folder to the commit (in case :commit param specified)
-          add_change carthage_folder_path
+          helper.add_change carthage_folder_path
           sh ["git", "add", carthage_folder_path] if options.commit
 
           true

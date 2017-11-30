@@ -30,7 +30,7 @@ module BranchIOCLI
         end
 
         if config.podfile_path && File.exist?(config.podfile_path) && config.pod_install_required?
-          helper.verify_cocoapods
+          tool_helper.verify_cocoapods
           say "Installing pods to resolve current build settings"
           Dir.chdir(File.dirname(config.podfile_path)) do
             # We haven't modified anything yet. Don't use --repo-update at this stage.
