@@ -322,8 +322,8 @@ EOF
         objc_paths = all_paths.grep(/\.m$/)
         objc_paths += objc_paths.map { |p| p.sub(/\.m$/, '.h') }.select { |f| File.exist? f }
 
-        path = swift_paths.find { |f| /class.*:\s+MSMessagesAppViewController\s*{\n/m.match_file f } ||
-               objc_paths.find { |f| /@interface.*:\s+MSMessagesAppViewController/.match_file f }
+        path = swift_paths.find { |f| /class.*:\s+MSMessagesAppViewController\s*{\n/m.match_file? f } ||
+               objc_paths.find { |f| /@interface.*:\s+MSMessagesAppViewController/.match_file? f }
 
         # If we found a .h, patch the corresponding .m.
         path && path.sub(/\.h$/, '.m')
