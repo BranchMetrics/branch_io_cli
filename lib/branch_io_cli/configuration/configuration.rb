@@ -24,6 +24,11 @@ module BranchIOCLI
           end
         end
 
+        def available_options
+          root = name.gsub(/^.*::(\w+)Configuration$/, '\1')
+          BranchIOCLI::Configuration.const_get("#{root.capitalize}Options").available_options
+        end
+
         def absolute_path(path)
           return path unless current
           current.absolute_path path
