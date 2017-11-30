@@ -255,6 +255,7 @@ module BranchIOCLI
         # Prompt the user:
         selected = choose do |menu|
           menu.header = "No Podfile or Cartfile specified or found. Here are your options"
+          menu.readline = true
 
           SDK_OPTIONS.each_key { |k| menu.choice k }
 

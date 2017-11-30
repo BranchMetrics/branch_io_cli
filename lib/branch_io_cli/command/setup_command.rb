@@ -108,6 +108,7 @@ module BranchIOCLI
 
         choice = choose do |menu|
           menu.header = "There are uncommitted changes in this repo. It's best to stash or commit them before continuing."
+          menu.readline = true
           menu.choice "Stash"
           menu.choice "Commit (You will be prompted for a commit message.)"
           menu.choice "Quit"
