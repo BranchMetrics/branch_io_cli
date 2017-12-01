@@ -8,7 +8,7 @@ class IO
   # object.
   #
   # @param command a shell command to execute and report
-  def log_command(*args)
+  def sh(*args)
     write "$ #{command_from_args(*args)}\n\n"
 
     Open3.popen2e(*args) do |stdin, output, thread|
@@ -33,7 +33,7 @@ end
 # Returns a Process::Status object.
 #
 # @param command a shell command to execute and report
-def STDOUT.log_command(*args)
+def STDOUT.sh(*args)
   # TODO: Improve this implementation?
   say "<%= color(%q{$ #{command_from_args(*args)}}, [MAGENTA, BOLD]) %>\n\n"
   # May also write to stderr
@@ -48,15 +48,28 @@ def STDOUT.log_command(*args)
   status
 end
 
-def command_from_args(*args)
-  args.pop if args.last.kind_of?(Hash)
-  args.shift if args.first.kind_of?(Hash)
+def IO.command_from_args(*args)
+  raise ArgumentError, "sh requires at least one argument" unless args.count > 0
 
-  if args.count == 1
-    command = args.first
-    command = command.shelljoin if command.kind_of? Array
-  else
-    command = args.shelljoin
+  # Ignore any trailing options in the output
+  args.pop if args.last.kind_of?(Hash)
+
+  command = ""
+
+  # Optional initial environment Hash
+  if args.first.kind_of?(Hash)
+    command = args.shift.map { |k, v| "#{k}=#{v.shellescape}" }.join(" ") + " "
   end
+
+  # Support [ "/usr/local/bin/foo", "foo" ], "-x", ...
+  if args.first.kind_of?(Array)
+    command += args.shift.first.shellescape + " " + args.shelljoin
+    command.chomp! " "
+  elsif args.count == 1 && args.first.kind_of?(String)
+    command += args.first
+  else
+    command += args.shelljoin
+  end
+
   command
 end

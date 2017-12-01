@@ -26,7 +26,7 @@ module BranchIOCLI
       #
       # @param command [String, Array] A shell command to execute
       def sh(*command)
-        status = STDOUT.log_command(*command)
+        status = STDOUT.sh(*command)
         raise CommandError, [command, status] unless status.success?
       end
 
