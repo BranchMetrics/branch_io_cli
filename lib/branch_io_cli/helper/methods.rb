@@ -3,9 +3,18 @@ module BranchIOCLI
     class CommandError < RuntimeError
       attr_reader :status
       def initialize(args)
-        message, status = *args
+        @args = args.first
+        @status = args.second
         super message
-        @status = status
+      end
+
+      def message
+        if @args.count == 1
+          return @args.first.shelljoin if @args.first.kind_of?(Array)
+          return @args.first.to_s
+        else
+          return @args.shelljoin
+        end
       end
     end
 
@@ -13,16 +22,12 @@ module BranchIOCLI
       # Execute a shell command with reporting.
       # The command itself is logged, then output from
       # both stdout and stderr, then a success or failure
-      # message. Raises CommandError on error.
-      #
-      # If output is STDOUT (the default), no redirection occurs. In all
-      # other cases, both stdout and stderr are redirected to output.
-      # In these cases, formatting (colors, highlights) may be lost.
+      # message. Raises CommandError on error. No redirection occurs.
       #
       # @param command [String, Array] A shell command to execute
-      def sh(command)
-        status = STDOUT.log_command command
-        raise CommandError, [%{Error executing "#{command}": #{status}.}, status] unless status.success?
+      def sh(*command)
+        status = STDOUT.log_command(*command)
+        raise CommandError, [command, status] unless status.success?
       end
 
       # Clear the screen and move the cursor to the top using highline

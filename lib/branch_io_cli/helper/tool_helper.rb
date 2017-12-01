@@ -71,9 +71,7 @@ github "BranchMetrics/ios-branch-deep-linking"
           end
 
           # 2. carthage update
-          Dir.chdir(File.dirname(cartfile_path)) do
-            sh "carthage #{options.carthage_command}"
-          end
+          sh "carthage #{options.carthage_command}", chdir: File.dirname(config.cartfile_path)
 
           # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
           helper.add_change cartfile_path
@@ -195,9 +193,7 @@ github "BranchMetrics/ios-branch-deep-linking"
           command = 'pod install'
           command += ' --repo-update' if options.pod_repo_update
 
-          Dir.chdir(File.dirname(podfile_path)) do
-            sh command
-          end
+          sh command, chdir: File.dirname(config.podfile_path)
 
           # 3. Add Podfile and Podfile.lock to commit (in case :commit param specified)
           helper.add_change podfile_path
@@ -225,9 +221,7 @@ github "BranchMetrics/ios-branch-deep-linking"
           return false unless PatchHelper.patch_cartfile cartfile_path
 
           # 2. carthage update
-          Dir.chdir(File.dirname(cartfile_path)) do
-            sh "carthage #{options.carthage_command} ios-branch-deep-linking"
-          end
+          sh "carthage #{options.carthage_command} ios-branch-deep-linking", chdir: File.dirname(config.cartfile_path)
 
           # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
           helper.add_change cartfile_path
