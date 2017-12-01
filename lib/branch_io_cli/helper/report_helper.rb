@@ -240,7 +240,7 @@ some cases. If that happens, please rerun without --no-pod-repo-update or run
           end
 
           say "Running #{install_command.inspect}"
-          if report.log_command(install_command).success?
+          if report.sh(install_command).success?
             say "Done ✅"
           else
             say "pod install failed. See report for details."

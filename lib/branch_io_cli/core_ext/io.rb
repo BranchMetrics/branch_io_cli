@@ -8,7 +8,7 @@ class IO
   # object.
   #
   # @param command a shell command to execute and report
-  def log_command(*args)
+  def sh(*args)
     write "$ #{command_from_args(*args)}\n\n"
 
     Open3.popen2e(*args) do |stdin, output, thread|
@@ -33,7 +33,7 @@ end
 # Returns a Process::Status object.
 #
 # @param command a shell command to execute and report
-def STDOUT.log_command(*args)
+def STDOUT.sh(*args)
   # TODO: Improve this implementation?
   say "<%= color(%q{$ #{command_from_args(*args)}}, [MAGENTA, BOLD]) %>\n\n"
   # May also write to stderr
