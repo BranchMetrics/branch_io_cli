@@ -11,51 +11,68 @@ module BranchIOCLI
         @domains = config.all_domains
       end
 
-      # rubocop: disable Metrics/PerceivedComplexity
       def run!
         # Make sure the user stashes or commits before continuing.
-        check_repo_status
+        return 1 unless check_repo_status
 
-        xcodeproj = config.xcodeproj
-
-        is_app_target = !config.target.extension_target_type?
-
-        if is_app_target && config.validate &&
-           !helper.validate_team_and_bundle_ids_from_aasa_files(@domains)
-          say "Universal Link configuration failed validation."
-          helper.errors.each { |error| say " #{error}" }
-          return 1 unless config.force
-        elsif is_app_target && config.validate
-          say "Universal Link configuration passed validation. ✅"
+        # Validate Universal Link configuration in an application target.
+        if config.validate && config.target.symbol_type == :application
+          valid = validate_universal_links
+          return 1 unless valid || config.force
         end
 
+        # Make sure we can resolve all build settings in a project using
+        # CocoaPods.
         if config.podfile_path && File.exist?(config.podfile_path) && config.pod_install_required?
           tool_helper.verify_cocoapods
           say "Installing pods to resolve current build settings"
-          Dir.chdir(File.dirname(config.podfile_path)) do
-            # We haven't modified anything yet. Don't use --repo-update at this stage.
-            # This is unlikely to fail.
-            sh "pod install"
-          end
+          # We haven't modified anything yet. Don't use --repo-update at this stage.
+          # This is unlikely to fail.
+          sh "pod install", chdir: File.dirname(config.podfile_path)
         end
 
+        # Add SDK via CocoaPods, Carthage or direct download (no-op if disabled).
+        add_sdk
+
+        # Patch source code if so instructed.
+        patch_helper.patch_source config.xcodeproj if config.patch_source
+
+        # Commit changes if so instructed.
+        commit_changes if config.commit
+
+        # Return success.
+        0
+      end
+
+      def validate_universal_links
+        valid = helper.validate_team_and_bundle_ids_from_aasa_files @domains
+        if valid
+          say "Universal Link configuration passed validation. ✅"
+        else
+          say "Universal Link configuration failed validation."
+          helper.errors.each { |error| say " #{error}" }
+        end
+        valid
+      end
+
+      def update_project_settings
         helper.add_custom_build_setting if config.setting
-
         helper.add_keys_to_info_plist @keys
-        helper.add_branch_universal_link_domains_to_info_plist @domains if is_app_target
-        helper.ensure_uri_scheme_in_info_plist if is_app_target # does nothing if already present
+        config.target.add_system_frameworks config.frameworks unless config.frameworks.blank?
 
-        if is_app_target
-          config.xcodeproj.build_configurations.each do |c|
-            new_path = helper.add_universal_links_to_project @domains, false, c.name
-            sh "git", "add", new_path if config.commit && new_path
-          end
+        return unless config.target.symbol_type == :application
+
+        helper.add_branch_universal_link_domains_to_info_plist @domains
+        helper.ensure_uri_scheme_in_info_plist
+        config.xcodeproj.build_configurations.each do |c|
+          new_path = helper.add_universal_links_to_project @domains, false, c.name
+          sh "git", "add", new_path if config.commit && new_path
         end
+      ensure
+        config.xcodeproj.save
+      end
 
-        config_helper.target.add_system_frameworks config.frameworks unless config.frameworks.nil? || config.frameworks.empty?
-
-        xcodeproj.save
-
+      def add_sdk
         case config.sdk_integration_mode
         when :cocoapods
           if File.exist? config.podfile_path
@@ -65,43 +82,38 @@ module BranchIOCLI
           end
         when :carthage
           if File.exist? config.cartfile_path
-            tool_helper.update_cartfile config, xcodeproj
+            tool_helper.update_cartfile config, config.xcodeproj
           else
             tool_helper.add_carthage config
           end
         when :direct
           tool_helper.add_direct config
         end
+      end
 
-        patch_helper.patch_source xcodeproj if config.patch_source
-
-        return 0 unless config.commit
-
+      def commit_changes
         changes = helper.changes.to_a.map { |c| Pathname.new(File.expand_path(c)).relative_path_from(Pathname.pwd).to_s }
 
         commit_message = config.commit if config.commit.kind_of?(String)
         commit_message ||= "[branch_io_cli] Branch SDK integration #{config.relative_path(config.xcodeproj_path)} (#{config.target.name})"
 
         sh "git", "commit", "-qm", commit_message, *changes
-
-        0
       end
-      # rubocop: enable Metrics/PerceivedComplexity
 
       def check_repo_status
         # If the git command is not installed, there's not much we can do.
         # Don't want to use verify_git here, which will insist on installing
         # the command. The logic of that method could change.
-        return if `which git`.empty? || !config.confirm
+        return true if `which git`.empty? || !config.confirm
 
         unless Dir.exist? ".git"
           `git rev-parse --git-dir > /dev/null 2>&1`
           # Not a git repo
-          return unless $?.success?
+          return true unless $?.success?
         end
 
         `git diff-index --quiet HEAD --`
-        return if $?.success?
+        return true if $?.success?
 
         # Show the user
         sh "git status"
@@ -124,8 +136,10 @@ module BranchIOCLI
           sh "git", "commit", "-aqm", message
         when /^Quit/
           say "Please stash or commit your changes before continuing."
-          exit(-1)
+          return false
         end
+
+        true
       end
     end
   end
