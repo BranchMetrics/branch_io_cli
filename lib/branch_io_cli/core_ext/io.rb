@@ -48,15 +48,28 @@ def STDOUT.sh(*args)
   status
 end
 
-def command_from_args(*args)
-  args.pop if args.last.kind_of?(Hash)
-  args.shift if args.first.kind_of?(Hash)
+def IO.command_from_args(*args)
+  raise ArgumentError, "sh requires at least one argument" unless args.count > 0
 
-  if args.count == 1
-    command = args.first
-    command = command.shelljoin if command.kind_of? Array
-  else
-    command = args.shelljoin
+  # Ignore any trailing options in the output
+  args.pop if args.last.kind_of?(Hash)
+
+  command = ""
+
+  # Optional initial environment Hash
+  if args.first.kind_of?(Hash)
+    command = args.shift.map { |k, v| "#{k}=#{v.shellescape}" }.join(" ") + " "
   end
+
+  # Support [ "/usr/local/bin/foo", "foo" ], "-x", ...
+  if args.first.kind_of?(Array)
+    command += args.shift.first.shellescape + " " + args.shelljoin
+    command.chomp! " "
+  elsif args.count == 1 && args.first.kind_of?(String)
+    command += args.first
+  else
+    command += args.shelljoin
+  end
+
   command
 end
