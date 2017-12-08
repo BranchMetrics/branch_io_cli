@@ -9,7 +9,7 @@ class IO
   #
   # @param command a shell command to execute and report
   def sh(*args)
-    write "$ #{command_from_args(*args)}\n\n"
+    write "$ #{IO.command_from_args(*args)}\n\n"
 
     Open3.popen2e(*args) do |stdin, output, thread|
       # output is stdout and stderr merged
