@@ -9,7 +9,7 @@ class IO
   #
   # @param command a shell command to execute and report
   def sh(*args)
-    write "$ #{command_from_args(*args)}\n\n"
+    write "$ #{IO.command_from_args(*args)}\n\n"
 
     Open3.popen2e(*args) do |stdin, output, thread|
       # output is stdout and stderr merged
@@ -35,7 +35,7 @@ end
 # @param command a shell command to execute and report
 def STDOUT.sh(*args)
   # TODO: Improve this implementation?
-  say "<%= color(%q{$ #{command_from_args(*args)}}, [MAGENTA, BOLD]) %>\n\n"
+  say "<%= color(%q{$ #{IO.command_from_args(*args)}}, [MAGENTA, BOLD]) %>\n\n"
   # May also write to stderr
   system(*args)
 
