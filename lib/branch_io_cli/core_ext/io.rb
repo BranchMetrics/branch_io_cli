@@ -35,7 +35,7 @@ end
 # @param command a shell command to execute and report
 def STDOUT.sh(*args)
   # TODO: Improve this implementation?
-  say "<%= color(%q{$ #{command_from_args(*args)}}, [MAGENTA, BOLD]) %>\n\n"
+  say "<%= color(%q{$ #{IO.command_from_args(*args)}}, [MAGENTA, BOLD]) %>\n\n"
   # May also write to stderr
   system(*args)
 

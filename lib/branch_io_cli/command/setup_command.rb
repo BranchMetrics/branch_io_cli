@@ -34,6 +34,9 @@ module BranchIOCLI
         # Add SDK via CocoaPods, Carthage or direct download (no-op if disabled).
         add_sdk
 
+        # Set up Universal Links and Branch key(s)
+        update_project_settings
+
         # Patch source code if so instructed.
         patch_helper.patch_source config.xcodeproj if config.patch_source
 
