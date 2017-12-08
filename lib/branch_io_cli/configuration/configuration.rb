@@ -1,4 +1,3 @@
-require "artii"
 require "cocoapods-core"
 require "pathname"
 require "xcodeproj"
@@ -78,6 +77,8 @@ module BranchIOCLI
 
         say "\n"
         print_identification
+        say ASCII_ART
+        say "\n"
         validate_options
         log
       end
@@ -97,8 +98,6 @@ EOF
       def print_identification
         say <<EOF
 <%= color("branch_io #{self.class.name.sub(/^.*::(.*?)Configuration$/, '\1').downcase} v. #{VERSION}", BOLD) %>
-
-#{Artii::Base.new.asciify 'Branch'}
 EOF
       end
 
