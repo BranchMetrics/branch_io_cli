@@ -1,6 +1,5 @@
 require "branch_io_cli/helper/android_helper"
 require "branch_io_cli/helper/ios_helper"
-require "fileutils"
 require "net/http"
 require "set"
 
@@ -67,10 +66,6 @@ module BranchIOCLI
               end
             end
           end
-        end
-
-        def ensure_directory(path)
-          FileUtils.mkdir_p path
         end
       end
     end

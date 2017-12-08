@@ -1,4 +1,5 @@
 require "cocoapods-core"
+require "fileutils"
 require "pathname"
 require "pattern_patch"
 require "zip"
@@ -48,14 +49,14 @@ module BranchIOCLI
           helper.add_change pods_folder_path
           helper.add_change workspace_path
 
-          sh [
+          sh(
             "git",
             "add",
-            podfile_pathname,
+            podfile_pathname.to_s,
             "#{podfile_pathname}.lock",
-            pods_folder_path,
-            workspace_path
-          ]
+            pods_folder_path.to_s,
+            workspace_path.to_s
+          )
         end
 
         def add_carthage(options)
@@ -103,7 +104,7 @@ github "BranchMetrics/ios-branch-deep-linking"
           carthage_folder_path = Pathname.new(File.expand_path("../Carthage", cartfile_path)).relative_path_from(Pathname.pwd)
           cartfile_pathname = Pathname.new(cartfile_path).relative_path_from Pathname.pwd
           helper.add_change carthage_folder_path
-          sh "git", "add", cartfile_pathname, "#{cartfile_pathname}.resolved", carthage_folder_path
+          sh "git", "add", cartfile_pathname.to_s, "#{cartfile_pathname}.resolved", carthage_folder_path.to_s
         end
 
         def add_direct(options)
@@ -115,7 +116,7 @@ github "BranchMetrics/ios-branch-deep-linking"
           say "Finding current framework release"
 
           # Find the latest release from GitHub.
-          releases = JSON.parse fetch "https://api.github.com/repos/BranchMetrics/ios-branch-deep-linking/releases"
+          releases = JSON.parse helper.fetch "https://api.github.com/repos/BranchMetrics/ios-branch-deep-linking/releases"
           current_release = releases.first
           # Get the download URL for the framework.
           framework_asset = current_release["assets"][0]
@@ -129,7 +130,7 @@ github "BranchMetrics/ios-branch-deep-linking"
             File.unlink zip_path if File.exist? zip_path
 
             # Download the framework zip
-            download framework_url, zip_path
+            helper.download framework_url, zip_path
 
             say "Unzipping Branch.framework"
 
@@ -138,7 +139,7 @@ github "BranchMetrics/ios-branch-deep-linking"
               # Start with just the framework and add dSYM, etc., later
               zip_file.glob "Carthage/Build/iOS/Branch.framework/**/*" do |entry|
                 filename = entry.name.sub %r{^Carthage/Build/iOS}, frameworks_group.real_path.to_s
-                ensure_directory File.dirname filename
+                FileUtils.mkdir_p File.dirname filename
                 entry.extract filename
               end
             end
@@ -206,7 +207,7 @@ github "BranchMetrics/ios-branch-deep-linking"
 
           # 5. If so, add the Pods folder to the commit (in case :commit param specified)
           helper.add_change pods_folder_path
-          sh "git", "add", pods_folder_path if options.commit
+          sh "git", "add", pods_folder_path.to_s if options.commit
 
           true
         end
@@ -251,7 +252,7 @@ github "BranchMetrics/ios-branch-deep-linking"
 
           # 7. If so, add the Carthage folder to the commit (in case :commit param specified)
           helper.add_change carthage_folder_path
-          sh "git", "add", carthage_folder_path if options.commit
+          sh "git", "add", carthage_folder_path.to_s if options.commit
 
           true
         end
