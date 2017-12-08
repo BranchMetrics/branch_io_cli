@@ -1,3 +1,4 @@
+require "artii"
 require "cocoapods-core"
 require "pathname"
 require "xcodeproj"
@@ -97,6 +98,7 @@ EOF
         say <<EOF
 <%= color("branch_io #{self.class.name.sub(/^.*::(.*?)Configuration$/, '\1').downcase} v. #{VERSION}", BOLD) %>
 
+#{Artii::Base.new.asciify 'Branch'}
 EOF
       end
 
