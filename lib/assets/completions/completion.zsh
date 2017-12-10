@@ -11,3 +11,4 @@ _branch_io_complete() {
 }
 
 compctl -K _branch_io_complete branch_io
+compctl -K _branch_io_complete br
