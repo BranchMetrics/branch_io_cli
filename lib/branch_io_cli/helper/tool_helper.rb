@@ -160,8 +160,6 @@ github "BranchMetrics/ios-branch-deep-linking"
           helper.add_change options.xcodeproj_path
           helper.add_change framework_path
           sh "git", "add", framework_path if options.commit
-
-          say "Done. ✅"
         end
 
         def update_framework_search_paths(path)

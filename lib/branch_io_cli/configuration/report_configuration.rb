@@ -72,47 +72,60 @@ EOF
 EOF
       end
 
-      # rubocop: disable Metrics/PerceivedComplexity
+      def open_workspace(path = workspace_path)
+        @workspace = Xcodeproj::Workspace.new_from_xcworkspace path
+        @workspace_path = File.expand_path path
+        true
+      rescue Xcodeproj::PlainInformative => e
+        say e.message
+        false
+      end
+
       def validate_xcodeproj_and_workspace(options)
-        # 1. What was passed in?
-        begin
-          if options.workspace
-            path = options.workspace
-            @workspace = Xcodeproj::Workspace.new_from_xcworkspace options.workspace
-            @workspace_path = File.expand_path options.workspace
-          end
-          if options.xcodeproj
-            path = options.xcodeproj
-            @xcodeproj = Xcodeproj::Project.open options.xcodeproj
-            @xcodeproj_path = File.expand_path options.xcodeproj
-          else
-            # Pass --workspace and --xcodeproj to override this inference.
-            if workspace && workspace.file_references.count > 0 && workspace.file_references.first.path =~ /\.xcodeproj$/
-              @xcodeproj_path = File.expand_path "../#{@workspace.file_references.first.path}", workspace_path
-              @xcodeproj = Xcodeproj::Project.open xcodeproj_path
-            end
-          end
-          return if @workspace || @xcodeproj
-        rescue StandardError => e
-          say e.message
+        # What was passed in?
+        if options.workspace
+          open_workspace options.workspace
         end
+
+        if options.xcodeproj
+          open_xcodeproj options.xcodeproj
+        elsif workspace
+          open_first_project_in_workspace
+        end
+
+        return if workspace || xcodeproj
 
         # Try to find first a workspace, then a project
-        all_workspace_paths = Dir[File.expand_path(File.join(".", "**/*.xcworkspace"))]
-                              .reject { |w| w =~ %r{/project.xcworkspace$} }
-                              .select do |p|
-          valid = true
-          Pathname.new(p).each_filename do |f|
-            valid = false && break if f == "Carthage" || f == "Pods"
+        path =
+          case all_workspace_paths.count
+          when 1
+            all_workspace_paths.first
+          when 0
+            find_project
           end
-          valid
-        end
+        # If more than one workspace. Don't try to find a project. Just prompt.
 
-        if all_workspace_paths.count == 1
-          path = all_workspace_paths.first
-        elsif all_workspace_paths.count == 0
-          all_xcodeproj_paths = Dir[File.expand_path(File.join(".", "**/*.xcodeproj"))]
-          xcodeproj_paths = all_xcodeproj_paths.select do |p|
+        loop do
+          path = ask "Please enter a path to your Xcode project or workspace: " if path.nil?
+          if path =~ /\.xcworkspace$/
+            next unless open_workspace path
+            open_first_project_in_workspace
+            return
+          elsif path =~ /\.xcodeproj$/
+            return if open_xcodeproj path
+          else
+            say "Path must end with .xcworkspace or .xcodeproj"
+          end
+        end
+      end
+
+      def all_workspace_paths
+        return @all_workspace_paths if @all_workspace_paths
+
+        @all_workspace_paths =
+          Dir[File.expand_path(File.join(".", "**/*.xcworkspace"))]
+          .reject { |w| w =~ %r{/project.xcworkspace$} }
+          .select do |p|
             valid = true
             Pathname.new(p).each_filename do |f|
               valid = false && break if f == "Carthage" || f == "Pods"
@@ -120,37 +133,23 @@ EOF
             valid
           end
 
-          path = xcodeproj_paths.first if xcodeproj_paths.count == 1
-        end
-        # If more than one workspace. Don't try to find a project. Just prompt.
-
-        loop do
-          path = ask "Please enter a path to your Xcode project or workspace: " if path.nil?
-          begin
-            if path =~ /\.xcworkspace$/
-              @workspace = Xcodeproj::Workspace.new_from_xcworkspace path
-              @workspace_path = File.expand_path path
-
-              # Pass --workspace and --xcodeproj to override this inference.
-              if workspace.file_references.count > 0 && workspace.file_references.first.path =~ /\.xcodeproj$/
-                @xcodeproj_path = File.expand_path "../#{workspace.file_references.first.path}", workspace_path
-                @xcodeproj = Xcodeproj::Project.open xcodeproj_path
-              end
-
-              return
-            elsif path =~ /\.xcodeproj$/
-              @xcodeproj = Xcodeproj::Project.open path
-              @xcodeproj_path = File.expand_path path
-              return
-            else
-              say "Path must end with .xcworkspace or .xcodeproj"
-            end
-          rescue StandardError => e
-            say e.message
-          end
-        end
+        @all_workspace_paths
       end
-      # rubocop: enable Metrics/PerceivedComplexity
+
+      def open_first_project_in_workspace
+        # Pass --workspace and --xcodeproj or use the configuration editor to
+        # override this inference.
+        project_path = workspace.file_references.map(&:path).find do |path|
+          path =~ /\.xcodeproj$/ && File.exist?(File.expand_path("../#{path}", workspace_path))
+        end
+
+        if project_path.nil?
+          raise "No project found in workspace #{workspace_path}"
+        end
+
+        open_xcodeproj project_path
+        # TODO: Handle the case where this cannot be opened (though it exists).
+      end
 
       def validate_scheme(options)
         schemes = all_schemes
