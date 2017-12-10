@@ -23,7 +23,7 @@ module BranchIOCLI
         next unless configuration_class && command_class
 
         command command_name do |c|
-          c.syntax = "branch_io #{c.name} [OPTIONS]"
+          c.syntax = "branch_io #{c.name} [OPTIONS]\n    br #{c.name} [OPTIONS]"
           c.summary = configuration_class.summary if configuration_class.respond_to?(:summary)
 
           begin

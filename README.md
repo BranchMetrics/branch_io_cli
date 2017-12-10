@@ -31,6 +31,15 @@ branch_io validate -h
 branch_io report -h
 ```
 
+The gem also installs `br` as an alias for `branch_io`:
+
+```bash
+br -h
+br setup -h
+br validate -h
+br report -h
+```
+
 ### Shell completion
 
 _Work in progress_
@@ -66,6 +75,7 @@ Currently command-line completion for bash is much more extensive than for zsh.
 
 ```bash
 branch_io setup [OPTIONS]
+br setup [OPTIONS]
 ```
 
 Integrates the Branch SDK into a native app project. This currently supports iOS only.
@@ -157,35 +167,35 @@ See https://github.com/BranchMetrics/branch_io_cli#setup-command for more inform
 ##### Test without validation (can use dummy keys and domains)
 
 ```bash
-branch_io setup -L key_live_xxxx -D myapp.app.link --no-validate
+br setup -L key_live_xxxx -D myapp.app.link --no-validate
 ```
 
 
 ##### Use both live and test keys
 
 ```bash
-branch_io setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link
+br setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link
 ```
 
 
 ##### Use custom or non-Branch domains
 
 ```bash
-branch_io setup -D myapp.app.link,example.com,www.example.com
+br setup -D myapp.app.link,example.com,www.example.com
 ```
 
 
 ##### Avoid pod repo update
 
 ```bash
-branch_io setup --no-pod-repo-update
+br setup --no-pod-repo-update
 ```
 
 
 ##### Install using carthage bootstrap
 
 ```bash
-branch_io --carthage-command "bootstrap --no-use-binaries"
+br setup --carthage-command "bootstrap --no-use-binaries"
 ```
 
 
@@ -195,6 +205,7 @@ branch_io --carthage-command "bootstrap --no-use-binaries"
 
 ```bash
 branch_io validate [OPTIONS]
+br validate [OPTIONS]
 ```
 
 This command validates all Universal Link domains configured in a project without making any
@@ -243,6 +254,7 @@ See https://github.com/BranchMetrics/branch_io_cli#validate-command for more inf
 
 ```bash
 branch_io report [OPTIONS]
+br report [OPTIONS]
 ```
 
 This command optionally cleans and then builds a workspace or project, generating a verbose

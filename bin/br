@@ -1,0 +1,5 @@
+#! /usr/bin/env ruby
+
+require "branch_io_cli"
+
+BranchIOCLI::CLI.new.run

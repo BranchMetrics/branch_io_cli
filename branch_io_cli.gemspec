@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ['lib']
   spec.bindir        = 'bin'
-  spec.executables   = %w{branch_io}
+  spec.executables   = %w{branch_io br}
 
   spec.homepage      = 'http://github.com/BranchMetrics/branch_io_cli'
   spec.license       = 'MIT'

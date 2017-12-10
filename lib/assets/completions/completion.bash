@@ -36,7 +36,7 @@ _branch_io_complete()
           ;;
       esac
       COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
-    elif [[ ${prev} == branch_io ]] ; then
+    elif [[ ${prev} == branch_io || ${prev} == br ]] ; then
       COMPREPLY=( $(compgen -W "${commands}" -- ${cur}) )
     else
       COMPREPLY=( $(compgen -o default ${cur}) )
@@ -44,3 +44,4 @@ _branch_io_complete()
     return 0
 }
 complete -F _branch_io_complete branch_io
+complete -F _branch_io_complete br
