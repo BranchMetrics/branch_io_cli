@@ -43,22 +43,26 @@ module BranchIOCLI
         # Commit changes if so instructed.
         commit_changes if config.commit
 
+        say "\nDone ✅"
+
         # Return success.
         0
       end
 
       def validate_universal_links
+        say "Validating new Universal Link configuration before making any changes.\n\n"
         valid = helper.validate_team_and_bundle_ids_from_aasa_files @domains
         if valid
-          say "Universal Link configuration passed validation. ✅"
+          say "Universal Link configuration passed validation. ✅\n\n"
         else
-          say "Universal Link configuration failed validation."
+          say "Universal Link configuration failed validation.\n\n"
           helper.errors.each { |error| say " #{error}" }
         end
         valid
       end
 
       def update_project_settings
+        say "Updating project settings.\n\n"
         helper.add_custom_build_setting if config.setting
         helper.add_keys_to_info_plist @keys
         config.target.add_system_frameworks config.frameworks unless config.frameworks.blank?
@@ -76,6 +80,7 @@ module BranchIOCLI
       end
 
       def add_sdk
+        say "Making sure Branch dependency is available."
         case config.sdk_integration_mode
         when :cocoapods
           if File.exist? config.podfile_path
@@ -92,6 +97,7 @@ module BranchIOCLI
         when :direct
           tool_helper.add_direct config
         end
+        say "\n"
       end
 
       def commit_changes
