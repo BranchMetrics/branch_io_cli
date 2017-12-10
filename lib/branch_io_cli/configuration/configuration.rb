@@ -144,32 +144,31 @@ EOF
         if options.xcodeproj
           path = options.xcodeproj
         else
-          all_xcodeproj_paths = Dir[File.expand_path(File.join(".", "**/*.xcodeproj"))]
-          # find an xcodeproj (ignoring the Pods and Carthage folders)
-          # TODO: Improve this filter
-          xcodeproj_paths = all_xcodeproj_paths.select do |p|
-            valid = true
-            Pathname.new(p).each_filename do |f|
-              valid = false && break if f == "Carthage" || f == "Pods"
-            end
-            valid
-          end
-
-          path = xcodeproj_paths.first if xcodeproj_paths.count == 1
+          path = find_project
         end
 
         loop do
           path = ask "Please enter the path to your Xcode project or use --xcodeproj: " if path.nil?
           # TODO: Allow the user to choose if xcodeproj_paths.count > 0
-          begin
-            @xcodeproj = Xcodeproj::Project.open path
-            @xcodeproj_path = File.expand_path path
-            return
-          rescue StandardError => e
-            say e.message
-            path = nil
-          end
+          return if open_xcodeproj path
         end
+      end
+
+      def all_xcodeproj_paths
+        return @all_xcodeproj_paths if @all_xcodeproj_paths
+        xcodeproj_paths = Dir[File.expand_path(File.join(".", "**/*.xcodeproj"))]
+        @all_xcodeproj_paths = xcodeproj_paths.select do |p|
+          valid = true
+          Pathname.new(p).each_filename do |f|
+            valid = false && break if f == "Carthage" || f == "Pods"
+          end
+          valid
+        end
+        @all_xcodeproj_paths
+      end
+
+      def find_project
+        all_xcodeproj_paths.count == 1 ? all_xcodeproj_paths.first : nil
       end
 
       def validate_target(allow_extensions = true)
@@ -223,7 +222,7 @@ EOF
 
       def open_podfile(path = podfile_path)
         @podfile = Pod::Podfile.from_file path
-        @podfile_path = path
+        @podfile_path = File.expand_path path
         @sdk_integration_mode = :cocoapods
         true
       rescue Pod::PlainInformative => e
@@ -233,7 +232,7 @@ EOF
 
       def open_xcodeproj(path = xcodeproj_path)
         @xcodeproj = Xcodeproj::Project.open path
-        @xcodeproj_path = path
+        @xcodeproj_path = File.expand_path path
         true
       rescue Xcodeproj::PlainInformative => e
         say e.message
