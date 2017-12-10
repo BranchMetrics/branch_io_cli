@@ -16,6 +16,8 @@ This is a preliminary release of this gem. Please report any problems by opening
 See also the [Branch Fastlane plugin](https://github.com/BranchMetrics/fastlane-plugin-branch), which offers
 the same support via Fastlane.
 
+![CLI in action](./assets/branch3.gif)
+
 ## Getting started
 
 ```bash
