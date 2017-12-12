@@ -152,7 +152,7 @@ See https://github.com/BranchMetrics/branch_io_cli#setup-command for more inform
 |--target MyAppTarget|Name of a target to modify in the Xcode project|BRANCH_TARGET|
 |--podfile /path/to/Podfile|Path to the Podfile for the project|BRANCH_PODFILE|
 |--cartfile /path/to/Cartfile|Path to the Cartfile for the project|BRANCH_CARTFILE|
-|--carthage-command update --no-use-binaries|Command to run when installing from Carthage (default: bootstrap --platform ios)|BRANCH_CARTHAGE_COMMAND|
+|--carthage-command bootstrap --no-use-binaries|Command to run when installing from Carthage (default: update --platform ios)|BRANCH_CARTHAGE_COMMAND|
 |--frameworks AdSupport,CoreSpotlight,SafariServices|Comma-separated list of system frameworks to add to the project|BRANCH_FRAMEWORKS|
 |--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|BRANCH_POD_REPO_UPDATE|
 |--[no-]validate|Validate Universal Link configuration (default: yes)|BRANCH_VALIDATE|
@@ -194,10 +194,10 @@ br setup --no-pod-repo-update
 ```
 
 
-##### Install using carthage update
+##### Install using carthage bootstrap
 
 ```bash
-br setup --carthage-command "update --no-use-binaries"
+br setup --carthage-command "bootstrap --no-use-binaries"
 ```
 
 

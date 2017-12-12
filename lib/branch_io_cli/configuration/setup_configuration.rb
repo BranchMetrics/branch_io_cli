@@ -12,7 +12,7 @@ module BranchIOCLI
             "Use both live and test keys" => "br setup -L key_live_xxxx -T key_test_yyyy -D myapp.app.link",
             "Use custom or non-Branch domains" => "br setup -D myapp.app.link,example.com,www.example.com",
             "Avoid pod repo update" => "br setup --no-pod-repo-update",
-            "Install using carthage update" => "br setup --carthage-command \"update --no-use-binaries\""
+            "Install using carthage bootstrap" => "br setup --carthage-command \"bootstrap --no-use-binaries\""
           }
         end
       end
