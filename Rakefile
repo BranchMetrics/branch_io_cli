@@ -67,7 +67,7 @@ end
 
 desc "Perform a full build of all examples in the repo"
 task "report:full" do
-  Rake::Task["branch:report"].invoke all_projects, pod_repo_update: false
+  Rake::Task["branch:report"].invoke all_projects, pod_repo_update: false, confirm: false
 end
 
 #

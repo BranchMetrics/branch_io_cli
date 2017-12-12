@@ -219,7 +219,7 @@ github "BranchMetrics/ios-branch-deep-linking"
           # 1. Patch Cartfile. Return if no change (Branch already present).
           return false unless PatchHelper.patch_cartfile cartfile_path
 
-          # 2. carthage update
+          # 2. carthage bootstrap (or other command)
           cmd = "carthage #{options.carthage_command}"
           cmd << " ios-branch-deep-linking" if options.carthage_command =~ /^(update|build)/
           sh cmd, chdir: File.dirname(config.cartfile_path)
