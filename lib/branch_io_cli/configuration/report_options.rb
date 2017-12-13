@@ -77,6 +77,12 @@ module BranchIOCLI
               example: "./report.txt",
               type: String,
               env_name: "BRANCH_REPORT_PATH"
+            ),
+            Option.new(
+              name: :confirm,
+              description: "Confirm before running certain commands",
+              default_value: true,
+              skip_confirmation: true
             )
           ]
         end

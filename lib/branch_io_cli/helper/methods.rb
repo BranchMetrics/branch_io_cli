@@ -3,8 +3,8 @@ module BranchIOCLI
     class CommandError < RuntimeError
       attr_reader :status
       def initialize(args)
-        @args = args.first
-        @status = args.second
+        @args = args[0]
+        @status = args[1]
         super message
       end
 

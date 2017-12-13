@@ -38,6 +38,7 @@ module BranchIOCLI
         report.write "#{report_helper.report_header}\n"
 
         report_helper.pod_install_if_required report
+        report_helper.carthage_bootstrap_if_required report
 
         # run xcodebuild -list
         report.sh(*report_helper.base_xcodebuild_cmd, "-list")

@@ -95,7 +95,7 @@ module BranchIOCLI
             Option.new(
               name: :carthage_command,
               description: "Command to run when installing from Carthage",
-              example: "<command>",
+              example: "bootstrap --no-use-binaries",
               type: String,
               default_value: "update --platform ios"
             ),

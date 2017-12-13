@@ -152,7 +152,7 @@ See https://github.com/BranchMetrics/branch_io_cli#setup-command for more inform
 |--target MyAppTarget|Name of a target to modify in the Xcode project|BRANCH_TARGET|
 |--podfile /path/to/Podfile|Path to the Podfile for the project|BRANCH_PODFILE|
 |--cartfile /path/to/Cartfile|Path to the Cartfile for the project|BRANCH_CARTFILE|
-|--carthage-command <command>|Command to run when installing from Carthage (default: update --platform ios)|BRANCH_CARTHAGE_COMMAND|
+|--carthage-command bootstrap --no-use-binaries|Command to run when installing from Carthage (default: update --platform ios)|BRANCH_CARTHAGE_COMMAND|
 |--frameworks AdSupport,CoreSpotlight,SafariServices|Comma-separated list of system frameworks to add to the project|BRANCH_FRAMEWORKS|
 |--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|BRANCH_POD_REPO_UPDATE|
 |--[no-]validate|Validate Universal Link configuration (default: yes)|BRANCH_VALIDATE|
@@ -285,6 +285,7 @@ building.
 |-H, --[no-]header-only|Write a report header to standard output and exit (default: no)|BRANCH_HEADER_ONLY|
 |--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|BRANCH_POD_REPO_UPDATE|
 |-o, --out ./report.txt|Report output path (default: ./report.txt)|BRANCH_REPORT_PATH|
+|--[no-]confirm|Confirm before running certain commands (default: yes)|BRANCH_CONFIRM|
 
 
 
