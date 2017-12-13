@@ -57,7 +57,7 @@ module BranchIOCLI
               example: "config1,config2",
               type: Array,
               negatable: true,
-              valid_values_proc: ->() { Configuration.current.xcodeproj.build_configurations.map(&:name) }
+              valid_values_proc: -> { Configuration.current.xcodeproj.build_configurations.map(&:name) }
             ),
             Option.new(
               name: :xcodeproj,
@@ -73,7 +73,7 @@ module BranchIOCLI
               example: "MyAppTarget",
               type: String,
               confirm_symbol: :target_name,
-              valid_values_proc: ->() { Configuration.current.xcodeproj.targets.map(&:name) }
+              valid_values_proc: -> { Configuration.current.xcodeproj.targets.map(&:name) }
             ),
             Option.new(
               name: :podfile,

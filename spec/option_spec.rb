@@ -4,7 +4,7 @@ describe BranchIOCLI::Configuration::Option do
 
     it 'raises if both :validate_proc and :valid_values are passed' do
       expect do
-        OPTION_CLASS.new valid_values_proc: ->() {}, validate_proc: ->(x) {}
+        OPTION_CLASS.new valid_values_proc: ->{}, validate_proc: ->(x){}
       end.to raise_error ArgumentError
     end
 
@@ -51,7 +51,7 @@ describe BranchIOCLI::Configuration::Option do
 
   describe '#valid_values' do
     it 'calls the valid_values_proc if present' do
-      option = OPTION_CLASS.new valid_values_proc: ->() { %w(a b c) }
+      option = OPTION_CLASS.new valid_values_proc: -> { %w(a b c) }
       expect(option.valid_values).to eq %w(a b c)
     end
 
@@ -138,7 +138,7 @@ describe BranchIOCLI::Configuration::Option do
     end
 
     it 'checks #valid_values if non-nil' do
-      option = OPTION_CLASS.new valid_values_proc: ->() { %w(a b) }
+      option = OPTION_CLASS.new valid_values_proc: -> { %w(a b) }
       expect(option.valid?("a")).to be true
       expect(option.valid?("b")).to be true
       expect(option.valid?("c")).to be false
@@ -150,7 +150,7 @@ describe BranchIOCLI::Configuration::Option do
     end
 
     it 'checks all values of an Array argument' do
-      option = OPTION_CLASS.new type: Array, valid_values_proc: ->() { %w(a b) }
+      option = OPTION_CLASS.new type: Array, valid_values_proc: -> { %w(a b) }
       expect(option.valid?(%w(a))).to be true
       expect(option.valid?(%w(a b))).to be true
       expect(option.valid?(%w(a b c))).to be false

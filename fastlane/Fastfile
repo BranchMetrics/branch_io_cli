@@ -1,0 +1,5 @@
+fastlane_version "2.69.0"
+
+lane :rubocop_update do
+  update_rubocop
+end

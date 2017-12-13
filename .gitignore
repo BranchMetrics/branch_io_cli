@@ -6,6 +6,9 @@ Gemfile.lock
 /_yardoc/
 /doc/
 /rdoc/
+fastlane/report.xml
+fastlane/README.md
+
 coverage
 test-results
 build
