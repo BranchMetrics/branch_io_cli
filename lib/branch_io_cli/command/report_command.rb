@@ -33,7 +33,7 @@ module BranchIOCLI
       end
 
       def write_report(report)
-        report.write "Branch.io Xcode build report v #{VERSION} #{DateTime.now}\n\n"
+        report.write "Branch.io Xcode build report v #{VERSION} #{Time.now}\n\n"
         report.write "#{config.report_configuration}\n"
         report.write "#{report_helper.report_header}\n"
 

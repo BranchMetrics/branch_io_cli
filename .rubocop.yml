@@ -3,6 +3,12 @@ AllCops:
     - "examples/**/*"
     - "vendor/**/*"
 
+Style/CommentedKeyword:
+  Enabled: true
+
+Style/DateTime:
+  Enabled: true
+
 Naming/HeredocDelimiterNaming:
   Enabled: false
 

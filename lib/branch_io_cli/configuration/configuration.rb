@@ -213,9 +213,7 @@ EOF
         end
 
         # Validate. Prompt if not valid.
-        while !buildfile_path || !validate_buildfile_at_path(buildfile_path, filename)
-          buildfile_path = ask "Please enter the path to your #{filename}: "
-        end
+        buildfile_path = ask "Please enter the path to your #{filename}: " while !buildfile_path || !validate_buildfile_at_path(buildfile_path, filename)
 
         @sdk_integration_mode = filename == "Podfile" ? :cocoapods : :carthage
       end
@@ -470,7 +468,9 @@ EOF
           new_value = ask "Please enter one or more of the above, separated by commas: " do |q|
             q.readline = true
             q.completion = valid_values
-          end.split(",") # comma-split with Array not working
+          end
+
+          new_value = new_value.split(",") # comma-split with ask("...", Array) not working
         elsif option.type.nil?
           new_value = Helper::Util.confirm "#{option.label}? ", value
         else
