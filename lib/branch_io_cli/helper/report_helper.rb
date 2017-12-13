@@ -255,9 +255,9 @@ some cases. If that happens, please rerun without --no-pod-repo-update or run
           return unless config.cartfile_path
           return if Dir.exist?(File.join(File.dirname(config.cartfile_path), "Carthage", "Build", "iOS"))
 
-          say "carthage bootstrap required in order to build."
+          say "carthage checkout required in order to build."
           if config.confirm
-            install = confirm 'Run "carthage bootstrap --platform ios" now?', true
+            install = confirm 'Run "carthage checkout && carthage build --platform ios" now?', true
 
             unless install
               say 'Please build your Carthage dependencies first in order to continue.'
@@ -267,7 +267,7 @@ some cases. If that happens, please rerun without --no-pod-repo-update or run
 
           ToolHelper.verify_carthage
 
-          install_command = "carthage bootstrap --platform ios"
+          install_command = "carthage checkout && carthage build --platform ios"
 
           say "Running #{install_command.inspect}"
           if report.sh(install_command).success?
