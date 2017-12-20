@@ -177,9 +177,13 @@ module BranchIOCLI
       end
 
       def team_and_bundle_from_app_id(identifier)
-        team = identifier.sub(/\..+$/, "")
-        bundle = identifier.sub(/^[^.]+\./, "")
-        [team, bundle]
+        matches = /^(.*?)\.(.*)$/.match identifier
+        matches[1, 2]
+      end
+
+      def reportable_app_id(identifier)
+        team, bundle = team_and_bundle_from_app_id identifier
+        "Signing team: #{team.inspect}, Bundle identifier: #{bundle.inspect}"
       end
 
       def update_team_and_bundle_ids_from_aasa_file(domain)
@@ -317,10 +321,25 @@ module BranchIOCLI
         match_found = identifiers.include? app_id
 
         unless match_found
-          @errors << "[#{domain}] appID mismatch. Project: #{app_id}. AASA: #{identifiers}"
+          report_app_id_mismatch domain, app_id, identifiers
         end
 
         match_found
+      end
+
+      def report_app_id_mismatch(domain, app_id, identifiers)
+        error_string = "[#{domain}] appID mismatch. Project #{reportable_app_id app_id}\n"
+        if identifiers.count <= 20
+          error_string << " Apps from AASA:\n"
+          identifiers.each do |identifier|
+            reportable = reportable_app_id identifier
+            error_string << "  #{reportable}\n"
+          end
+        else
+          error_string << " Please check your settings in the Branch Dashboard (https://dashboard.branch.io)"
+        end
+
+        @errors << error_string
       end
 
       def validate_project_domains(expected, configuration = RELEASE_CONFIGURATION)
