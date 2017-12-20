@@ -40,7 +40,8 @@ module BranchIOCLI
               example: "myurischeme[://]",
               type: String,
               aliases: "-U",
-              label: "URI scheme"
+              label: "URI scheme",
+              convert_proc: ->(value) { Configuration.uri_scheme_without_suffix(value) }
             ),
             Option.new(
               name: :setting,
@@ -57,7 +58,7 @@ module BranchIOCLI
               example: "config1,config2",
               type: Array,
               negatable: true,
-              valid_values_proc: -> { Configuration.current.xcodeproj.build_configurations.map(&:name) }
+              valid_values_proc: -> { Configuration.current && Configuration.current.xcodeproj.build_configurations.map(&:name) }
             ),
             Option.new(
               name: :xcodeproj,
@@ -73,7 +74,7 @@ module BranchIOCLI
               example: "MyAppTarget",
               type: String,
               confirm_symbol: :target_name,
-              valid_values_proc: -> { Configuration.current.xcodeproj.targets.map(&:name) }
+              valid_values_proc: -> { Configuration.current && Configuration.current.xcodeproj.targets.map(&:name) }
             ),
             Option.new(
               name: :podfile,

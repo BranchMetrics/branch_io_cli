@@ -178,9 +178,9 @@ module BranchIOCLI
         uri_scheme = options.uri_scheme
         unless uri_scheme
           uri_scheme = ask "Please enter any URI scheme you entered in the Branch Dashboard (optional). "
-          uri_scheme = nil if uri_scheme.empty?
+          uri_scheme = self.class.uri_scheme_without_suffix uri_scheme
         end
-        @uri_scheme = uri_scheme_without_suffix uri_scheme
+        @uri_scheme = uri_scheme
       end
 
       def app_link_roots_from_domains(domains)
@@ -228,18 +228,6 @@ module BranchIOCLI
         app_link_subdomains = app_link_subdomains_from_roots app_link_roots
         custom_domains = custom_domains_from_domains domains
         custom_domains + app_link_subdomains
-      end
-
-      # Removes any trailing :/* from the argument and returns a copy.
-      # Matches:
-      #  myscheme
-      #  myscheme:
-      #  myscheme://
-      #  myscheme:///
-      #  etc.
-      def uri_scheme_without_suffix(scheme)
-        return nil if scheme.nil?
-        scheme.sub %r{:/*$}, ""
       end
 
       def prompt_for_podfile_or_cartfile
