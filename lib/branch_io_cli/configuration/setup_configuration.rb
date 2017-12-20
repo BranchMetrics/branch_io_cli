@@ -178,9 +178,8 @@ module BranchIOCLI
         uri_scheme = options.uri_scheme
         unless uri_scheme
           uri_scheme = ask "Please enter any URI scheme you entered in the Branch Dashboard (optional). "
-          uri_scheme = self.class.uri_scheme_without_suffix uri_scheme
         end
-        @uri_scheme = uri_scheme
+        @uri_scheme = self.class.uri_scheme_without_suffix uri_scheme
       end
 
       def app_link_roots_from_domains(domains)
