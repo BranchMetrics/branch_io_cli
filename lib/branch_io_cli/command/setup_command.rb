@@ -21,7 +21,7 @@ module BranchIOCLI
           return 1 unless valid || config.force
         end
 
-        # Make sure we can resolve all build settings in a project using
+        # Make sure we can resolve all build settings in a project that uses
         # CocoaPods.
         if config.podfile_path && File.exist?(config.podfile_path) && config.pod_install_required?
           tool_helper.verify_cocoapods
@@ -61,26 +61,8 @@ module BranchIOCLI
         valid
       end
 
-      def update_project_settings
-        say "Updating project settings.\n\n"
-        helper.add_custom_build_setting if config.setting
-        helper.add_keys_to_info_plist @keys
-        config.target.add_system_frameworks config.frameworks unless config.frameworks.blank?
-
-        return unless config.target.symbol_type == :application
-
-        helper.add_branch_universal_link_domains_to_info_plist @domains
-        helper.ensure_uri_scheme_in_info_plist
-        config.xcodeproj.build_configurations.each do |c|
-          new_path = helper.add_universal_links_to_project @domains, false, c.name
-          sh "git", "add", new_path if config.commit && new_path
-        end
-      ensure
-        config.xcodeproj.save
-      end
-
       def add_sdk
-        say "Making sure Branch dependency is available."
+        say "\nMaking sure Branch dependency is available.\n\n"
         case config.sdk_integration_mode
         when :cocoapods
           if File.exist? config.podfile_path
@@ -97,7 +79,24 @@ module BranchIOCLI
         when :direct
           tool_helper.add_direct config
         end
-        say "\n"
+      end
+
+      def update_project_settings
+        say "Updating project settings.\n\n"
+        helper.add_custom_build_setting if config.setting
+        helper.add_keys_to_info_plist @keys
+        config.target.add_system_frameworks config.frameworks unless config.frameworks.blank?
+
+        return unless config.target.symbol_type == :application
+
+        helper.add_branch_universal_link_domains_to_info_plist @domains
+        helper.ensure_uri_scheme_in_info_plist
+        config.xcodeproj.build_configurations.each do |c|
+          new_path = helper.add_universal_links_to_project @domains, false, c.name
+          sh "git", "add", new_path if config.commit && new_path
+        end
+      ensure
+        config.xcodeproj.save
       end
 
       def commit_changes

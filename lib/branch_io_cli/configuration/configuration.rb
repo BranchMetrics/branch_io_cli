@@ -53,6 +53,18 @@ module BranchIOCLI
           return nil unless current
           current.root
         end
+
+        # Removes any trailing :/* from the argument and returns a copy.
+        # Matches:
+        #  myscheme
+        #  myscheme:
+        #  myscheme://
+        #  myscheme:///
+        #  etc.
+        def uri_scheme_without_suffix(scheme)
+          return nil if scheme.blank?
+          scheme.sub %r{:/*$}, ""
+        end
       end
 
       attr_reader :options
