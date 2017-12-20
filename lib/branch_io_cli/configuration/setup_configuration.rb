@@ -176,7 +176,11 @@ module BranchIOCLI
       def validate_uri_scheme(options)
         # No validation at the moment. Just strips off any trailing ://
         uri_scheme = options.uri_scheme
-        uri_scheme ||= ask "Please enter any URI scheme you entered in the Branch Dashboard (optional). "
+
+        if confirm
+          uri_scheme ||= ask "Please enter any URI scheme you entered in the Branch Dashboard (optional). "
+        end
+
         @uri_scheme = self.class.uri_scheme_without_suffix uri_scheme
       end
 

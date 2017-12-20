@@ -50,13 +50,22 @@ module BranchIOCLI
       end
 
       def validate_universal_links
-        say "Validating new Universal Link configuration before making any changes.\n\n"
-        valid = helper.validate_team_and_bundle_ids_from_aasa_files @domains
-        if valid
-          say "Universal Link configuration passed validation. ✅\n\n"
-        else
-          say "Universal Link configuration failed validation.\n\n"
-          helper.errors.each { |error| say " #{error}" }
+        say "Validating new Universal Link configuration before making any changes."
+        valid = true
+        config.xcodeproj.build_configurations.each do |c|
+          message = "Validating #{c.name} configuration"
+          say "\n<%= color('#{message}', [BOLD, CYAN]) %>\n\n"
+
+          configuration_valid = helper.validate_team_and_bundle_ids_from_aasa_files @domains, false, c.name
+
+          if configuration_valid
+            say "Universal Link configuration passed validation for #{c.name} configuration. ✅\n\n"
+          else
+            say "Universal Link configuration failed validation for #{c.name} configuration.\n\n"
+            helper.errors.each { |error| say " #{error}" }
+          end
+
+          valid &&= configuration_valid
         end
         valid
       end
