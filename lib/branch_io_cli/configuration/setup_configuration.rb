@@ -175,7 +175,12 @@ module BranchIOCLI
 
       def validate_uri_scheme(options)
         # No validation at the moment. Just strips off any trailing ://
-        @uri_scheme = uri_scheme_without_suffix options.uri_scheme
+        uri_scheme = options.uri_scheme
+        unless uri_scheme
+          uri_scheme = ask "Please enter any URI scheme you entered in the Branch Dashboard (optional). "
+          uri_scheme = nil if uri_scheme.empty?
+        end
+        @uri_scheme = uri_scheme_without_suffix uri_scheme
       end
 
       def app_link_roots_from_domains(domains)
@@ -225,10 +230,16 @@ module BranchIOCLI
         custom_domains + app_link_subdomains
       end
 
-      # Removes any trailing :// from the argument and returns a copy
+      # Removes any trailing :/* from the argument and returns a copy.
+      # Matches:
+      #  myscheme
+      #  myscheme:
+      #  myscheme://
+      #  myscheme:///
+      #  etc.
       def uri_scheme_without_suffix(scheme)
         return nil if scheme.nil?
-        scheme.sub %r{://$}, ""
+        scheme.sub %r{:/*$}, ""
       end
 
       def prompt_for_podfile_or_cartfile
