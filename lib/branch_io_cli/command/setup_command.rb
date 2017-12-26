@@ -31,11 +31,11 @@ module BranchIOCLI
           sh "pod install", chdir: File.dirname(config.podfile_path)
         end
 
-        # Add SDK via CocoaPods, Carthage or direct download (no-op if disabled).
-        add_sdk
-
         # Set up Universal Links and Branch key(s)
         update_project_settings
+
+        # Add SDK via CocoaPods, Carthage or direct download (no-op if disabled).
+        add_sdk
 
         # Patch source code if so instructed.
         patch_helper.patch_source config.xcodeproj if config.patch_source
