@@ -178,6 +178,12 @@ module BranchIOCLI
         # No validation at the moment. Just strips off any trailing ://
         uri_scheme = options.uri_scheme
 
+        # --no-uri-scheme/uri_scheme: false
+        if options.uri_scheme == false
+          @uri_scheme = nil
+          return
+        end
+
         if confirm
           uri_scheme ||= ask "Please enter any URI scheme you entered in the Branch Dashboard [enter for none]: "
         end
