@@ -179,7 +179,7 @@ module BranchIOCLI
         uri_scheme = options.uri_scheme
 
         if confirm
-          uri_scheme ||= ask "Please enter any URI scheme you entered in the Branch Dashboard (optional). "
+          uri_scheme ||= ask "Please enter any URI scheme you entered in the Branch Dashboard [enter for none]: "
         end
 
         @uri_scheme = self.class.uri_scheme_without_suffix uri_scheme
