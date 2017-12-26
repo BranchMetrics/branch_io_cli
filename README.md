@@ -145,7 +145,7 @@ See https://github.com/BranchMetrics/branch_io_cli#setup-command for more inform
 |-T, --test-key key_test_yyyy|Branch test key|BRANCH_TEST_KEY|
 |-D, --domains example.com,www.example.com|Comma-separated list of custom domain(s) or non-Branch domain(s)|BRANCH_DOMAINS|
 |--app-link-subdomain myapp|Branch app.link subdomain, e.g. myapp for myapp.app.link|BRANCH_APP_LINK_SUBDOMAIN|
-|-U, --uri-scheme myurischeme[://]|Custom URI scheme used in the Branch Dashboard for this app|BRANCH_URI_SCHEME|
+|-U, --[no-]uri-scheme [myurischeme[://]]|Custom URI scheme used in the Branch Dashboard for this app|BRANCH_URI_SCHEME|
 |-s, --setting [BRANCH_KEY_SETTING]|Use a custom build setting for the Branch key (default: Use Info.plist)|BRANCH_SETTING|
 |--[no-]test-configurations [config1,config2]|List of configurations that use the test key with a user-defined setting (default: Debug configurations)|BRANCH_TEST_CONFIGURATIONS|
 |--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|BRANCH_XCODEPROJ|
