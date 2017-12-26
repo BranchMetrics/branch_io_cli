@@ -41,6 +41,7 @@ module BranchIOCLI
               type: String,
               aliases: "-U",
               label: "URI scheme",
+              negatable: true,
               convert_proc: ->(value) { Configuration.uri_scheme_without_suffix(value) }
             ),
             Option.new(
