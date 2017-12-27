@@ -151,7 +151,7 @@ module BranchIOCLI
 
         begin
           # Retrieve info from the API
-          app = BranchApp.new key
+          app = BranchApp[key]
           @apps[key] = app
           true
         rescue StandardError => e

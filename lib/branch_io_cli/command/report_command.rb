@@ -37,8 +37,8 @@ module BranchIOCLI
         report.write "#{config.report_configuration}\n"
         report.write "#{report_helper.report_header}\n"
 
-        report_helper.pod_install_if_required report
-        report_helper.carthage_bootstrap_if_required report
+        tool_helper.pod_install_if_required report
+        tool_helper.carthage_bootstrap_if_required report
 
         # run xcodebuild -list
         report.sh(*report_helper.base_xcodebuild_cmd, "-list")
@@ -86,6 +86,10 @@ module BranchIOCLI
 
       def report_helper
         Helper::ReportHelper
+      end
+
+      def tool_helper
+        Helper::ToolHelper
       end
     end
   end

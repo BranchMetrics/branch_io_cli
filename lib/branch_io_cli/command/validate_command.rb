@@ -6,6 +6,8 @@ module BranchIOCLI
 
         configurations = config.configurations || config.xcodeproj.build_configurations.map(&:name)
 
+        tool_helper.pod_install_if_required
+
         configurations.each do |configuration|
           message = "Validating #{configuration} configuration"
           say "\n<%= color('#{message}', [BOLD, CYAN]) %>\n\n"
@@ -34,6 +36,16 @@ module BranchIOCLI
           config_valid &&= entitlements_valid
 
           say "Universal Link configuration passed validation for #{configuration} configuration. ✅" if config_valid
+
+          branch_config_valid = helper.project_valid? configuration
+          unless branch_config_valid
+            say "Branch configuration failed validation for #{configuration} configuration."
+            helper.errors.each { |error| say " #{error}" }
+          end
+
+          config_valid &&= branch_config_valid
+
+          say "Project configuration passed validation for #{configuration} configuration. ✅" if config_valid
 
           valid &&= config_valid
         end

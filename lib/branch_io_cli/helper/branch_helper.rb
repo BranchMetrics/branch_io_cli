@@ -71,6 +71,7 @@ module BranchIOCLI
 
         def domains(apps)
           apps.inject Set.new do |result, k, v|
+            next result unless v
             result + v.domains
           end
         end

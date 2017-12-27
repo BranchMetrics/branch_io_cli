@@ -110,7 +110,7 @@ module BranchIOCLI
         end
       end
 
-      def info_plist(configuration)
+      def info_plist_path(configuration)
         # find the Info.plist paths for this configuration
         info_plist_path = config.target.expanded_build_setting "INFOPLIST_FILE", configuration
 
@@ -118,16 +118,19 @@ module BranchIOCLI
 
         project_parent = File.dirname config.xcodeproj_path
 
-        info_plist_path = File.expand_path info_plist_path, project_parent
+        File.expand_path info_plist_path, project_parent
+      end
 
+      def info_plist(path)
         # try to open and parse the Info.plist (raises)
-        info_plist = File.open(info_plist_path) { |f| Plist.parse_xml f }
-        raise "Failed to parse #{info_plist_path}" if info_plist.nil?
+        info_plist = File.open(path) { |f| Plist.parse_xml f }
+        raise "Failed to parse #{path}" if info_plist.nil?
         info_plist
       end
 
       def update_info_plist_setting(configuration = RELEASE_CONFIGURATION, &b)
-        info_plist = info_plist(configuration)
+        info_plist_path = info_plist_path(configuration)
+        info_plist = info_plist(info_plist_path)
         yield info_plist
 
         Plist::Emit.save_plist info_plist, info_plist_path
@@ -416,7 +419,17 @@ module BranchIOCLI
 
       # Validates Branch-related settings in a project (keys, domains, URI schemes)
       def project_valid?(configuration)
-        branch_key = info_plist(configuration)
+        @errors = []
+
+        info_plist_path = info_plist_path(configuration)
+        info_plist = info_plist(info_plist_path).symbolize_keys
+        branch_key = config.target.expand_build_settings info_plist[:branch_key], configuration
+
+        unless branch_key
+          @errors << "branch_key not found in Info.plist"
+          return false
+        end
+
         if branch_key.kind_of?(Hash)
           branch_keys = branch_key.map { |k, v| v }
         else

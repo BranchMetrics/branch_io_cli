@@ -21,15 +21,7 @@ module BranchIOCLI
           return 1 unless valid || config.force
         end
 
-        # Make sure we can resolve all build settings in a project that uses
-        # CocoaPods.
-        if config.podfile_path && File.exist?(config.podfile_path) && config.pod_install_required?
-          tool_helper.verify_cocoapods
-          say "Installing pods to resolve current build settings"
-          # We haven't modified anything yet. Don't use --repo-update at this stage.
-          # This is unlikely to fail.
-          sh "pod install", chdir: File.dirname(config.podfile_path)
-        end
+        tool_helper.pod_install_if_required
 
         # Set up Universal Links and Branch key(s)
         update_project_settings

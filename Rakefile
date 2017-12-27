@@ -44,7 +44,8 @@ task :setup do
     validate: true,
     pod_repo_update: false,
     setting: true,
-    confirm: false
+    confirm: false,
+    trace: true
   )
 end
 
@@ -58,18 +59,19 @@ task :validate do
       k272-alternate.app.link
       k272.test-app.link
       k272-alternate.test-app.link
-    )
+    ),
+    trace: true
   )
 end
 
 desc "Report on all examples in repo"
 task :report do
-  Rake::Task["branch:report"].invoke all_projects, header_only: true
+  Rake::Task["branch:report"].invoke all_projects, header_only: true, trace: true
 end
 
 desc "Perform a full build of all examples in the repo"
 task "report:full" do
-  Rake::Task["branch:report"].invoke all_projects, pod_repo_update: false, confirm: false
+  Rake::Task["branch:report"].invoke all_projects, pod_repo_update: false, confirm: false, trace: true
 end
 
 #
