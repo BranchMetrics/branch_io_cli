@@ -1,3 +1,4 @@
+require "active_support/core_ext/object"
 require "json"
 require "openssl"
 require "plist"
@@ -425,7 +426,7 @@ module BranchIOCLI
         info_plist = info_plist(info_plist_path).symbolize_keys
         branch_key = config.target.expand_build_settings info_plist[:branch_key], configuration
 
-        unless branch_key
+        if branch_key.blank?
           @errors << "branch_key not found in Info.plist"
           return false
         end
@@ -437,6 +438,17 @@ module BranchIOCLI
         end
 
         valid = true
+
+        if config.live_key || config.test_key
+          # Validate the keys in the project against those passed in by the user.
+          expected_keys = [config.live_key, config.test_key].compact.uniq
+          valid &&= branch_keys.uniq == expected_keys
+          unless valid
+            @errors << "Project keys do not match."
+            @errors << " Expected: #{expected_keys.inspect}"
+            @errors << " Actual: #{branch_keys.inspect}"
+          end
+        end
 
         # Retrieve app data from Branch API for all keys in the Info.plist
         apps = branch_keys.map do |key|
