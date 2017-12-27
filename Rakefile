@@ -22,6 +22,8 @@ desc "Run setup, validate, report and report:full in order"
 task all: [:setup, :validate, :report, "report:full"]
 
 IOS_REPO_DIR = File.expand_path "../../ios-branch-deep-linking", __FILE__
+LIVE_KEY = "key_live_fgvRfyHxLBuCjUuJAKEZNdeiAueoTL6R"
+TEST_KEY = "key_test_efBNprLtMrryfNERzPVh2gkhxyliNN14"
 
 def all_projects
   projects = Dir[File.expand_path("../examples/*Example*", __FILE__)]
@@ -36,8 +38,8 @@ task :setup do
   projects = Dir[File.expand_path("../examples/*Example*", __FILE__)]
   Rake::Task["branch:setup"].invoke(
     projects,
-    live_key: "key_live_xxxx",
-    test_key: "key_test_yyyy",
+    live_key: LIVE_KEY,
+    test_key: TEST_KEY,
     domains: %w(k272.app.link),
     validate: true,
     pod_repo_update: false,

@@ -1,4 +1,5 @@
 require "branch_io_cli/ascii_art"
+require "branch_io_cli/branch_app"
 require "branch_io_cli/cli"
 require "branch_io_cli/command"
 require "branch_io_cli/configuration"

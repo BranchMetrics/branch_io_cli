@@ -28,6 +28,7 @@ module BranchIOCLI
         }
 
       attr_reader :keys
+      attr_reader :apps
       attr_reader :all_domains
 
       def initialize(options)
@@ -120,6 +121,7 @@ module BranchIOCLI
 
       def validate_keys_from_setup_options(options)
         @keys = {}
+        @apps = {}
 
         # 1. Check the options passed in. If nothing (nil) passed, continue.
         validate_key options.live_key, :live, accept_nil: true
@@ -138,15 +140,26 @@ module BranchIOCLI
 
       def key_valid?(key, type)
         return false if key.nil?
-        key.empty? || key =~ /^key_#{type}_/
+        return true if key.empty?
+        unless key =~ /^key_#{type}_/
+          say "#{key.inspect} is not a valid #{type} Branch key. It must begin with key_#{type}_."
+          return false
+        end
+
+        begin
+          # Retrieve info from the API
+          app = BranchApp.new key
+          @apps[key] = app
+          true
+        rescue StandardError => e
+          say "Error fetching app for key #{key} from Branch API: #{e.message}"
+          false
+        end
       end
 
       def validate_key(key, type, options = {})
         return if options[:accept_nil] && key.nil?
-        until key_valid? key, type
-          say "#{key.inspect} is not a valid #{type} Branch key. It must begin with key_#{type}_." if key
-          key = ask "Please enter your #{type} Branch key or use --#{type}-key [enter for none]: "
-        end
+        key = ask "Please enter your #{type} Branch key or use --#{type}-key [enter for none]: " until key_valid? key, type
         @keys[type] = key unless key.empty?
         instance_variable_set "@#{type}_key", key
       end
