@@ -6,14 +6,14 @@ module BranchIOCLI
           [
             Option.new(
               name: :live_key,
-              description: "Branch live key",
+              description: "Branch live key expected in project",
               example: "key_live_xxxx",
               type: String,
               aliases: "-L"
             ),
             Option.new(
               name: :test_key,
-              description: "Branch test key",
+              description: "Branch test key expected in project",
               example: "key_test_yyyy",
               type: String,
               aliases: "-T"

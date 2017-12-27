@@ -19,6 +19,7 @@ module BranchIOCLI
       def validate_options
         validate_xcodeproj_path
         validate_target
+        validate_keys optional: true
       end
 
       def log
@@ -26,6 +27,8 @@ module BranchIOCLI
         say <<EOF
 <%= color('Xcode project:', BOLD) %> #{xcodeproj_path}
 <%= color('Target:', BOLD) %> #{target.name}
+<%= color('Live key:', BOLD) %> #{keys[:live] || '(none)'}
+<%= color('Test key:', BOLD) %> #{keys[:test] || '(none)'}
 <%= color('Domains:', BOLD) %> #{domains || '(none)'}
 <%= color('Configurations:', BOLD) %> #{(configurations || xcodeproj.build_configurations.map(&:name)).join(',')}
 EOF

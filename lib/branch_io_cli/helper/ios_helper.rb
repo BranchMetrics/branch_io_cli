@@ -439,17 +439,6 @@ module BranchIOCLI
 
         valid = true
 
-        if config.live_key || config.test_key
-          # Validate the keys in the project against those passed in by the user.
-          expected_keys = [config.live_key, config.test_key].compact.uniq
-          valid &&= branch_keys.uniq == expected_keys
-          unless valid
-            @errors << "Project keys do not match."
-            @errors << " Expected: #{expected_keys.inspect}"
-            @errors << " Actual: #{branch_keys.inspect}"
-          end
-        end
-
         # Retrieve app data from Branch API for all keys in the Info.plist
         apps = branch_keys.map do |key|
           begin
@@ -477,6 +466,19 @@ module BranchIOCLI
         end
 
         valid
+      end
+
+      def branch_keys_from_project(configurations)
+        configurations.map do |c|
+          path = info_plist_path(c)
+          info_plist = info_plist(path).symbolize_keys
+          branch_key = config.target.expand_build_settings(info_plist[:branch_key], c)
+          if branch_key.kind_of?(Hash)
+            branch_key.values
+          else
+            branch_key
+          end
+        end.compact.flatten.uniq
       end
 
       def ios_urischemes(apps)

@@ -27,8 +27,6 @@ module BranchIOCLI
           "Skip adding the framework to the project." => :skip
         }
 
-      attr_reader :keys
-      attr_reader :apps
       attr_reader :all_domains
 
       def initialize(options)
@@ -52,7 +50,7 @@ module BranchIOCLI
 
         validate_xcodeproj_path
         validate_target
-        validate_keys_from_setup_options options
+        validate_keys
         validate_all_domains options, !target.extension_target_type?
         validate_uri_scheme options
         validate_setting options
@@ -116,54 +114,6 @@ module BranchIOCLI
         message += "\n"
 
         say message
-      end
-
-      def validate_keys_from_setup_options(options)
-        @keys = {}
-        @apps = {}
-
-        # 1. Check the options passed in. If nothing (nil) passed, continue.
-        validate_key options.live_key, :live, accept_nil: true
-        validate_key options.test_key, :test, accept_nil: true
-
-        # 2. Did we find a valid key above?
-        while @keys.empty?
-          # 3. If not, prompt.
-          say "A live key, a test key or both is required."
-          validate_key nil, :live
-          validate_key nil, :test
-        end
-
-        # 4. We have at least one valid key now.
-      end
-
-      def key_valid?(key, type)
-        return false if key.nil?
-        return true if key.empty?
-        unless key =~ /^key_#{type}_.+/
-          say "#{key.inspect} is not a valid #{type} Branch key. It must begin with key_#{type}_."
-          return false
-        end
-
-        # For now: When using --no-validate, don't call the Branch API.
-        return true unless validate
-
-        begin
-          # Retrieve info from the API
-          app = BranchApp[key]
-          @apps[key] = app
-          true
-        rescue StandardError => e
-          say "Error fetching app for key #{key} from Branch API: #{e.message}"
-          false
-        end
-      end
-
-      def validate_key(key, type, options = {})
-        return if options[:accept_nil] && key.nil?
-        key = ask "Please enter your #{type} Branch key or use --#{type}-key [enter for none]: " until key_valid? key, type
-        @keys[type] = key unless key.empty?
-        instance_variable_set "@#{type}_key", key
       end
 
       def validate_all_domains(options, required = true)

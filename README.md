@@ -243,8 +243,10 @@ See https://github.com/BranchMetrics/branch_io_cli#validate-command for more inf
 |-h, --help|Prints a list of commands or help for each command||
 |-v, --version|Prints the current version of the CLI||
 |-t, --trace|Prints a stack trace when exceptions are raised||
-|-D, --domains example.com,www.example.com|Comma-separated list of domains to validate (Branch domains or non-Branch domains) (default: [])|BRANCH_DOMAINS|
-|--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|BRANCH_XCODEPROJ|
+|-L, --live-key key_live_xxxx|Branch live key expected in project|BRANCH_LIVE_KEY|
+|-T, --test-key key_test_yyyy|Branch test key expected in project|BRANCH_TEST_KEY|
+|-D, --domains example.com,www.example.com|Comma-separated list of domains expected to be configured in the project (Branch domains or non-Branch domains) (default: [])|BRANCH_DOMAINS|
+|--xcodeproj MyProject.xcodeproj|Path to an Xcode project to validate|BRANCH_XCODEPROJ|
 |--target MyAppTarget|Name of a target to validate in the Xcode project|BRANCH_TARGET|
 |--configurations Debug,Release|Comma-separated list of configurations to validate (default: all)|BRANCH_CONFIGURATIONS|
 |--[no-]universal-links-only|Validate only the Universal Link configuration (default: no)|BRANCH_UNIVERSAL_LINKS_ONLY|
