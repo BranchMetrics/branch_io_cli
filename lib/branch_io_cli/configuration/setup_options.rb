@@ -139,14 +139,8 @@ module BranchIOCLI
               example: "message",
               argument_optional: true,
               label: "Commit message"
-            ),
-            Option.new(
-              name: :confirm,
-              description: "Confirm configuration before proceeding",
-              default_value: true,
-              skip_confirmation: true
             )
-          ]
+          ] + Option.global_options
         end
       end
     end

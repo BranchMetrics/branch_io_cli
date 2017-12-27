@@ -17,7 +17,7 @@ _branch_io_complete()
 
     report_opts="--workspace --xcodeproj --scheme --target --configuration --sdk --podfile --cartfile --no-clean -H --header-only --no-pod-repo-update -o --out --no-confirm"
 
-    validate_opts="-D --domains --xcodeproj --target --configurations"
+    validate_opts="-D --domains --xcodeproj --target --configurations --universal-links-only --no-confirm"
 
 
     if [[ ${cur} == -* ]] ; then

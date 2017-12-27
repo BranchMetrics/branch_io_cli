@@ -37,15 +37,17 @@ module BranchIOCLI
 
           say "Universal Link configuration passed validation for #{configuration} configuration. ✅" if config_valid
 
-          branch_config_valid = helper.project_valid? configuration
-          unless branch_config_valid
-            say "Branch configuration failed validation for #{configuration} configuration."
-            helper.errors.each { |error| say " #{error}" }
+          unless config.universal_links_only
+            branch_config_valid = helper.project_valid? configuration
+            unless branch_config_valid
+              say "Branch configuration failed validation for #{configuration} configuration."
+              helper.errors.each { |error| say " #{error}" }
+            end
+
+            config_valid &&= branch_config_valid
+
+            say "Project configuration passed validation for #{configuration} configuration. ✅" if config_valid
           end
-
-          config_valid &&= branch_config_valid
-
-          say "Project configuration passed validation for #{configuration} configuration. ✅" if config_valid
 
           valid &&= config_valid
         end

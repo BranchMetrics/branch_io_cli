@@ -29,8 +29,13 @@ module BranchIOCLI
               description: "Comma-separated list of configurations to validate (default: all)",
               type: Array,
               example: "Debug,Release"
+            ),
+            Option.new(
+              name: :universal_links_only,
+              description: "Validate only the Universal Link configuration",
+              default_value: false
             )
-          ]
+          ] + Option.global_options
         end
       end
     end

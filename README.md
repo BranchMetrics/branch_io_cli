@@ -160,7 +160,7 @@ See https://github.com/BranchMetrics/branch_io_cli#setup-command for more inform
 |--[no-]add-sdk|Add the Branch framework to the project (default: yes)|BRANCH_ADD_SDK|
 |--[no-]patch-source|Add Branch SDK calls to the AppDelegate (default: yes)|BRANCH_PATCH_SOURCE|
 |--commit [message]|Commit the results to Git if non-blank|BRANCH_COMMIT|
-|--[no-]confirm|Confirm configuration before proceeding (default: yes)|BRANCH_CONFIRM|
+|--[no-]confirm|Enable or disable many prompts (default: yes)|BRANCH_CONFIRM|
 
 
 #### Examples
@@ -247,6 +247,8 @@ See https://github.com/BranchMetrics/branch_io_cli#validate-command for more inf
 |--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|BRANCH_XCODEPROJ|
 |--target MyAppTarget|Name of a target to validate in the Xcode project|BRANCH_TARGET|
 |--configurations Debug,Release|Comma-separated list of configurations to validate (default: all)|BRANCH_CONFIGURATIONS|
+|--[no-]universal-links-only|Validate only the Universal Link configuration (default: no)|BRANCH_UNIVERSAL_LINKS_ONLY|
+|--[no-]confirm|Enable or disable many prompts (default: yes)|BRANCH_CONFIRM|
 
 
 
@@ -285,7 +287,7 @@ building.
 |-H, --[no-]header-only|Write a report header to standard output and exit (default: no)|BRANCH_HEADER_ONLY|
 |--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|BRANCH_POD_REPO_UPDATE|
 |-o, --out ./report.txt|Report output path (default: ./report.txt)|BRANCH_REPORT_PATH|
-|--[no-]confirm|Confirm before running certain commands (default: yes)|BRANCH_CONFIRM|
+|--[no-]confirm|Enable or disable many prompts (default: yes)|BRANCH_CONFIRM|
 
 
 

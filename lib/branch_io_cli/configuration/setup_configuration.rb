@@ -32,7 +32,6 @@ module BranchIOCLI
       attr_reader :all_domains
 
       def initialize(options)
-        @confirm = options.confirm
         super
         # Configuration has been validated and logged to the screen.
         confirm_with_user if options.confirm

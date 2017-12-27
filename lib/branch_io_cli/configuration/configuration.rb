@@ -84,6 +84,7 @@ module BranchIOCLI
         @options = options
         @pod_repo_update = options.pod_repo_update if self.class.available_options.map(&:name).include?(:pod_repo_update)
         @sdk = "iphonesimulator" # to load Xcode build settings for commands without a --sdk option
+        @confirm = options.confirm
 
         Configuration.current = self
 
