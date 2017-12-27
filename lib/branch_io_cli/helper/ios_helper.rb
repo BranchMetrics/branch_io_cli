@@ -110,7 +110,7 @@ module BranchIOCLI
         end
       end
 
-      def update_info_plist_setting(configuration = RELEASE_CONFIGURATION, &b)
+      def info_plist(configuration)
         # find the Info.plist paths for this configuration
         info_plist_path = config.target.expanded_build_setting "INFOPLIST_FILE", configuration
 
@@ -123,8 +123,11 @@ module BranchIOCLI
         # try to open and parse the Info.plist (raises)
         info_plist = File.open(info_plist_path) { |f| Plist.parse_xml f }
         raise "Failed to parse #{info_plist_path}" if info_plist.nil?
+        info_plist
+      end
 
-        yield info_plist
+      def update_info_plist_setting(configuration = RELEASE_CONFIGURATION, &b)
+        yield info_plist(configuration)
 
         Plist::Emit.save_plist info_plist, info_plist_path
         add_change info_plist_path
@@ -408,6 +411,50 @@ module BranchIOCLI
         return [] if associated_domains.nil?
 
         associated_domains.select { |d| d =~ /^applinks:/ }.map { |d| d.sub(/^applinks:/, "") }
+      end
+
+      # Validates Branch-related settings in a project (keys, domains, URI schemes)
+      def project_valid?(configuration)
+        branch_key = info_plist(configuration)
+        if branch_key.kind_of?(Hash)
+          branch_keys = branch_key.map { |k, v| v }
+        else
+          branch_keys = [branch_key]
+        end
+
+        valid = true
+
+        # Retrieve app data from Branch API for all keys in the Info.plist
+        apps = branch_keys.map do |key|
+          begin
+            BranchApp[key]
+          rescue StandardError => e
+            # Failed to retrieve a key in the Info.plist from the API.
+            @errors << "[#{key}] #{e.message}"
+            valid = false
+            nil
+          end
+        end.compact.uniq
+
+        # Get domains and URI schemes loaded from API
+        domains_from_api = domains apps
+        # uri_schemes_from_api = ios_urischemes apps
+
+        # Make sure all domains and URI schemes are present in the project.
+        domains = domains_from_project(configuration)
+        missing_domains = domains_from_api - domains
+        unless missing_domains.empty?
+          valid = false
+          missing_domains.each do |domain|
+            @errors << "[#{domain}] Missing from #{configuration} configuration."
+          end
+        end
+
+        valid
+      end
+
+      def ios_urischemes(apps)
+        Set.new apps.map(&:ios_uri_scheme).compact
       end
     end
   end

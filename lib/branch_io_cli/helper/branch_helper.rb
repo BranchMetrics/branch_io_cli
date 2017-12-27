@@ -1,3 +1,4 @@
+require "active_support/core_ext/hash"
 require "branch_io_cli/helper/android_helper"
 require "branch_io_cli/helper/ios_helper"
 require "net/http"
@@ -65,6 +66,12 @@ module BranchIOCLI
                 raise "Error downloading #{url}: #{response.code} #{response.message}"
               end
             end
+          end
+        end
+
+        def domains(apps)
+          apps.inject Set.new do |result, k, v|
+            result + v.domains
           end
         end
       end

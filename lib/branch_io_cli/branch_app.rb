@@ -4,6 +4,18 @@ require "branch_io_cli/helper"
 
 module BranchIOCLI
   class BranchApp
+    class << self
+      def [](key)
+        fetch key
+      end
+
+      def fetch(key, cache: true)
+        @apps ||= {}
+        @apps[key] = new(key) unless cache && @apps[key]
+        @apps[key]
+      end
+    end
+
     API_ENDPOINT = "https://api.branch.io/v1/app-link-settings/"
 
     attr_reader :key

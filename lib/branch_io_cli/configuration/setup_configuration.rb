@@ -191,9 +191,7 @@ module BranchIOCLI
       end
 
       def domains_from_api
-        @apps.inject [] do |memo, k, v|
-          memo + v.domains
-        end.uniq
+        helper.domains @apps
       end
 
       def validate_uri_scheme(options)
