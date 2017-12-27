@@ -127,7 +127,8 @@ module BranchIOCLI
       end
 
       def update_info_plist_setting(configuration = RELEASE_CONFIGURATION, &b)
-        yield info_plist(configuration)
+        info_plist = info_plist(configuration)
+        yield info_plist
 
         Plist::Emit.save_plist info_plist, info_plist_path
         add_change info_plist_path
