@@ -19,7 +19,7 @@ task default: [:spec, :rubocop]
 #
 
 desc "Run setup, validate, report and report:full in order"
-task all: [:setup, :validate, :report, "report:full"]
+task all: [:setup, :validate, :report, :"report:full"]
 
 IOS_REPO_DIR = File.expand_path "../../ios-branch-deep-linking", __FILE__
 LIVE_KEY = "key_live_fgvRfyHxLBuCjUuJAKEZNdeiAueoTL6R"

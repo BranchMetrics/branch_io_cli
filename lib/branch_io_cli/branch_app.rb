@@ -19,13 +19,13 @@ module BranchIOCLI
     def initialize(key)
       @key = key
 
-      say "Checking Branch Dashboard for key #{key}."
+      say "Fetching configuration from Branch Dashboard for #{key}."
 
-      @hash = JSON.parse(Helper::BranchHelper.fetch("#{API_ENDPOINT}#{key}")).symbolize_keys
+      @hash = JSON.parse(Helper::BranchHelper.fetch("#{API_ENDPOINT}#{key}")).symbolize_keys.merge key: key
 
       say "Done ✅"
 
-      @alternate_short_url_domain = @hash[:alernate_short_url_domain]
+      @alternate_short_url_domain = @hash[:alternate_short_url_domain]
       @android_package_name = @hash[:android_package_name]
       @android_uri_scheme = @hash[:android_uri_scheme]
       @default_short_url_domain = @hash[:default_short_url_domain]
@@ -35,12 +35,20 @@ module BranchIOCLI
       @short_url_domain = @hash[:short_url_domain]
     end
 
+    def domains
+      [alternate_short_url_domain, default_short_url_domain, short_url_domain].compact.uniq
+    end
+
     def to_hash
       @hash
     end
 
     def to_s
-      @hash.to_s.sub(/\{\:/, '').sub(/\}/, '').gsub(/, \:/, ' ').gsub(/\=\>/, '=')
+      # Changes
+      # {:key1=>"value1", :key2=>"value2"}
+      # to
+      # key1="value1" key2="value2"
+      @hash.to_s.sub(/^\{\:/, '').sub(/\}$/, '').gsub(/, \:/, ' ').gsub(/\=\>/, '=')
     end
 
     def inspect

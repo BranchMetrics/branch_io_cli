@@ -141,10 +141,13 @@ module BranchIOCLI
       def key_valid?(key, type)
         return false if key.nil?
         return true if key.empty?
-        unless key =~ /^key_#{type}_/
+        unless key =~ /^key_#{type}_.+/
           say "#{key.inspect} is not a valid #{type} Branch key. It must begin with key_#{type}_."
           return false
         end
+
+        # For now: When using --no-validate, don't call the Branch API.
+        return true unless validate
 
         begin
           # Retrieve info from the API
@@ -185,6 +188,12 @@ module BranchIOCLI
 
           @all_domains = all_domains_from_domains domains
         end
+      end
+
+      def domains_from_api
+        @apps.inject [] do |memo, k, v|
+          memo + v.domains
+        end.uniq
       end
 
       def validate_uri_scheme(options)
