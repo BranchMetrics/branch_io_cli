@@ -432,7 +432,7 @@ module BranchIOCLI
 
         info_plist_path = info_plist_path(configuration)
         info_plist = info_plist(info_plist_path).symbolize_keys
-        branch_key = config.target.expand_build_settings info_plist[:branch_key], configuration
+        branch_key = info_plist[:branch_key]
 
         if branch_key.blank?
           say "branch_key not found in Info.plist. ❌"
@@ -444,6 +444,8 @@ module BranchIOCLI
         else
           branch_keys = [branch_key]
         end
+
+        branch_keys = branch_keys.map { |key| config.target.expand_build_settings key, configuration }
 
         valid = true
 
@@ -480,7 +482,7 @@ module BranchIOCLI
           path = info_plist_path(c)
           info_plist = info_plist(path).symbolize_keys
           branch_key = info_plist[:branch_key]
-          if branch_key.nil?
+          if branch_key.blank?
             say "branch_key not found in Info.plist. ❌"
             return []
           end
