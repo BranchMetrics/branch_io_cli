@@ -21,7 +21,7 @@ module BranchIOCLI
           return 1 unless valid || config.force
         end
 
-        tool_helper.pod_install_if_required
+        return false unless tool_helper.pod_install_if_required
 
         # Set up Universal Links and Branch key(s)
         update_project_settings

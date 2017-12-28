@@ -6,7 +6,7 @@ module BranchIOCLI
 
         configurations = config.configurations || config.xcodeproj.build_configurations.map(&:name)
 
-        tool_helper.pod_install_if_required
+        return false unless tool_helper.pod_install_if_required
 
         valid = project_matches_keys?(configurations)
         schemes_valid = uri_schemes_valid?(configurations)

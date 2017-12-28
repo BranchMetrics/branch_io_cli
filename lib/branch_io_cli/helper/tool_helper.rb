@@ -325,7 +325,7 @@ github "BranchMetrics/ios-branch-deep-linking"
         end
 
         def pod_install_if_required(report = STDOUT)
-          return unless config.pod_install_required?
+          return true unless config.pod_install_required?
           # Only if a Podfile is detected/supplied at the command line.
 
           say "pod install required in order to build."
@@ -334,7 +334,7 @@ github "BranchMetrics/ios-branch-deep-linking"
 
             unless install
               say 'Please run "pod install" or "pod update" first in order to continue.'
-              exit(-1)
+              return false
             end
           end
 
@@ -357,13 +357,15 @@ some cases. If that happens, please rerun without --no-pod-repo-update or run
             say "Done ✅"
           else
             say "#{install_command.inspect} failed. See report for details."
-            exit(-1)
+            return false
           end
+
+          true
         end
 
         def carthage_bootstrap_if_required(report = STDOUT)
-          return unless config.cartfile_path
-          return if Dir.exist?(File.join(File.dirname(config.cartfile_path), "Carthage", "Build", "iOS"))
+          return true unless config.cartfile_path
+          return true if Dir.exist?(File.join(File.dirname(config.cartfile_path), "Carthage", "Build", "iOS"))
 
           say "carthage checkout required in order to build."
           if config.confirm
@@ -371,7 +373,7 @@ some cases. If that happens, please rerun without --no-pod-repo-update or run
 
             unless install
               say 'Please build your Carthage dependencies first in order to continue.'
-              exit(-1)
+              return false
             end
           end
 
@@ -384,8 +386,10 @@ some cases. If that happens, please rerun without --no-pod-repo-update or run
             say "Done ✅"
           else
             say "#{install_command.inspect} failed. See report for details."
-            exit(-1)
+            return false
           end
+
+          true
         end
       end
     end
