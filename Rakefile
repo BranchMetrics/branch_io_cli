@@ -19,7 +19,7 @@ task default: [:spec, :rubocop]
 #
 
 desc "Run setup, validate, report and report:full in order"
-task all: [:setup, :validate, :report, :"report:full"]
+task all: [:setup, :validate, :report, report: :full]
 
 IOS_REPO_DIR = File.expand_path "../../ios-branch-deep-linking", __FILE__
 LIVE_KEY = "key_live_fgvRfyHxLBuCjUuJAKEZNdeiAueoTL6R"
@@ -82,9 +82,11 @@ task :report do
   Rake::Task["branch:report"].invoke all_projects, header_only: true, trace: true
 end
 
-desc "Perform a full build of all examples in the repo"
-task "report:full" do
-  Rake::Task["branch:report"].invoke all_projects, pod_repo_update: false, confirm: false, trace: true
+namespace :report do
+  desc "Perform a full build of all examples in the repo"
+  task :full do
+    Rake::Task["branch:report"].invoke all_projects, pod_repo_update: false, confirm: false, trace: true
+  end
 end
 
 #

@@ -13,6 +13,7 @@ describe BranchIOCLI::Helper::IOSHelper do
 
   before :each do
     instance.errors = []
+    instance.reset_aasa_cache
   end
 
   describe "constants" do

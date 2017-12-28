@@ -257,6 +257,10 @@ module BranchIOCLI
         nil
       end
 
+      def reset_aasa_cache
+        @aasa_files = {}
+      end
+
       def contents_of_aasa_file(domain)
         @aasa_files ||= {}
         return @aasa_files[domain] if @aasa_files[domain]
