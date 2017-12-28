@@ -7,6 +7,8 @@ module BranchIOCLI
         tool_helper.pod_install_if_required
 
         valid = project_matches_keys?(configurations)
+        schemes_valid = uri_schemes_valid?(configurations)
+        valid &&= schemes_valid
 
         configurations.each do |configuration|
           message = "Validating #{configuration} configuration"
@@ -77,8 +79,20 @@ module BranchIOCLI
       end
 
       def uri_schemes_valid?(configurations)
-        branch_keys = helper.branch_keys_from_project(configurations)
-        apps = branch_keys.map { |k| BranchApp[k] }
+        uri_schemes = helper.branch_apps_from_project(configurations).map(&:ios_uri_scheme).compact.uniq
+        expected = uri_schemes.sort
+        return true if expected.empty?
+
+        actual = helper.uri_schemes_from_project(configurations).sort
+        if expected == actual
+          say "URI schemes from project match schemes from Dashboard. ✅"
+        else
+          say "URI schemes from project do not match schemes from Dashboard."
+          say " Expected: #{expected_keys.inspect}"
+          say " Actual: #{branch_keys.inspect}"
+        end
+
+        expected == actual
       end
     end
   end

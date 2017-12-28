@@ -427,7 +427,7 @@ module BranchIOCLI
         branch_key = config.target.expand_build_settings info_plist[:branch_key], configuration
 
         if branch_key.blank?
-          @errors << "branch_key not found in Info.plist"
+          say "branch_key not found in Info.plist."
           return false
         end
 
@@ -445,7 +445,7 @@ module BranchIOCLI
             BranchApp[key]
           rescue StandardError => e
             # Failed to retrieve a key in the Info.plist from the API.
-            @errors << "[#{key}] #{e.message}"
+            say "[#{key}] #{e.message}"
             valid = false
             nil
           end
@@ -460,7 +460,7 @@ module BranchIOCLI
         unless missing_domains.empty?
           valid = false
           missing_domains.each do |domain|
-            @errors << "[#{domain}] Missing from #{configuration} configuration."
+            say "[#{domain}] Domain from Dashboard missing from #{configuration} configuration."
           end
         end
 
@@ -471,13 +471,33 @@ module BranchIOCLI
         configurations.map do |c|
           path = info_plist_path(c)
           info_plist = info_plist(path).symbolize_keys
-          branch_key = config.target.expand_build_settings(info_plist[:branch_key], c)
-          if branch_key.kind_of?(Hash)
-            branch_key.values
-          else
-            branch_key
+          branch_key = info_plist[:branch_key]
+          if branch_key.nil?
+            say "branch_key not found in Info.plist."
+            return []
           end
+
+          if branch_key.kind_of?(Hash)
+            keys = branch_key.values
+          else
+            keys = [branch_key]
+          end
+
+          keys.map { |key| config.target.expand_build_settings key, c }
         end.compact.flatten.uniq
+      end
+
+      def branch_apps_from_project(configurations)
+        branch_keys_from_project(configurations).map { |key| BranchApp[key] }
+      end
+
+      def uri_schemes_from_project(configurations)
+        configurations.map do |c|
+          path = info_plist_path(c)
+          info_plist = info_plist(path).symbolize_keys
+          url_types = info_plist["CFBundleURLTypes"] || []
+          url_types.map { |t| t["CFBundleURLSchemes"] }
+        end.flatten.uniq
       end
     end
   end
