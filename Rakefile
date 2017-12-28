@@ -51,9 +51,8 @@ end
 
 desc "Validate repo examples"
 task :validate do
-  projects = Dir[File.expand_path("../examples/*Example*", __FILE__)]
   Rake::Task["branch:validate"].invoke(
-    projects,
+    all_projects,
     # Expect all projects to have exactly these keys and domains
     live_key: LIVE_KEY,
     test_key: TEST_KEY,

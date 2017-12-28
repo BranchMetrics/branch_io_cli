@@ -75,6 +75,11 @@ module BranchIOCLI
 
         keys_valid
       end
+
+      def uri_schemes_valid?(configurations)
+        branch_keys = helper.branch_keys_from_project(configurations)
+        apps = branch_keys.map { |k| BranchApp[k] }
+      end
     end
   end
 end

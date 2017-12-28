@@ -453,7 +453,6 @@ module BranchIOCLI
 
         # Get domains and URI schemes loaded from API
         domains_from_api = domains apps
-        # uri_schemes_from_api = ios_urischemes apps
 
         # Make sure all domains and URI schemes are present in the project.
         domains = domains_from_project(configuration)
@@ -479,10 +478,6 @@ module BranchIOCLI
             branch_key
           end
         end.compact.flatten.uniq
-      end
-
-      def ios_urischemes(apps)
-        Set.new apps.map(&:ios_uri_scheme).compact
       end
     end
   end

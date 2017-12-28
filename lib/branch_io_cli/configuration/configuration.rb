@@ -395,6 +395,10 @@ EOF
         path && path.sub(/\.h$/, '.m')
       end
 
+      def ios_urischemes_from_api(apps = @apps)
+        Set.new apps.map(&:ios_uri_scheme).compact
+      end
+
       # TODO: How many of these can vary by configuration?
 
       def modules_enabled?
