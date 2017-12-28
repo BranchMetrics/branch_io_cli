@@ -2,6 +2,8 @@ module BranchIOCLI
   module Command
     class ValidateCommand < Command
       def run!
+        say "\n"
+
         configurations = config.configurations || config.xcodeproj.build_configurations.map(&:name)
 
         tool_helper.pod_install_if_required

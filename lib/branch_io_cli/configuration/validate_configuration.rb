@@ -27,6 +27,7 @@ module BranchIOCLI
         say <<EOF
 <%= color('Xcode project:', BOLD) %> #{xcodeproj_path}
 <%= color('Target:', BOLD) %> #{target.name}
+<%= color('Target type:', BOLD) %> #{target.product_type}
 <%= color('Live key:', BOLD) %> #{keys[:live] || '(none)'}
 <%= color('Test key:', BOLD) %> #{keys[:test] || '(none)'}
 <%= color('Domains:', BOLD) %> #{domains || '(none)'}

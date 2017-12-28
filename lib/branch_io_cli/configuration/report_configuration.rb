@@ -62,6 +62,7 @@ EOF
 <%= color('Xcode project:', BOLD) %> #{xcodeproj_path || '(none)'}
 <%= color('Scheme:', BOLD) %> #{scheme || '(none)'}
 <%= color('Target:', BOLD) %> #{target || '(none)'}
+<%= color('Target type:', BOLD) %> #{target.product_type}
 <%= color('Configuration:', BOLD) %> #{configuration || '(none)'}
 <%= color('SDK:', BOLD) %> #{sdk}
 <%= color('Podfile:', BOLD) %> #{relative_path(podfile_path) || '(none)'}
