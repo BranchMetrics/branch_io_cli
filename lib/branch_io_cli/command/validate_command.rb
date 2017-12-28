@@ -29,15 +29,17 @@ module BranchIOCLI
             config_valid &&= domains_valid
           end
 
-          entitlements_valid = helper.validate_team_and_bundle_ids_from_aasa_files [], false, configuration
-          unless entitlements_valid
-            say "Universal Link configuration failed validation for #{configuration} configuration. ❌"
-            helper.errors.each { |error| say " #{error}" }
+          if config.target.symbol_type == :application
+            entitlements_valid = helper.validate_team_and_bundle_ids_from_aasa_files [], false, configuration
+            unless entitlements_valid
+              say "Universal Link configuration failed validation for #{configuration} configuration. ❌"
+              helper.errors.each { |error| say " #{error}" }
+            end
+
+            config_valid &&= entitlements_valid
+
+            say "Universal Link configuration passed validation for #{configuration} configuration. ✅" if config_valid
           end
-
-          config_valid &&= entitlements_valid
-
-          say "Universal Link configuration passed validation for #{configuration} configuration. ✅" if config_valid
 
           unless config.universal_links_only
             branch_config_valid = helper.project_valid? configuration
