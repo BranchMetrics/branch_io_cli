@@ -4,7 +4,7 @@ describe BranchIOCLI::Configuration::Option do
 
     it 'raises if both :validate_proc and :valid_values are passed' do
       expect do
-        OPTION_CLASS.new valid_values_proc: ->{}, validate_proc: ->(x){}
+        OPTION_CLASS.new valid_values_proc: -> {}, validate_proc: ->(x) {}
       end.to raise_error ArgumentError
     end
 

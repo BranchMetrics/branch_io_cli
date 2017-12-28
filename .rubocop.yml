@@ -2,12 +2,7 @@ AllCops:
   Exclude:
     - "examples/**/*"
     - "vendor/**/*"
-
-Style/CommentedKeyword:
-  Enabled: true
-
-Style/DateTime:
-  Enabled: true
+  TargetRubyVersion: 2.0
 
 Naming/HeredocDelimiterNaming:
   Enabled: false
