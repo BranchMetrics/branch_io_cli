@@ -66,7 +66,11 @@ task :validate do
     ),
     trace: true
   )
+end
 
+desc "Validate iOS repo examples"
+task "validate:ios" do
+  projects = Dir[File.expand_path("../examples/*Example*", __FILE__)]
   Rake::Task["branch:validate"].invoke(
     all_projects - projects,
     trace: true
