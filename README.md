@@ -210,16 +210,26 @@ branch_io validate [OPTIONS]
 br validate [OPTIONS]
 ```
 
-This command validates all Universal Link domains configured in a project without making any
-modification. It validates both Branch and non-Branch domains. Unlike web-based Universal
-Link validators, this command operates directly on the project. It finds the bundle and
-signing team identifiers in the project as well as the app's Associated Domains. It requests
-the apple-app-site-association file for each domain and validates the file against the
-project's settings.
+This command validates all Branch-related settings for a target in an Xcode project,
+including validation of the apple-app-site-association file from each domain.
+Multiple targets may be validated by running the command multiple times using
+the `--target` option. Test targets are not supported.
 
-Only app targets are supported for this command. By default, it will validate the first.
-If your project has multiple app targets, specify the `--target` option to validate other
-targets.
+For each Branch key present in the Info.plist, it retrieves the settings from Branch's
+system. If the information cannot be retrieved (or if the `branch_key` is not present),
+an error is recorded. If the `--live-key` or `--test-key` option is present,
+the set of all keys used by the target must exactly match the options.
+
+All domains and URI schemes configured for the target must include all domains
+and URI schemes configured for all keys used by the target. Other domains or
+URI schemes may also be present in the project.
+
+This command validates all Universal Link domains configured in an application target
+without making any modification. It validates both Branch and non-Branch domains. Unlike
+web-based Universal Link validators, this command operates directly on the project. It
+finds the bundle and signing team identifiers in the project as well as the app's
+Associated Domains. It requests the apple-app-site-association file for each domain
+and validates the file against the project's settings.
 
 By default, all build configurations in the project are validated. To validate a different list
 of configurations, including a single configuration, specify the `--configurations` option.
@@ -228,7 +238,7 @@ If `--domains` is specified, the list of Universal Link domains in the Associate
 Domains entitlement must exactly match this list, without regard to order, for all
 configurations under validation. If no `--domains` are provided, validation passes
 if at least one Universal Link domain is configured for each configuration and passes
-validation, and no Universal Link domain is present in anyconfiguration that does not
+validation, and no Universal Link domain is present in any configuration that does not
 pass validation.
 
 All parameters are optional.
