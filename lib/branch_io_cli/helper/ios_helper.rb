@@ -258,6 +258,9 @@ module BranchIOCLI
       end
 
       def contents_of_aasa_file(domain)
+        @aasa_files ||= {}
+        return @aasa_files[domain] if @aasa_files[domain]
+
         uris = [
           URI("https://#{domain}/.well-known/apple-app-site-association"),
           URI("https://#{domain}/apple-app-site-association")
@@ -307,6 +310,7 @@ module BranchIOCLI
 
         @errors << "[#{domain}] Failed to retrieve AASA file" and return nil if data.nil?
 
+        @aasa_files[domain] = data
         data
       rescue IOError, SocketError => e
         @errors << "[#{domain}] Socket error: #{e.message}"
