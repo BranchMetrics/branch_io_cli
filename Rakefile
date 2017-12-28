@@ -41,6 +41,7 @@ task :setup do
     live_key: LIVE_KEY,
     test_key: TEST_KEY,
     domains: %w(k272.app.link),
+    uri_scheme: "branchfastlaneexample",
     validate: true,
     pod_repo_update: false,
     setting: true,
@@ -51,8 +52,9 @@ end
 
 desc "Validate repo examples"
 task :validate do
+  projects = Dir[File.expand_path("../examples/*Example*", __FILE__)]
   Rake::Task["branch:validate"].invoke(
-    all_projects,
+    projects,
     # Expect all projects to have exactly these keys and domains
     live_key: LIVE_KEY,
     test_key: TEST_KEY,
@@ -62,6 +64,11 @@ task :validate do
       k272.test-app.link
       k272-alternate.test-app.link
     ),
+    trace: true
+  )
+
+  Rake::Task["branch:validate"].invoke(
+    all_projects - projects,
     trace: true
   )
 end

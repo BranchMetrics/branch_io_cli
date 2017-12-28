@@ -22,7 +22,7 @@ module BranchIOCLI
             if domains_valid
               say "Project domains match domains parameter. ✅"
             else
-              say "Project domains do not match specified domains."
+              say "Project domains do not match specified domains. ❌"
               helper.errors.each { |error| say "  #{error}" }
             end
 
@@ -31,7 +31,7 @@ module BranchIOCLI
 
           entitlements_valid = helper.validate_team_and_bundle_ids_from_aasa_files [], false, configuration
           unless entitlements_valid
-            say "Universal Link configuration failed validation for #{configuration} configuration."
+            say "Universal Link configuration failed validation for #{configuration} configuration. ❌"
             helper.errors.each { |error| say " #{error}" }
           end
 
@@ -42,7 +42,7 @@ module BranchIOCLI
           unless config.universal_links_only
             branch_config_valid = helper.project_valid? configuration
             unless branch_config_valid
-              say "Branch configuration failed validation for #{configuration} configuration."
+              say "Branch configuration failed validation for #{configuration} configuration. ❌"
               helper.errors.each { |error| say " #{error}" }
             end
 
@@ -52,6 +52,12 @@ module BranchIOCLI
           end
 
           valid &&= config_valid
+        end
+
+        unless valid
+          say "\nValidation failed. See errors above marked with ❌."
+          say "Please verify your app configuration at https://dashboard.branch.io."
+          say "If your Dashboard configuration is correct, br setup will fix most errors."
         end
 
         valid ? 0 : 1
@@ -70,7 +76,7 @@ module BranchIOCLI
         if keys_valid
           say "Branch keys from project match provided keys. ✅"
         else
-          say "Branch keys from project do not match provided keys."
+          say "Branch keys from project do not match provided keys. ❌"
           say " Expected: #{expected_keys.inspect}"
           say " Actual: #{branch_keys.inspect}"
         end
@@ -80,19 +86,20 @@ module BranchIOCLI
 
       def uri_schemes_valid?(configurations)
         uri_schemes = helper.branch_apps_from_project(configurations).map(&:ios_uri_scheme).compact.uniq
-        expected = uri_schemes.sort
+        expected = uri_schemes.map { |s| BranchIOCLI::Configuration::Configuration.uri_scheme_without_suffix(s) }.sort
         return true if expected.empty?
 
         actual = helper.uri_schemes_from_project(configurations).sort
-        if expected == actual
+        valid = (expected - actual).empty?
+        if valid
           say "URI schemes from project match schemes from Dashboard. ✅"
         else
-          say "URI schemes from project do not match schemes from Dashboard."
-          say " Expected: #{expected_keys.inspect}"
-          say " Actual: #{branch_keys.inspect}"
+          say "URI schemes from project do not match schemes from Dashboard. ❌"
+          say " Expected: #{expected.inspect}"
+          say " Actual: #{actual.inspect}"
         end
 
-        expected == actual
+        valid
       end
     end
   end

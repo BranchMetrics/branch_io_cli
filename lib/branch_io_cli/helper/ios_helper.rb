@@ -297,7 +297,7 @@ module BranchIOCLI
               signature.verify nil, cert_store, nil, OpenSSL::PKCS7::NOVERIFY
               data = signature.data
             else
-              @error << "[#{domain}] Unsigned AASA files must be served via HTTPS" and next if uri.scheme == "http"
+              @errors << "[#{domain}] Unsigned AASA files must be served via HTTPS" and next if uri.scheme == "http"
               data = response.body
             end
 
@@ -427,7 +427,7 @@ module BranchIOCLI
         branch_key = config.target.expand_build_settings info_plist[:branch_key], configuration
 
         if branch_key.blank?
-          say "branch_key not found in Info.plist."
+          say "branch_key not found in Info.plist. ❌"
           return false
         end
 
@@ -445,7 +445,7 @@ module BranchIOCLI
             BranchApp[key]
           rescue StandardError => e
             # Failed to retrieve a key in the Info.plist from the API.
-            say "[#{key}] #{e.message}"
+            say "[#{key}] #{e.message} ❌"
             valid = false
             nil
           end
@@ -460,7 +460,7 @@ module BranchIOCLI
         unless missing_domains.empty?
           valid = false
           missing_domains.each do |domain|
-            say "[#{domain}] Domain from Dashboard missing from #{configuration} configuration."
+            say "[#{domain}] Domain from Dashboard missing from #{configuration} configuration. ❌"
           end
         end
 
@@ -473,7 +473,7 @@ module BranchIOCLI
           info_plist = info_plist(path).symbolize_keys
           branch_key = info_plist[:branch_key]
           if branch_key.nil?
-            say "branch_key not found in Info.plist."
+            say "branch_key not found in Info.plist. ❌"
             return []
           end
 
@@ -492,12 +492,14 @@ module BranchIOCLI
       end
 
       def uri_schemes_from_project(configurations)
-        configurations.map do |c|
+        schemes = configurations.map do |c|
           path = info_plist_path(c)
-          info_plist = info_plist(path).symbolize_keys
+          info_plist = info_plist(path)
           url_types = info_plist["CFBundleURLTypes"] || []
           url_types.map { |t| t["CFBundleURLSchemes"] }
-        end.flatten.uniq
+        end
+
+        schemes.compact.flatten.uniq
       end
     end
   end
