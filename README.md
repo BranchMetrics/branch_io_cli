@@ -35,6 +35,8 @@ brew tap jdee/tap
 brew install branch_io_cli
 ```
 
+**Note:** Prerelease versions of the CLI are only available from RubyGems for now.
+
 ### Getting help
 
 ```bash
@@ -65,16 +67,38 @@ any Ruby-related environment variables if using the system Ruby.
 
 Add to `~/.bash_profile` or `~/.bashrc`:
 
+##### RubyGems
+
 ```bash
 . `gem which branch_io_cli | sed 's+branch_io_cli.rb$+assets/completions/completion.bash+'`
+```
+
+##### Homebrew
+
+Source the script from the Cellar, e.g.:
+
+```bash
+br_version=`br -v | awk '{ print $4 }'`
+. /usr/local/Cellar/branch_io_cli/${br_version}/libexec/gems/branch_io_cli-${br_version}/lib/assets/completions/completion.bash
 ```
 
 #### Zsh
 
 Add to `~/.zshrc`:
 
+##### RubyGems
+
 ```zsh
 . `gem which branch_io_cli | sed 's+branch_io_cli.rb$+assets/completions/completion.zsh+'`
+```
+
+##### Homebrew
+
+Source the script from the Cellar, e.g.:
+
+```bash
+br_version=`br -v | awk '{ print $4 }'`
+. /usr/local/Cellar/branch_io_cli/${br_version}/libexec/gems/branch_io_cli-${br_version}/lib/assets/completions/completion.zsh
 ```
 
 Currently command-line completion for bash is much more extensive than for zsh.
