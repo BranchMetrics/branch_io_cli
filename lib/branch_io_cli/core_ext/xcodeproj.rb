@@ -73,7 +73,7 @@ module Xcodeproj
           end
 
           # TODO: What is the correct resolution order here? Which overrides which in
-          # Xcode?
+          # Xcode? Or does it matter here?
           if setting_value.nil? && defined?(BranchIOCLI::Configuration::XcodeSettings)
             setting_value = BranchIOCLI::Configuration::XcodeSettings[configuration][setting_name]
           end
@@ -120,13 +120,13 @@ module Xcodeproj
             # Everything else becomes a hyphen, including underscores.
             expanded_macro.gsub!(/[^A-Za-z0-9-]/, '-') if modifier == "rfc1034identifier"
 
-            string.gsub!(/\$\(#{original_macro}\)|\$\{#{original_macro}\}|^#{original_macro}/, expanded_macro)
+            string.gsub!(/\$\(#{original_macro}\)|\$\{#{original_macro}\}/, expanded_macro)
             search_position += expanded_macro.length
           end
 
           # HACK: When matching against an xcconfig, as here, sometimes the macro is just returned
-          # without delimiters, e.g. TARGET_NAME or PROJECT_DIR/PROJECT_NAME/BridgingHeader.h. We allow
-          # these two patterns for now.
+          # without delimiters as the entire string or as a path component, e.g. TARGET_NAME or
+          # PROJECT_DIR/PROJECT_NAME/BridgingHeader.h.
           string = string.split("/").map do |component|
             next component unless component =~ /^[A-Z0-9_]+$/
             expanded_build_setting(component, configuration) || component
