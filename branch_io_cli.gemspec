@@ -23,21 +23,21 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = '>= 2.0.0'
 
-  spec.add_dependency 'CFPropertyList'
-  spec.add_dependency 'cocoapods-core'
-  spec.add_dependency 'commander'
-  spec.add_dependency 'pattern_patch', '>= 0.5.4'
-  spec.add_dependency 'plist'
-  spec.add_dependency 'rubyzip'
-  spec.add_dependency 'xcodeproj'
+  spec.add_dependency 'CFPropertyList', '~> 2.3'
+  spec.add_dependency 'cocoapods-core', '~> 1.3'
+  spec.add_dependency 'commander', '~> 4.4'
+  spec.add_dependency 'pattern_patch', '>= 0.5.4', '~> 0.5'
+  spec.add_dependency 'plist', '~> 3.3'
+  spec.add_dependency 'rubyzip', '~> 1.1'
+  spec.add_dependency 'xcodeproj', '~> 1.4'
 
-  spec.add_development_dependency 'bundler'
-  spec.add_development_dependency 'cocoapods' # For ease of testing with repo examples
-  spec.add_development_dependency 'pry'
-  spec.add_development_dependency 'rake'
-  spec.add_development_dependency 'rspec'
-  spec.add_development_dependency 'rspec-simplecov'
-  spec.add_development_dependency 'rspec_junit_formatter'
+  spec.add_development_dependency 'bundler', '~> 1.15'
+  spec.add_development_dependency 'cocoapods', '~> 1.3' # For ease of testing with repo examples
+  spec.add_development_dependency 'pry', '~> 0.11'
+  spec.add_development_dependency 'rake', '< 13'
+  spec.add_development_dependency 'rspec', '~> 3.5'
+  spec.add_development_dependency 'rspec-simplecov', '~> 0.2'
+  spec.add_development_dependency 'rspec_junit_formatter', '~> 0.3'
   spec.add_development_dependency 'rubocop', '0.50.0'
-  spec.add_development_dependency 'simplecov'
+  spec.add_development_dependency 'simplecov', '~> 0.15'
 end
