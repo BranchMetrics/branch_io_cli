@@ -22,6 +22,15 @@ gem install branch_io_cli
 
 Note that this command may require `sudo` access if you are using the system Ruby, i.e. `sudo gem install branch_io_cli`.
 
+### Experimental: Install using Homebrew
+
+```bash
+brew tap jdee/tap
+brew install branch_io_cli
+```
+
+### Getting help
+
 ```bash
 branch_io -h
 branch_io setup -h

@@ -257,28 +257,31 @@ github "BranchMetrics/ios-branch-deep-linking"
           true
         end
 
+        def install_cmd
+          ENV["BRANCH_IO_CLI_INSTALLED_FROM_HOMEBREW"] == "true" ? :brew : :gem
+        end
+
         def verify_cocoapods
           pod_cmd = `which pod`
           return unless pod_cmd.empty?
 
-          gem_cmd = `which gem`
-          if gem_cmd.empty?
-            say "'pod' command not available in PATH and 'gem' command not available in PATH to install cocoapods."
+          cmd = `which #{install_cmd}`
+          if cmd.empty?
+            say "'pod' command not available in PATH and '#{install_command}' command not available in PATH to install cocoapods."
             exit(-1)
           end
 
-          install = confirm "'pod' command not available in PATH. Install cocoapods (may require a sudo password)?", true
+          sudo = install_cmd == :brew || File.writable?(Gem.dir) ? "" : "sudo "
+          sudo_warning = sudo.blank? ? "" : " (requires a sudo password)"
+
+          install = confirm "'pod' command not available in PATH. Install cocoapods#{sudo_warning}?", true
           unless install
+            # TODO: There are times that --no-add-sdk is not available or doesn't avoid the need.
             say "Please install cocoapods or use --no-add-sdk to continue."
             exit(-1)
           end
 
-          gem_home = Gem.dir
-          if gem_home && File.writable?(gem_home)
-            sh "gem install cocoapods"
-          else
-            sh "sudo gem install cocoapods"
-          end
+          sh "#{sudo}#{install_cmd} install cocoapods"
 
           # Ensure master podspec repo is set up (will update if it exists).
           sh "pod setup"
