@@ -1,4 +1,4 @@
-require "branch_io_cli/helper"
+require_relative "../helper"
 
 module BranchIOCLI
   module Command

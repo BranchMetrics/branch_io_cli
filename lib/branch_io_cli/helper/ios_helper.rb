@@ -3,8 +3,8 @@ require "json"
 require "openssl"
 require "plist"
 
-require "branch_io_cli/configuration"
-require "branch_io_cli/helper/methods"
+require_relative "../configuration"
+require_relative "methods"
 
 module BranchIOCLI
   module Helper

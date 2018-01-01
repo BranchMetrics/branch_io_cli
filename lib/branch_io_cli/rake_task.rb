@@ -1,6 +1,6 @@
 require "rake"
 require "rake/tasklib"
-require "branch_io_cli"
+require_relative "../branch_io_cli"
 require "highline/import"
 
 module BranchIOCLI

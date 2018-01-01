@@ -1,6 +1,6 @@
 require "active_support/core_ext/hash"
-require "branch_io_cli/helper/android_helper"
-require "branch_io_cli/helper/ios_helper"
+require_relative "android_helper"
+require_relative "ios_helper"
 require "net/http"
 require "set"
 

@@ -1,6 +1,6 @@
 require "active_support/core_ext/string"
 require "rbconfig"
-require "branch_io_cli/core_ext/tty_platform"
+require_relative "../core_ext/tty_platform"
 
 module BranchIOCLI
   module Configuration
