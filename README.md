@@ -331,7 +331,7 @@ Output information about CLI environment.
 |-v, --version|Prints the current version of the CLI||
 |-t, --trace|Prints a stack trace when exceptions are raised||
 |-c, --[no-]completion-script|Get the path to the completion script for this shell (default: no)|BRANCH_COMPLETION_SCRIPT|
-|-s, --shell zsh|Specify shell for completion script (default: /bin/bash)|BRANCH_SHELL|
+|-s, --shell zsh|Specify shell for completion script|SHELL|
 |-V, --[no-]verbose|Generate verbose output (default: no)|BRANCH_VERBOSE|
 
 
