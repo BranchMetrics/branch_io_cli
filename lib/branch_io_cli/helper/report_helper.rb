@@ -26,16 +26,6 @@ module BranchIOCLI
           Configuration::Environment
         end
 
-        def obfuscate_user(path)
-          path.gsub(ENV['HOME'], '~').gsub(ENV['USER'], '$USER')
-        end
-
-        def display_path(path)
-          path = path.gsub(Gem.dir, '$GEM_HOME')
-          path = obfuscate_user(path)
-          path
-        end
-
         def helper
           BranchHelper
         end
@@ -57,28 +47,6 @@ module BranchIOCLI
           report += " Configurations:\n"
           report += "  #{config.configurations_from_scheme.join("\n  ")}\n"
           report
-        end
-
-        def ruby_header(terminal: true)
-          if terminal
-            header = "<%= color('Ruby version:', BOLD) %> #{RUBY_VERSION}\n"
-            header += "<%= color('RubyGems version:', BOLD) %> #{Gem::VERSION}\n"
-            header += "<%= color('Bundler:', BOLD) %> #{defined?(Bundler) ? Bundler::VERSION : 'no'}\n"
-            header += "<%= color('Installed from Homebrew:', BOLD) %> #{env.from_homebrew? ? 'yes' : 'no'}\n"
-            header += "<%= color('GEM_HOME:', BOLD) %> #{obfuscate_user(Gem.dir)}\n"
-            header += "<%= color('Lib path:', BOLD) %> #{display_path(env.lib_path)}\n"
-            header += "<%= color('Shell:', BOLD) %> #{ENV['SHELL']}\n\n"
-          else
-            header = "Ruby version: #{RUBY_VERSION}\n"
-            header += "RubyGems version: #{Gem::VERSION}\n"
-            header += "Bundler: #{defined?(Bundler) ? Bundler::VERSION : 'no'}\n"
-            header += "Installed from Homebrew: #{env.from_homebrew? ? 'yes' : 'no'}\n"
-            header += "GEM_HOME: #{obfuscate_user(Gem.dir)}\n"
-            header += "Lib path: #{display_path(env.lib_path)}\n"
-            header += "LOAD_PATH: #{$LOAD_PATH.map { |p| display_path(p) }}\n"
-            header += "Shell: #{ENV['SHELL']}\n\n"
-          end
-          header
         end
 
         # rubocop: disable Metrics/PerceivedComplexity

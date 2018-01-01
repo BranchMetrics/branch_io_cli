@@ -19,7 +19,7 @@ module BranchIOCLI
 
         if config.header_only
           say "\n"
-          say report_helper.ruby_header
+          say env.ruby_header
           say report_helper.report_header
           return 0
         end
@@ -39,9 +39,9 @@ module BranchIOCLI
         report.write "#{config.report_configuration}\n"
 
         if report == STDOUT
-          say report_helper.ruby_header
+          say env.ruby_header
         else
-          report.write report_helper.ruby_header(terminal: false)
+          report.write env.ruby_header(terminal: false, include_load_path: true)
         end
 
         report.write "#{report_helper.report_header}\n"
