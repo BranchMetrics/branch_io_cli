@@ -13,7 +13,7 @@ _branch_io_complete()
     global_opts="-h --help -t --trace -v --version"
 
 
-    env_opts="-l --lib-path -a --assets-path -c --completion-script -s --shell -V --verbose"
+    env_opts="-c --completion-script -s --shell -V --verbose"
 
     setup_opts="-L --live-key -T --test-key -D --domains --app-link-subdomain -U --uri-scheme -s --setting --test-configurations --xcodeproj --target --podfile --cartfile --carthage-command --frameworks --no-pod-repo-update --no-validate --force --no-add-sdk --no-patch-source --commit --no-confirm"
 
