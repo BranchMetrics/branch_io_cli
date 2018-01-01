@@ -8,6 +8,13 @@ module BranchIOCLI
         def summary
           "Generate and optionally submit a build diagnostic report."
         end
+
+        def examples
+          {
+            "Show general project information without building" => "br report -H",
+            "Perform a full build and report all errors to report.txt" => "br report"
+          }
+        end
       end
 
       attr_reader :report_path

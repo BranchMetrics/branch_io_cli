@@ -272,6 +272,37 @@ See https://github.com/BranchMetrics/branch_io_cli#validate-command for more inf
 |--[no-]confirm|Enable or disable many prompts (default: yes)|BRANCH_CONFIRM|
 
 
+#### Examples
+
+
+##### Ensure project has at least one correctly configured Branch key and domain
+
+```bash
+br validate
+```
+
+
+##### Ensure project is correctly configured for certain Branch keys
+
+```bash
+br validate -L key_live_xxxx -T key_test_yyyy
+```
+
+
+##### Ensure project is correctly configured to use specific domains
+
+```bash
+br validate -D myapp.app.link,myapp-alternate.app.link
+```
+
+
+##### Validate only Universal Link configuration
+
+```bash
+br validate --universal-links-only
+```
+
+
 
 
 
@@ -311,6 +342,23 @@ building.
 |--[no-]confirm|Enable or disable many prompts (default: yes)|BRANCH_CONFIRM|
 
 
+#### Examples
+
+
+##### Show general project information without building
+
+```bash
+br report -H
+```
+
+
+##### Perform a full build and report all errors to report.txt
+
+```bash
+br report
+```
+
+
 
 
 ### Env command
@@ -333,6 +381,23 @@ Output information about CLI environment.
 |-c, --[no-]completion-script|Get the path to the completion script for this shell (default: no)|BRANCH_COMPLETION_SCRIPT|
 |-s, --shell zsh|Specify shell for completion script|SHELL|
 |-V, --[no-]verbose|Generate verbose output (default: no)|BRANCH_VERBOSE|
+
+
+#### Examples
+
+
+##### Show CLI environment
+
+```bash
+br env
+```
+
+
+##### Get completion script for zsh
+
+```bash
+br env -cs zsh
+```
 
 
 

@@ -5,6 +5,13 @@ module BranchIOCLI
         def summary
           "Output information about CLI environment."
         end
+
+        def examples
+          {
+            "Show CLI environment" => "br env",
+            "Get completion script for zsh" => "br env -cs zsh"
+          }
+        end
       end
 
       def initialize(options)
