@@ -7,7 +7,13 @@ module BranchIOCLI
         end
       end
 
+      def initialize(options)
+        @quiet = true
+        super
+      end
+
       def validate_options
+        # Nothing to do for this command
       end
     end
   end
