@@ -9,7 +9,7 @@ _branch_io_complete()
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     cmd="${COMP_WORDS[1]}"
 
-    commands="<%= all_commands.join (' ') %>"
+    commands="<%= all_commands.join(' ') %>"
     global_opts="-h --help -t --trace -v --version"
 
 <% all_commands.each do |command| %>
