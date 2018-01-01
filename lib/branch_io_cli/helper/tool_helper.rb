@@ -15,6 +15,10 @@ module BranchIOCLI
           Configuration::Configuration.current
         end
 
+        def env
+          Configuration::Environment
+        end
+
         def helper
           BranchHelper
         end
@@ -259,10 +263,22 @@ github "BranchMetrics/ios-branch-deep-linking"
         end
 
         def install_cmd
-          ENV["BRANCH_IO_CLI_INSTALLED_FROM_HOMEBREW"] == "true" ? :brew : :gem
+          env.from_homebrew? ? :brew : :gem
         end
 
         def verify_cocoapods
+          if install_cmd == :gem && defined?(Bundler)
+            begin
+              require "cocoapods"
+            rescue LoadError
+              # The only alternative here would be something like patch Gemfile, run bundle install
+              # and then exec %w(bundle exec br) + ARGV, except merge anything inferred or obtained
+              # by asking questions.
+              say %(CocoaPods is required to continue. Please add 'gem "cocoapods"' to your Gemfile, run bundle install and then rerun this command.)
+              exit(-1)
+            end
+          end
+
           pod_cmd = `which pod`
           return unless pod_cmd.empty?
 

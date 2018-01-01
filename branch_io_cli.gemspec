@@ -33,7 +33,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'xcodeproj', '~> 1.4'
 
   spec.add_development_dependency 'bundler', '~> 1.15'
-  spec.add_development_dependency 'cocoapods', '~> 1.3' # For ease of testing with repo examples
+  spec.add_development_dependency 'cocoapods', '~> 1.3'
+  spec.add_development_dependency 'fastlane', '~> 2.69'
   spec.add_development_dependency 'pry', '~> 0.11'
   spec.add_development_dependency 'rake', '< 13'
   spec.add_development_dependency 'rspec', '~> 3.5'
