@@ -79,30 +79,25 @@ module BranchIOCLI
         end
 
         def ruby_header(terminal: true, include_load_path: false)
-          if terminal
-            header = "<%= color('Operating system:', BOLD) %> #{operating_system}\n"
-            header += "<%= color('Ruby version:', BOLD) %> #{RUBY_VERSION}\n"
-            header += "<%= color('Ruby path:', BOLD) %> #{obfuscate_user(ruby_path)}\n"
-            header += "<%= color('RubyGems version:', BOLD) %> #{Gem::VERSION}\n"
-            header += "<%= color('Bundler:', BOLD) %> #{defined?(Bundler) ? Bundler::VERSION : 'no'}\n"
-            header += "<%= color('Installed from Homebrew:', BOLD) %> #{from_homebrew? ? 'yes' : 'no'}\n"
-            header += "<%= color('GEM_HOME:', BOLD) %> #{obfuscate_user(Gem.dir)}\n"
-            header += "<%= color('Lib path:', BOLD) %> #{display_path(lib_path)}\n"
-            header += "<%= color('LOAD_PATH:', BOLD) %> #{$LOAD_PATH.map { |p| display_path(p) }}\n" if include_load_path
-            header += "<%= color('Shell:', BOLD) %> #{ENV['SHELL']}\n\n"
-          else
-            header = "Operating system: #{operating_system}\n"
-            header += "Ruby version: #{RUBY_VERSION}\n"
-            header += "Ruby path: #{obfuscate_user(ruby_path)}\n"
-            header += "RubyGems version: #{Gem::VERSION}\n"
-            header += "Bundler: #{defined?(Bundler) ? Bundler::VERSION : 'no'}\n"
-            header += "Installed from Homebrew: #{from_homebrew? ? 'yes' : 'no'}\n"
-            header += "GEM_HOME: #{obfuscate_user(Gem.dir)}\n"
-            header += "Lib path: #{display_path(lib_path)}\n"
-            header += "LOAD_PATH: #{$LOAD_PATH.map { |p| display_path(p) }}\n" if include_load_path
-            header += "Shell: #{ENV['SHELL']}\n\n"
-          end
+          header = header_item("Operating system", operating_system)
+          header += header_item("Ruby version", RUBY_VERSION)
+          header += header_item("RubyGems version", Gem::VERSION)
+          header += header_item("Bundler", defined?(Bundler) ? Bundler::VERSION : "no")
+          header += header_item("Installed from Homebrew", from_homebrew? ? "yes" : "no")
+          header += header_item("GEM_HOME", obfuscate_user(Gem.dir))
+          header += header_item("Lib path", display_path(lib_path))
+          header += header_item("LOAD_PATH", $LOAD_PATH.map { |p| display_path(p) }) if include_load_path
+          header += header_item("Shell", ENV["SHELL"])
+          header += "\n"
           header
+        end
+
+        def header_item(label, value, terminal: true)
+          if terminal
+            "<%= color('#{label}:', BOLD) %> #{value}\n"
+          else
+            "label: #{value}\n"
+          end
         end
 
         def obfuscate_user(path)
