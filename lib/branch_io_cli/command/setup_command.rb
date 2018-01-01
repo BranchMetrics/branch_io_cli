@@ -139,7 +139,7 @@ module BranchIOCLI
 
         case choice
         when /^Stash/
-          sh "git stash -q"
+          sh %w(git stash -q)
         when /^Commit/
           message = ask "Please enter a commit message: "
           sh "git", "commit", "-aqm", message

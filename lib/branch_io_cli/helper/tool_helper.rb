@@ -1,3 +1,4 @@
+require "active_support/core_ext/string"
 require "cocoapods-core"
 require "fileutils"
 require "pathname"
@@ -23,10 +24,10 @@ module BranchIOCLI
 
           podfile_path = options.podfile_path
 
-          install_command = "pod install"
-          install_command += " --repo-update" if options.pod_repo_update
+          install_command = %w(pod install)
+          install_command << "--repo-update" if options.pod_repo_update
           Dir.chdir(File.dirname(podfile_path)) do
-            sh "pod init"
+            sh %w(pod init)
             PatternPatch::Patch.new(
               regexp: /^(\s*)# Pods for #{options.target.name}$/,
               mode: :append,
@@ -34,7 +35,7 @@ module BranchIOCLI
             ).apply podfile_path
             # Store a Pod::Podfile representation of this file.
             options.open_podfile
-            sh install_command
+            sh(*install_command)
           end
 
           return unless options.commit
@@ -72,7 +73,7 @@ github "BranchMetrics/ios-branch-deep-linking"
           end
 
           # 2. carthage update
-          sh "carthage #{options.carthage_command}", chdir: File.dirname(config.cartfile_path)
+          sh "carthage", options.carthage_command, chdir: File.dirname(config.cartfile_path)
 
           # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
           helper.add_change cartfile_path
@@ -189,10 +190,10 @@ github "BranchMetrics/ios-branch-deep-linking"
 
           # 2. pod install
           # command = "PATH='#{ENV['PATH']}' pod install"
-          command = 'pod install'
-          command += ' --repo-update' if options.pod_repo_update
+          command = %w(pod install)
+          command << '--repo-update' if options.pod_repo_update
 
-          sh command, chdir: File.dirname(config.podfile_path)
+          sh(*command, chdir: File.dirname(config.podfile_path))
 
           # 3. Add Podfile and Podfile.lock to commit (in case :commit param specified)
           helper.add_change podfile_path
@@ -220,9 +221,9 @@ github "BranchMetrics/ios-branch-deep-linking"
           return false unless PatchHelper.patch_cartfile cartfile_path
 
           # 2. carthage bootstrap (or other command)
-          cmd = "carthage #{options.carthage_command}"
-          cmd << " ios-branch-deep-linking" if options.carthage_command =~ /^(update|build)/
-          sh cmd, chdir: File.dirname(config.cartfile_path)
+          cmd = ["carthage", *options.carthage_command.shellsplit]
+          cmd << "ios-branch-deep-linking" if options.carthage_command =~ /^(update|build)/
+          sh(*cmd, chdir: File.dirname(config.cartfile_path))
 
           # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
           helper.add_change cartfile_path
@@ -281,10 +282,16 @@ github "BranchMetrics/ios-branch-deep-linking"
             exit(-1)
           end
 
-          sh "#{sudo}#{install_cmd} install cocoapods"
+          if sudo.blank?
+            command = [install_cmd.to_s, "install", "cocoapods"]
+          else
+            command = [sudo, install_cmd.to_s, "install", "cocoapods"]
+          end
+
+          sh(*command)
 
           # Ensure master podspec repo is set up (will update if it exists).
-          sh "pod setup"
+          sh %w(pod setup)
         end
 
         def verify_carthage
@@ -303,7 +310,7 @@ github "BranchMetrics/ios-branch-deep-linking"
             exit(-1)
           end
 
-          sh "brew install carthage"
+          sh %w(brew install carthage)
         end
 
         def verify_git
@@ -324,7 +331,7 @@ github "BranchMetrics/ios-branch-deep-linking"
             exit(-1)
           end
 
-          sh "xcode-select --install"
+          sh %w(xcode-select --install)
         end
 
         def pod_install_if_required(report = STDOUT)
@@ -343,10 +350,10 @@ github "BranchMetrics/ios-branch-deep-linking"
 
           verify_cocoapods
 
-          install_command = "pod install"
+          install_command = %w(pod install)
 
           if config.pod_repo_update
-            install_command += " --repo-update"
+            install_command << " --repo-update"
           else
             say <<-EOF
 You have disabled "pod repo update". This can cause "pod install" to fail in
@@ -355,11 +362,12 @@ some cases. If that happens, please rerun without --no-pod-repo-update or run
                 EOF
           end
 
-          say "Running #{install_command.inspect}"
-          if report.sh(install_command).success?
+          # included by sh, but this is to the screen when generating a report.
+          say "Running #{IO.command_from_args(*install_command)}"
+          if report.sh(*install_command).success?
             say "Done ✅"
           else
-            say "#{install_command.inspect} failed. See report for details."
+            say "#{IO.command_from_args(*install_command)} failed. See report for details."
             return false
           end
 
@@ -382,13 +390,25 @@ some cases. If that happens, please rerun without --no-pod-repo-update or run
 
           verify_carthage
 
-          install_command = "carthage checkout && carthage build --platform ios"
+          checkout_command = %w(carthage checkout)
 
-          say "Running #{install_command.inspect}"
-          if report.sh(install_command).success?
+          # included by sh, but this is to the screen when generating a report.
+          say "Running #{IO.command_from_args(*checkout_command)}"
+          if report.sh(*checkout_command).success?
             say "Done ✅"
           else
-            say "#{install_command.inspect} failed. See report for details."
+            say "#{IO.command_from_args(*checkout_command)} failed. See report for details."
+            return false
+          end
+
+          build_command = %w(carthage build --platform ios)
+
+          # included by sh, but this is to the screen when generating a report.
+          say "Running #{IO.command_from_args(*build_command)}"
+          if report.sh(*build_command).success?
+            say "Done ✅"
+          else
+            say "#{IO.command_from_args(*build_command)} failed. See report for details."
             return false
           end
 
