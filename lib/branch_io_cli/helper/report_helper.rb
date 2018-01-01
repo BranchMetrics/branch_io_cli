@@ -22,6 +22,10 @@ module BranchIOCLI
           Configuration::Configuration.current
         end
 
+        def env
+          Configuration::Environment
+        end
+
         def helper
           BranchHelper
         end

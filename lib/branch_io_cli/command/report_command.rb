@@ -18,6 +18,8 @@ module BranchIOCLI
         end
 
         if config.header_only
+          say "\n"
+          say env.ruby_header
           say report_helper.report_header
           return 0
         end
@@ -35,6 +37,13 @@ module BranchIOCLI
       def write_report(report)
         report.write "Branch.io Xcode build report v #{VERSION} #{Time.now}\n\n"
         report.write "#{config.report_configuration}\n"
+
+        if report == STDOUT
+          say env.ruby_header
+        else
+          report.write env.ruby_header(terminal: false, include_load_path: true)
+        end
+
         report.write "#{report_helper.report_header}\n"
 
         tool_helper.pod_install_if_required report
