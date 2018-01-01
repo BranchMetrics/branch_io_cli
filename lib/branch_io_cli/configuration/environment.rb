@@ -20,10 +20,6 @@ module BranchIOCLI
           PLATFORM.os.to_s.capitalize
         end
 
-        def os_cpu
-          PLATFORM.cpu
-        end
-
         def os_arch
           PLATFORM.architecture
         end
@@ -38,11 +34,7 @@ module BranchIOCLI
             os += " #{os_version}" if os_version
           end
 
-          if os_cpu
-            os += " (#{os_cpu} #{os_arch})"
-          else
-            os += "(#{os_arch})"
-          end
+          os += "(#{os_arch})"
 
           os
         end
