@@ -65,12 +65,11 @@ module BranchIOCLI
           File.join lib_path, "assets"
         end
 
-        # Returns the last path component as a symbol, e.g.
-        # :bash, :zsh. Uses the SHELL env. var. unless overriden
+        # Returns the last path component. Uses the SHELL env. var. unless overriden
         # at the command line (br env -cs zsh).
         def shell
-          return ENV["SHELL"] unless config.respond_to?(:shell)
-          config.shell.split("/").last.to_sym
+          return ENV["SHELL"].split("/").last unless config.class.available_options.map(&:name).include?(:shell)
+          config.shell.split("/").last
         end
 
         def completion_script
@@ -79,15 +78,16 @@ module BranchIOCLI
         end
 
         def ruby_header(terminal: true, include_load_path: false)
-          header = header_item("Operating system", operating_system)
-          header += header_item("Ruby version", RUBY_VERSION)
-          header += header_item("RubyGems version", Gem::VERSION)
-          header += header_item("Bundler", defined?(Bundler) ? Bundler::VERSION : "no")
-          header += header_item("Installed from Homebrew", from_homebrew? ? "yes" : "no")
-          header += header_item("GEM_HOME", obfuscate_user(Gem.dir))
-          header += header_item("Lib path", display_path(lib_path))
-          header += header_item("LOAD_PATH", $LOAD_PATH.map { |p| display_path(p) }) if include_load_path
-          header += header_item("Shell", ENV["SHELL"])
+          header = header_item("Operating system", operating_system, terminal: terminal)
+          header += header_item("Ruby version", RUBY_VERSION, terminal: terminal)
+          header += header_item("Ruby path", display_path(ruby_path), terminal: terminal)
+          header += header_item("RubyGems version", Gem::VERSION, terminal: terminal)
+          header += header_item("Bundler", defined?(Bundler) ? Bundler::VERSION : "no", terminal: terminal)
+          header += header_item("Installed from Homebrew", from_homebrew? ? "yes" : "no", terminal: terminal)
+          header += header_item("GEM_HOME", obfuscate_user(Gem.dir), terminal: terminal)
+          header += header_item("Lib path", display_path(lib_path), terminal: terminal)
+          header += header_item("LOAD_PATH", $LOAD_PATH.map { |p| display_path(p) }, terminal: terminal) if include_load_path
+          header += header_item("Shell", ENV["SHELL"], terminal: terminal)
           header += "\n"
           header
         end

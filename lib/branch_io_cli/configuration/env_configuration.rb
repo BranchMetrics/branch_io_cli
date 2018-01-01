@@ -23,8 +23,8 @@ module BranchIOCLI
         return if quiet
 
         say <<EOF
-<%= color('Completion script:', BOLD) %> #{completion_script}
-<%= color('Shell:', BOLD) %> #{shell}
+<%= color('Show completion script:', BOLD) %> #{completion_script}
+<%= color('Shell for completion script:', BOLD) %> #{shell}
 EOF
       end
 
