@@ -18,6 +18,12 @@ module BranchIOCLI
         super
       end
 
+      def validate_options
+        if shell && !completion_script
+          say "--shell (-s) ignored without --completion-script (-c)"
+        end
+      end
+
       def log
         super
         return if quiet
