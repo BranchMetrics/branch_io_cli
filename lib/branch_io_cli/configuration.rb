@@ -1,4 +1,6 @@
 require "branch_io_cli/configuration/configuration"
+require "branch_io_cli/configuration/env_configuration"
+require "branch_io_cli/configuration/env_options"
 require "branch_io_cli/configuration/option"
 require "branch_io_cli/configuration/option_wrapper"
 require "branch_io_cli/configuration/report_configuration"
