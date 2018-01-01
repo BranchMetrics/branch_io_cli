@@ -9,6 +9,8 @@ module BranchIOCLI
 
       def initialize(options)
         @quiet = !options.verbose
+        @ruby_version = options.ruby_version
+        @rubygems_version = options.rubygems_version
         @lib_path = options.lib_path
         @assets_path = options.assets_path
         @completion_script = options.completion_script
@@ -21,20 +23,21 @@ module BranchIOCLI
         return if quiet
 
         say <<EOF
-<%= color('Show lib path:', BOLD) %> #{lib_path}
-<%= color('Show assets path:', BOLD) %> #{assets_path}
-<%= color('Show completion script:', BOLD) %> #{completion_script}
-<%= color('Show shell:', BOLD) %> #{shell}
+<%= color('Completion script:', BOLD) %> #{completion_script}
+<%= color('Shell:', BOLD) %> #{shell}
 EOF
       end
 
-      def all?
-        !(
-          lib_path ||
-          assets_path ||
-          completion_script ||
-          shell
-        )
+      def show_all?
+        !show_completion_script?
+      end
+
+      def show_completion_script?
+        completion_script
+      end
+
+      def shell_from_options
+        shell if shell.kind_of?(String)
       end
     end
   end

@@ -4,27 +4,17 @@ module BranchIOCLI
       def self.available_options
         [
           Option.new(
-            name: :lib_path,
-            description: "Path to the installed gem",
-            default_value: false,
-            aliases: "-l"
-          ),
-          Option.new(
-            name: :assets_path,
-            description: "Path to gem assets",
-            default_value: false,
-            aliases: "-a"
-          ),
-          Option.new(
             name: :completion_script,
-            description: "Path to the completion script for this shell",
+            description: "Get the path to the completion script for this shell",
             default_value: false,
             aliases: "-c"
           ),
           Option.new(
             name: :shell,
-            description: "Name of the shell in use",
-            default_value: false,
+            description: "Specify shell for completion script",
+            type: String,
+            default_value: ENV["SHELL"],
+            example: "zsh",
             aliases: "-s"
           ),
           Option.new(
