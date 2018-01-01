@@ -9,9 +9,11 @@ _branch_io_complete()
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     cmd="${COMP_WORDS[1]}"
 
-    commands="setup report validate"
+    commands="env setup report validate"
     global_opts="-h --help -t --trace -v --version"
 
+
+    env_opts="-c --completion-script -s --shell -V --verbose"
 
     setup_opts="-L --live-key -T --test-key -D --domains --app-link-subdomain -U --uri-scheme -s --setting --test-configurations --xcodeproj --target --podfile --cartfile --carthage-command --frameworks --no-pod-repo-update --no-validate --force --no-add-sdk --no-patch-source --commit --no-confirm"
 
@@ -30,6 +32,9 @@ _branch_io_complete()
           ;;
         validate)
           opts=$validate_opts
+          ;;
+        env)
+          opts=$env_opts
           ;;
         *)
           opts=$global_opts

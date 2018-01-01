@@ -7,10 +7,6 @@ This is a command-line tool to integrate the Branch SDK into mobile app projects
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://github.com/BranchMetrics/branch_io_cli/blob/master/LICENSE)
 [![CircleCI](https://img.shields.io/circleci/project/github/BranchMetrics/branch_io_cli.svg)](https://circleci.com/gh/BranchMetrics/branch_io_cli)
 
-## Preliminary release
-
-This is a preliminary release of this gem. Please report any problems by opening issues in this repo.
-
 ### Using Fastlane?
 
 See also the [Branch Fastlane plugin](https://github.com/BranchMetrics/fastlane-plugin-branch), which offers
@@ -335,6 +331,30 @@ building.
 |--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|BRANCH_POD_REPO_UPDATE|
 |-o, --out ./report.txt|Report output path (default: ./report.txt)|BRANCH_REPORT_PATH|
 |--[no-]confirm|Enable or disable many prompts (default: yes)|BRANCH_CONFIRM|
+
+
+
+
+### Env command
+
+```bash
+branch_io env [OPTIONS]
+br env [OPTIONS]
+```
+
+Output information about CLI environment.
+
+
+#### Options
+
+|Option|Description|Env. var.|
+|------|-----------|---------|
+|-h, --help|Prints a list of commands or help for each command||
+|-v, --version|Prints the current version of the CLI||
+|-t, --trace|Prints a stack trace when exceptions are raised||
+|-c, --[no-]completion-script|Get the path to the completion script for this shell (default: no)|BRANCH_COMPLETION_SCRIPT|
+|-s, --shell zsh|Specify shell for completion script (default: /bin/bash)|BRANCH_SHELL|
+|-V, --[no-]verbose|Generate verbose output (default: no)|BRANCH_VERBOSE|
 
 
 

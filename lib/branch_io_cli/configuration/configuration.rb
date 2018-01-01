@@ -81,6 +81,7 @@ module BranchIOCLI
       attr_reader :sdk
       attr_reader :keys
       attr_reader :apps
+      attr_reader :quiet
 
       def initialize(options)
         @options = options
@@ -90,10 +91,13 @@ module BranchIOCLI
 
         Configuration.current = self
 
-        say "\n"
-        print_identification
-        say ASCII_ART
-        say "\n"
+        unless quiet
+          say "\n"
+          print_identification
+          say ASCII_ART
+          say "\n"
+        end
+
         validate_options
         log
       end
@@ -103,6 +107,8 @@ module BranchIOCLI
       end
 
       def log
+        return if quiet
+
         say <<EOF
 <%= color('Configuration:', [CYAN, BOLD, UNDERLINE]) %>
 
