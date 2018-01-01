@@ -3,28 +3,28 @@ module BranchIOCLI
     class EnvCommand < Command
       def run!
         if config.all?
-          say lib_path
-          say assets_path
-          say completion_script
-          say shell
+          puts lib_path
+          puts assets_path
+          puts completion_script
+          puts shell
         end
 
         if config.lib_path
-          say lib_path
+          puts lib_path
         end
 
         if config.assets_path
-          say assets_path
+          puts assets_path
         end
 
         if config.completion_script
           script_path = completion_script
           say "Completion script not available for #{shell}" and return false if script_path.nil?
-          say script_path
+          puts script_path
         end
 
         if config.shell
-          say shell
+          puts shell
         end
 
         true

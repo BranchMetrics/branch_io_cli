@@ -33,6 +33,9 @@ _branch_io_complete()
         validate)
           opts=$validate_opts
           ;;
+        env)
+          opts=$env_opts
+          ;;
         *)
           opts=$global_opts
           ;;
