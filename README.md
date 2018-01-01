@@ -335,6 +335,32 @@ building.
 
 
 
+### Env command
+
+```bash
+branch_io env [OPTIONS]
+br env [OPTIONS]
+```
+
+Output information about CLI environment.
+
+
+#### Options
+
+|Option|Description|Env. var.|
+|------|-----------|---------|
+|-h, --help|Prints a list of commands or help for each command||
+|-v, --version|Prints the current version of the CLI||
+|-t, --trace|Prints a stack trace when exceptions are raised||
+|-l, --[no-]lib-path|Path to the installed gem (default: no)|BRANCH_LIB_PATH|
+|-a, --[no-]assets-path|Path to gem assets (default: no)|BRANCH_ASSETS_PATH|
+|-c, --[no-]completion-script|Path to the completion script for this shell (default: no)|BRANCH_COMPLETION_SCRIPT|
+|-s, --[no-]shell|Name of the shell in use (default: no)|BRANCH_SHELL|
+|-V, --[no-]verbose|Generate verbose output (default: no)|BRANCH_VERBOSE|
+
+
+
+
 
 <!-- END COMMAND REFERENCE -->
 

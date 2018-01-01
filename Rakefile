@@ -98,7 +98,7 @@ task "readme" do
   include BranchIOCLI::Format::MarkdownFormat
 
   text = "\\1\n"
-  text += %i(setup validate report).inject("") do |t, command|
+  text += %i(setup validate report env).inject("") do |t, command|
     t + render_command(command)
   end
   text += "\n\\2"
