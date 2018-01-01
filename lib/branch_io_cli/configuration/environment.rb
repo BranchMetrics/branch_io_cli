@@ -34,7 +34,7 @@ module BranchIOCLI
             os += " #{os_version}" if os_version
           end
 
-          os += "(#{os_arch})"
+          os += " (#{os_arch})"
 
           os
         end
