@@ -35,10 +35,6 @@ EOF
       def show_completion_script?
         completion_script
       end
-
-      def shell_from_options
-        shell if shell.kind_of?(String)
-      end
     end
   end
 end
