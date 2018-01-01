@@ -11,9 +11,9 @@ module BranchIOCLI
           ),
           Option.new(
             name: :shell,
+            env_name: "SHELL",
             description: "Specify shell for completion script",
             type: String,
-            default_value: ENV["SHELL"],
             example: "zsh",
             aliases: "-s"
           ),
