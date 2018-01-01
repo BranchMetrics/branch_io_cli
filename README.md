@@ -359,6 +359,13 @@ br report
 ```
 
 
+##### Don't clean before building
+
+```bash
+br report --no-clean
+```
+
+
 
 
 ### Env command

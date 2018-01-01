@@ -12,7 +12,8 @@ module BranchIOCLI
         def examples
           {
             "Show general project information without building" => "br report -H",
-            "Perform a full build and report all errors to report.txt" => "br report"
+            "Perform a full build and report all errors to report.txt" => "br report",
+            "Don't clean before building" => "br report --no-clean"
           }
         end
       end

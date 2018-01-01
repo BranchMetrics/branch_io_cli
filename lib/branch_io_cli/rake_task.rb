@@ -5,9 +5,7 @@ require "highline/import"
 
 module BranchIOCLI
   class RakeTask < Rake::TaskLib
-    attr_reader :defaults
-
-    def initialize(name = :branch, &b)
+    def initialize(name = :branch)
       namespace name do
         add_branch_task :report, "Generate a brief Branch report"
         add_branch_task :setup, "Set a project up with the Branch SDK"
