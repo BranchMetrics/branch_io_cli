@@ -7,10 +7,6 @@ This is a command-line tool to integrate the Branch SDK into mobile app projects
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://github.com/BranchMetrics/branch_io_cli/blob/master/LICENSE)
 [![CircleCI](https://img.shields.io/circleci/project/github/BranchMetrics/branch_io_cli.svg)](https://circleci.com/gh/BranchMetrics/branch_io_cli)
 
-## Preliminary release
-
-This is a preliminary release of this gem. Please report any problems by opening issues in this repo.
-
 ### Using Fastlane?
 
 See also the [Branch Fastlane plugin](https://github.com/BranchMetrics/fastlane-plugin-branch), which offers
