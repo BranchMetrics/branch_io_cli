@@ -447,19 +447,12 @@ module BranchIOCLI
 
         branch_keys = branch_keys.map { |key| config.target.expand_build_settings key, configuration }
 
-        valid = true
-
         # Retrieve app data from Branch API for all keys in the Info.plist
-        apps = branch_keys.map do |key|
-          begin
-            BranchApp[key]
-          rescue StandardError => e
-            # Failed to retrieve a key in the Info.plist from the API.
-            say "[#{key}] #{e.message} ❌"
-            valid = false
-            nil
-          end
-        end.compact.uniq
+        apps = branch_keys.map { |k| BranchApp[k] }.compact.uniq
+        invalid_keys = apps.reject(&:valid?).map(&:key)
+
+        valid = invalid_keys.empty?
+        say "Invalid Branch key(s) in Info.plist for #{configuration} configuration: #{invalid_keys}. ❌" unless valid
 
         # Get domains and URI schemes loaded from API
         domains_from_api = domains apps

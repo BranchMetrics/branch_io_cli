@@ -1,6 +1,7 @@
 require "active_support/core_ext/hash"
 require "json"
-require "branch_io_cli/helper"
+require_relative "helper"
+require "tty/spinner"
 
 module BranchIOCLI
   class BranchApp
@@ -31,11 +32,19 @@ module BranchIOCLI
     def initialize(key)
       @key = key
 
-      say "Fetching configuration from Branch Dashboard for #{key}."
+      spinner = TTY::Spinner.new "[:spinner] Fetching configuration from Branch Dashboard for #{key}.", format: :flip
+      spinner.auto_spin
 
-      @hash = JSON.parse(Helper::BranchHelper.fetch("#{API_ENDPOINT}#{key}")).symbolize_keys.merge key: key
-
-      say "Done ✅"
+      begin
+        @hash = JSON.parse(Helper::BranchHelper.fetch("#{API_ENDPOINT}#{key}")).symbolize_keys.merge key: key
+        spinner.success "Done."
+        @valid = true
+      rescue StandardError => e
+        spinner.error "Failed."
+        say e.message
+        @valid = false
+        return
+      end
 
       @alternate_short_url_domain = @hash[:alternate_short_url_domain]
       @android_package_name = @hash[:android_package_name]
@@ -45,6 +54,10 @@ module BranchIOCLI
       @ios_team_id = @hash[:ios_team_id]
       @ios_uri_scheme = @hash[:ios_uri_scheme]
       @short_url_domain = @hash[:short_url_domain]
+    end
+
+    def valid?
+      @valid
     end
 
     def domains

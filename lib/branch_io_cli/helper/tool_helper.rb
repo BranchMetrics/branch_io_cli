@@ -3,6 +3,7 @@ require "cocoapods-core"
 require "fileutils"
 require "pathname"
 require "pattern_patch"
+require "tty/spinner"
 require "zip"
 
 module BranchIOCLI
@@ -262,12 +263,8 @@ github "BranchMetrics/ios-branch-deep-linking"
           true
         end
 
-        def install_cmd
-          env.from_homebrew? ? :brew : :gem
-        end
-
         def verify_cocoapods
-          if install_cmd == :gem && defined?(Bundler)
+          if defined?(Bundler)
             begin
               require "cocoapods"
             rescue LoadError
@@ -288,7 +285,7 @@ github "BranchMetrics/ios-branch-deep-linking"
             exit(-1)
           end
 
-          sudo = install_cmd == :brew || File.writable?(Gem.dir) ? "" : "sudo "
+          sudo = env.from_homebrew? || File.writable?(Gem.dir) ? "" : "sudo "
           sudo_warning = sudo.blank? ? "" : " (requires a sudo password)"
 
           install = confirm "'pod' command not available in PATH. Install cocoapods#{sudo_warning}?", true
@@ -297,6 +294,8 @@ github "BranchMetrics/ios-branch-deep-linking"
             say "Please install cocoapods or use --no-add-sdk to continue."
             exit(-1)
           end
+
+          install_cmd = env.from_homebrew? ? "brew" : "gem"
 
           if sudo.blank?
             command = [install_cmd.to_s, "install", "cocoapods"]
@@ -307,7 +306,15 @@ github "BranchMetrics/ios-branch-deep-linking"
           sh(*command)
 
           # Ensure master podspec repo is set up (will update if it exists).
-          sh %w(pod setup)
+          spinner = TTY::Spinner.new("[:spinner] Synching master podspec repo.", format: :arrow_pulse)
+          spinner.auto_spin
+          begin
+            sh %w(pod setup)
+            spinner.success "Done."
+          rescue CommandError
+            spinner.error "Failed."
+            raise
+          end
         end
 
         def verify_carthage
