@@ -3,6 +3,7 @@ require_relative "android_helper"
 require_relative "ios_helper"
 require "net/http"
 require "set"
+require "tty/spinner"
 
 module BranchIOCLI
   module Helper
@@ -19,21 +20,27 @@ module BranchIOCLI
           @changes << change.to_s
         end
 
-        def fetch(url)
+        def fetch(url, spin: true)
+          @spinner = TTY::Spinner.new "[:spinner] GET #{url}.", format: :flip if spin
+          @spinner.auto_spin if spin
           response = Net::HTTP.get_response URI(url)
 
           case response
           when Net::HTTPSuccess
+            @spinner.success "#{response.code} #{response.message}"
             response.body
           when Net::HTTPRedirection
-            fetch response['location']
+            fetch response['location'], spin: false
           else
+            @spinner.error "#{response.code} #{response.message}"
             raise "Error fetching #{url}: #{response.code} #{response.message}"
           end
         end
 
-        def download(url, dest)
+        def download(url, dest, spin: true)
           uri = URI(url)
+
+          @spinner = TTY::Spinner.new "[:spinner] GET #{uri}.", format: :flip if spin
 
           Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
             request = Net::HTTP::Get.new uri
@@ -43,7 +50,7 @@ module BranchIOCLI
               when Net::HTTPSuccess
                 bytes_downloaded = 0
                 dots_reported = 0
-                # report a dot every 100 kB
+                # spin every 100 kB
                 per_dot = 102_400
 
                 File.open dest, 'w' do |io|
@@ -53,16 +60,16 @@ module BranchIOCLI
                     # print progress
                     bytes_downloaded += chunk.length
                     while (bytes_downloaded - per_dot * dots_reported) >= per_dot
-                      print "."
+                      @spinner.spin
                       dots_reported += 1
                     end
-                    STDOUT.flush
                   end
                 end
-                say "\n"
+                @spinner.success "#{response.code} #{response.message}"
               when Net::HTTPRedirection
-                download response['location'], dest
+                download response['location'], dest, spin: false
               else
+                @spinner.error "#{response.code} #{response.message}"
                 raise "Error downloading #{url}: #{response.code} #{response.message}"
               end
             end
