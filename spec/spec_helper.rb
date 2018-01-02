@@ -4,4 +4,4 @@ require 'rspec/simplecov'
 # SimpleCov.minimum_coverage 95
 SimpleCov.start
 
-require 'branch_io_cli'
+require_relative "../lib/branch_io_cli"

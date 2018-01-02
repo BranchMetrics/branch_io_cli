@@ -1,6 +1,6 @@
 require "plist"
 require "shellwords"
-require "branch_io_cli/configuration/configuration"
+require_relative "../configuration/configuration"
 
 module BranchIOCLI
   module Helper

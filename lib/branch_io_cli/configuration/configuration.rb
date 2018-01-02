@@ -306,7 +306,7 @@ EOF
         end
 
         # For now: When using --no-validate with the setup command, don't call the Branch API.
-        return true unless respond_to?(:validate) && validate
+        return true unless self.class.available_options.map(&:name).include?(:validate) && validate
 
         begin
           # Retrieve info from the API

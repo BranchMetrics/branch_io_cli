@@ -2,9 +2,10 @@ require "active_support/core_ext/object"
 require "json"
 require "openssl"
 require "plist"
+require "tty/spinner"
 
-require "branch_io_cli/configuration"
-require "branch_io_cli/helper/methods"
+require_relative "../configuration"
+require_relative "methods"
 
 module BranchIOCLI
   module Helper
@@ -279,18 +280,24 @@ module BranchIOCLI
 
           Net::HTTP.start uri.host, uri.port, use_ssl: uri.scheme == "https" do |http|
             request = Net::HTTP::Get.new uri
+            spinner = TTY::Spinner.new "[:spinner] GET #{uri}.", format: :flip
+            spinner.auto_spin
             response = http.request request
 
             # Better to use Net::HTTPRedirection and Net::HTTPSuccess here, but
             # having difficulty with the unit tests.
             if (300..399).cover?(response.code.to_i)
+              spinner.error "#{response.code} #{response.message}"
               say "#{uri} cannot result in a redirect. Ignoring."
               next
             elsif response.code.to_i != 200
               # Try the next URI.
-              say "Could not retrieve #{uri}: #{response.code} #{response.message}. Ignoring."
+              spinner.error "#{response.code} #{response.message}"
+              say "Could not retrieve #{uri}. Ignoring."
               next
             end
+
+            spinner.success "#{response.code} #{response.message}"
 
             content_type = response["Content-type"]
             @errors << "[#{domain}] AASA Response does not contain a Content-type header" and next if content_type.nil?
@@ -307,8 +314,6 @@ module BranchIOCLI
               @errors << "[#{domain}] Unsigned AASA files must be served via HTTPS" and next if uri.scheme == "http"
               data = response.body
             end
-
-            say "GET #{uri}: #{response.code} #{response.message} (Content-type:#{content_type}) ✅"
           end
         end
 
@@ -447,19 +452,12 @@ module BranchIOCLI
 
         branch_keys = branch_keys.map { |key| config.target.expand_build_settings key, configuration }
 
-        valid = true
-
         # Retrieve app data from Branch API for all keys in the Info.plist
-        apps = branch_keys.map do |key|
-          begin
-            BranchApp[key]
-          rescue StandardError => e
-            # Failed to retrieve a key in the Info.plist from the API.
-            say "[#{key}] #{e.message} ❌"
-            valid = false
-            nil
-          end
-        end.compact.uniq
+        apps = branch_keys.map { |k| BranchApp[k] }.compact.uniq
+        invalid_keys = apps.reject(&:valid?).map(&:key)
+
+        valid = invalid_keys.empty?
+        say "Invalid Branch key(s) in Info.plist for #{configuration} configuration: #{invalid_keys}. ❌" unless valid
 
         # Get domains and URI schemes loaded from API
         domains_from_api = domains apps
