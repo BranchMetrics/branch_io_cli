@@ -37,10 +37,10 @@ module BranchIOCLI
 
       begin
         @hash = JSON.parse(Helper::BranchHelper.fetch("#{API_ENDPOINT}#{key}")).symbolize_keys.merge key: key
-        spinner.success "Done."
+        spinner.success
         @valid = true
       rescue StandardError => e
-        spinner.error "Failed."
+        spinner.error
         say e.message
         @valid = false
         return

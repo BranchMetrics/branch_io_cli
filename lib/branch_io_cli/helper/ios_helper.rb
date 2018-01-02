@@ -2,6 +2,7 @@ require "active_support/core_ext/object"
 require "json"
 require "openssl"
 require "plist"
+require "tty/spinner"
 
 require_relative "../configuration"
 require_relative "methods"
@@ -279,18 +280,24 @@ module BranchIOCLI
 
           Net::HTTP.start uri.host, uri.port, use_ssl: uri.scheme == "https" do |http|
             request = Net::HTTP::Get.new uri
+            spinner = TTY::Spinner.new "[:spinner] GET #{uri}.", format: :flip
+            spinner.auto_spin
             response = http.request request
 
             # Better to use Net::HTTPRedirection and Net::HTTPSuccess here, but
             # having difficulty with the unit tests.
             if (300..399).cover?(response.code.to_i)
+              spinner.error "#{response.code} #{response.message}"
               say "#{uri} cannot result in a redirect. Ignoring."
               next
             elsif response.code.to_i != 200
               # Try the next URI.
-              say "Could not retrieve #{uri}: #{response.code} #{response.message}. Ignoring."
+              spinner.error "#{response.code} #{response.message}"
+              say "Could not retrieve #{uri}. Ignoring."
               next
             end
+
+            spinner.success "#{response.code} #{response.message}"
 
             content_type = response["Content-type"]
             @errors << "[#{domain}] AASA Response does not contain a Content-type header" and next if content_type.nil?
@@ -307,8 +314,6 @@ module BranchIOCLI
               @errors << "[#{domain}] Unsigned AASA files must be served via HTTPS" and next if uri.scheme == "http"
               data = response.body
             end
-
-            say "GET #{uri}: #{response.code} #{response.message} (Content-type:#{content_type}) ✅"
           end
         end
 

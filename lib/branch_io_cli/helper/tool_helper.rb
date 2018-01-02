@@ -3,7 +3,6 @@ require "cocoapods-core"
 require "fileutils"
 require "pathname"
 require "pattern_patch"
-require "tty/spinner"
 require "zip"
 
 module BranchIOCLI
@@ -306,15 +305,9 @@ github "BranchMetrics/ios-branch-deep-linking"
           sh(*command)
 
           # Ensure master podspec repo is set up (will update if it exists).
-          spinner = TTY::Spinner.new("[:spinner] Synching master podspec repo.", format: :arrow_pulse)
-          spinner.auto_spin
-          begin
-            sh %w(pod setup)
-            spinner.success "Done."
-          rescue CommandError
-            spinner.error "Failed."
-            raise
-          end
+          say "Synching master podspec repo. This may take some time."
+          sh %w(pod setup)
+          say "Done ✅"
         end
 
         def verify_carthage
