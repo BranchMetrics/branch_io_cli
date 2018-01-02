@@ -135,7 +135,7 @@ github "BranchMetrics/ios-branch-deep-linking"
             File.unlink zip_path if File.exist? zip_path
 
             # Download the framework zip
-            helper.download framework_url, zip_path
+            helper.download framework_url, zip_path, size: framework_asset["size"]
 
             say "Unzipping Branch.framework"
 

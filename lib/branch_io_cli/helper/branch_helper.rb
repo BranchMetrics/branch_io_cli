@@ -2,7 +2,9 @@ require "active_support/core_ext/hash"
 require_relative "android_helper"
 require_relative "ios_helper"
 require "net/http"
+require "pastel"
 require "set"
+require "tty/progressbar"
 require "tty/spinner"
 
 module BranchIOCLI
@@ -42,10 +44,8 @@ module BranchIOCLI
           end
         end
 
-        def download(url, dest, spin: true)
+        def download(url, dest, size: nil)
           uri = URI(url)
-
-          @spinner = TTY::Spinner.new "[:spinner] GET #{uri}.", format: :flip if spin
 
           Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
             request = Net::HTTP::Get.new uri
@@ -54,9 +54,12 @@ module BranchIOCLI
               case response
               when Net::HTTPSuccess
                 bytes_downloaded = 0
-                dots_reported = 0
-                # spin every 100 kB
-                per_dot = 102_400
+                if size
+                  pastel = Pastel.new
+                  green = pastel.on_green " "
+                  yellow = pastel.on_yellow " "
+                  progress = TTY::ProgressBar.new "[:bar] :percent (:eta)", total: 50, complete: green, incomplete: yellow
+                end
 
                 File.open dest, 'w' do |io|
                   response.read_body do |chunk|
@@ -64,19 +67,13 @@ module BranchIOCLI
 
                     # print progress
                     bytes_downloaded += chunk.length
-                    while (bytes_downloaded - per_dot * dots_reported) >= per_dot
-                      @spinner.spin
-                      dots_reported += 1
-                    end
+                    progress.ratio = bytes_downloaded.to_f / size.to_f if size
                   end
                 end
-                @spinner.success "#{response.code} #{response.message}" if @spinner
-                @spinner = nil
+                progress.finish if size
               when Net::HTTPRedirection
-                download response['location'], dest, spin: false
+                download response['location'], dest, size: size
               else
-                @spinner.error "#{response.code} #{response.message}" if @spinner
-                @spinner = nil
                 raise "Error downloading #{url}: #{response.code} #{response.message}"
               end
             end
