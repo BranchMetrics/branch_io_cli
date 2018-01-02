@@ -26,10 +26,12 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'CFPropertyList', '~> 2.3'
   spec.add_dependency 'cocoapods-core', '~> 1.3'
   spec.add_dependency 'commander', '~> 4.4'
+  spec.add_dependency 'pastel', '~> 0.7'
   spec.add_dependency 'pattern_patch', '>= 0.5.4', '~> 0.5'
   spec.add_dependency 'plist', '~> 3.3'
   spec.add_dependency 'rubyzip', '~> 1.1'
   spec.add_dependency 'tty-platform', '~> 0.1'
+  spec.add_dependency 'tty-progressbar', '~> 0.13'
   spec.add_dependency 'tty-spinner', '~> 0.7'
   spec.add_dependency 'xcodeproj', '~> 1.4'
 
