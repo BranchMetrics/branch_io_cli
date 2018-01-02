@@ -21,18 +21,23 @@ module BranchIOCLI
         end
 
         def fetch(url, spin: true)
-          @spinner = TTY::Spinner.new "[:spinner] GET #{url}.", format: :flip if spin
-          @spinner.auto_spin if spin
+          if spin
+            @spinner = TTY::Spinner.new "[:spinner] GET #{url}.", format: :flip
+            @spinner.auto_spin
+          end
+
           response = Net::HTTP.get_response URI(url)
 
           case response
           when Net::HTTPSuccess
-            @spinner.success "#{response.code} #{response.message}"
+            @spinner.success "#{response.code} #{response.message}" if @spinner
+            @spinner = nil
             response.body
           when Net::HTTPRedirection
             fetch response['location'], spin: false
           else
-            @spinner.error "#{response.code} #{response.message}"
+            @spinner.error "#{response.code} #{response.message}" if @spinner
+            @spinner = nil
             raise "Error fetching #{url}: #{response.code} #{response.message}"
           end
         end
@@ -65,11 +70,13 @@ module BranchIOCLI
                     end
                   end
                 end
-                @spinner.success "#{response.code} #{response.message}"
+                @spinner.success "#{response.code} #{response.message}" if @spinner
+                @spinner = nil
               when Net::HTTPRedirection
                 download response['location'], dest, spin: false
               else
-                @spinner.error "#{response.code} #{response.message}"
+                @spinner.error "#{response.code} #{response.message}" if @spinner
+                @spinner = nil
                 raise "Error downloading #{url}: #{response.code} #{response.message}"
               end
             end

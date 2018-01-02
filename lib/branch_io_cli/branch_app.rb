@@ -36,7 +36,7 @@ module BranchIOCLI
       spinner.auto_spin
 
       begin
-        @hash = JSON.parse(Helper::BranchHelper.fetch("#{API_ENDPOINT}#{key}")).symbolize_keys.merge key: key
+        @hash = JSON.parse(Helper::BranchHelper.fetch("#{API_ENDPOINT}#{key}", spin: false)).symbolize_keys.merge key: key
         spinner.success
         @valid = true
       rescue StandardError => e
