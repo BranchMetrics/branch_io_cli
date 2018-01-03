@@ -1,5 +1,5 @@
 require "active_support/core_ext/object"
-require "json"
+require "active_support/json"
 require "openssl"
 require "plist"
 require "tty/spinner"
