@@ -331,8 +331,7 @@ EOF
       end
 
       def pod_install_required?
-        # If this is set, its existence has been verified.
-        return false unless podfile_path
+        return false unless podfile_path && File.exist?(podfile_path)
 
         lockfile_path = "#{podfile_path}.lock"
         manifest_path = File.expand_path "../Pods/Manifest.lock", podfile_path
