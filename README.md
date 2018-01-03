@@ -38,6 +38,7 @@ branch_io -h
 branch_io setup -h
 branch_io validate -h
 branch_io report -h
+branch_io env -h
 ```
 
 The gem also installs `br` as an alias for `branch_io`:
@@ -47,6 +48,7 @@ br -h
 br setup -h
 br validate -h
 br report -h
+br env -h
 ```
 
 ### Shell completion
