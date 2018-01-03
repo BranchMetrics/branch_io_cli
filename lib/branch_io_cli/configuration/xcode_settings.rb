@@ -1,5 +1,6 @@
 require "open3"
 require "shellwords"
+require_relative "environment"
 
 module BranchIOCLI
   module Configuration
@@ -41,6 +42,10 @@ module BranchIOCLI
         Configuration.current
       end
 
+      def env
+        Environment
+      end
+
       def [](key)
         @xcode_settings[key]
       end
@@ -65,7 +70,7 @@ module BranchIOCLI
         @xcode_settings = {}
         Open3.popen2e(xcodebuild_cmd) do |stdin, output, thread|
           while (line = output.gets)
-            @xcodebuild_showbuildsettings_output += line
+            @xcodebuild_showbuildsettings_output += env.obfuscate_user(line)
             line.strip!
             next unless (matches = /^(.+)\s+=\s+(.+)$/.match line)
             @xcode_settings[matches[1]] = matches[2]
@@ -78,7 +83,7 @@ module BranchIOCLI
         if report == STDOUT
           say "<%= color('$ #{xcodebuild_cmd}', [MAGENTA, BOLD]) %>\n\n"
         else
-          report.write "$ #{xcodebuild_cmd}\n\n"
+          report.write "$ #{env.obfuscate_user(xcodebuild_cmd)}\n\n"
         end
 
         report.write @xcodebuild_showbuildsettings_output

@@ -98,6 +98,7 @@ module BranchIOCLI
         end
 
         def display_path(path)
+          return nil if path.nil?
           path = path.gsub(Gem.dir, '$GEM_HOME')
           path = obfuscate_user(path)
           path

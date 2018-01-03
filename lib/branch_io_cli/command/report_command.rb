@@ -54,13 +54,13 @@ module BranchIOCLI
         tool_helper.carthage_bootstrap_if_required report
 
         # run xcodebuild -list
-        report.sh(*report_helper.base_xcodebuild_cmd, "-list")
+        report.sh(*report_helper.base_xcodebuild_cmd, "-list", obfuscate: true)
 
         # If using a workspace, -list all the projects as well
         if config.workspace_path
           config.workspace.file_references.map(&:path).each do |project_path|
             path = File.join File.dirname(config.workspace_path), project_path
-            report.sh "xcodebuild", "-list", "-project", path
+            report.sh "xcodebuild", "-list", "-project", path, obfuscate: true
           end
         end
 
@@ -83,7 +83,7 @@ module BranchIOCLI
         if config.clean
           task = Helper::Task.new use_spinner: report != STDOUT
           task.begin "Cleaning."
-          if report.sh(*base_cmd, "clean").success?
+          if report.sh(*base_cmd, "clean", obfuscate: true).success?
             task.success "Done."
           else
             task.error "Clean failed."
@@ -92,7 +92,7 @@ module BranchIOCLI
 
         task = Helper::Task.new use_spinner: report != STDOUT
         task.begin "Building."
-        if report.sh(*base_cmd, "-verbose").success?
+        if report.sh(*base_cmd, "-verbose", obfuscate: true).success?
           task.success "Done."
         else
           task.error "Failed."
