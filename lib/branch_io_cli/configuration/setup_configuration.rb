@@ -27,11 +27,9 @@ module BranchIOCLI
           "Skip adding the framework to the project." => :skip
         }
 
-      attr_reader :keys
       attr_reader :all_domains
 
       def initialize(options)
-        @confirm = options.confirm
         super
         # Configuration has been validated and logged to the screen.
         confirm_with_user if options.confirm
@@ -52,7 +50,7 @@ module BranchIOCLI
 
         validate_xcodeproj_path
         validate_target
-        validate_keys_from_setup_options options
+        validate_keys
         validate_all_domains options, !target.extension_target_type?
         validate_uri_scheme options
         validate_setting options
@@ -77,6 +75,7 @@ module BranchIOCLI
         message = <<-EOF
 <%= color('Xcode project:', BOLD) %> #{xcodeproj_path}
 <%= color('Target:', BOLD) %> #{target.name}
+<%= color('Target type:', BOLD) %> #{target.product_type}
 <%= color('Live key:', BOLD) %> #{keys[:live] || '(none)'}
 <%= color('Test key:', BOLD) %> #{keys[:test] || '(none)'}
 <%= color('Domains:', BOLD) %> #{all_domains}
@@ -118,39 +117,6 @@ module BranchIOCLI
         say message
       end
 
-      def validate_keys_from_setup_options(options)
-        @keys = {}
-
-        # 1. Check the options passed in. If nothing (nil) passed, continue.
-        validate_key options.live_key, :live, accept_nil: true
-        validate_key options.test_key, :test, accept_nil: true
-
-        # 2. Did we find a valid key above?
-        while @keys.empty?
-          # 3. If not, prompt.
-          say "A live key, a test key or both is required."
-          validate_key nil, :live
-          validate_key nil, :test
-        end
-
-        # 4. We have at least one valid key now.
-      end
-
-      def key_valid?(key, type)
-        return false if key.nil?
-        key.empty? || key =~ /^key_#{type}_/
-      end
-
-      def validate_key(key, type, options = {})
-        return if options[:accept_nil] && key.nil?
-        until key_valid? key, type
-          say "#{key.inspect} is not a valid #{type} Branch key. It must begin with key_#{type}_." if key
-          key = ask "Please enter your #{type} Branch key or use --#{type}-key [enter for none]: "
-        end
-        @keys[type] = key unless key.empty?
-        instance_variable_set "@#{type}_key", key
-      end
-
       def validate_all_domains(options, required = true)
         app_link_roots = app_link_roots_from_domains options.domains
 
@@ -172,6 +138,10 @@ module BranchIOCLI
 
           @all_domains = all_domains_from_domains domains
         end
+      end
+
+      def domains_from_api
+        helper.domains @apps
       end
 
       def validate_uri_scheme(options)

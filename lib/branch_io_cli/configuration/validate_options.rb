@@ -5,8 +5,22 @@ module BranchIOCLI
         def available_options
           [
             Option.new(
+              name: :live_key,
+              description: "Branch live key expected in project",
+              example: "key_live_xxxx",
+              type: String,
+              aliases: "-L"
+            ),
+            Option.new(
+              name: :test_key,
+              description: "Branch test key expected in project",
+              example: "key_test_yyyy",
+              type: String,
+              aliases: "-T"
+            ),
+            Option.new(
               name: :domains,
-              description: "Comma-separated list of domains to validate (Branch domains or non-Branch domains)",
+              description: "Comma-separated list of domains expected to be configured in the project (Branch domains or non-Branch domains)",
               type: Array,
               example: "example.com,www.example.com",
               aliases: "-D",
@@ -14,7 +28,7 @@ module BranchIOCLI
             ),
             Option.new(
               name: :xcodeproj,
-              description: "Path to an Xcode project to update",
+              description: "Path to an Xcode project to validate",
               type: String,
               example: "MyProject.xcodeproj"
             ),
@@ -29,8 +43,13 @@ module BranchIOCLI
               description: "Comma-separated list of configurations to validate (default: all)",
               type: Array,
               example: "Debug,Release"
+            ),
+            Option.new(
+              name: :universal_links_only,
+              description: "Validate only the Universal Link configuration",
+              default_value: false
             )
-          ]
+          ] + Option.global_options
         end
       end
     end

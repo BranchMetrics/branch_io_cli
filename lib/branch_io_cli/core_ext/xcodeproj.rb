@@ -92,6 +92,8 @@ module Xcodeproj
         # @param configuration [String] Name of any valid configuration for this target
         # @return [String] A copy of the original string with all embedded build settings expanded
         def expand_build_settings(string, configuration)
+          return nil if string.nil?
+
           search_position = 0
           string = string.clone
 

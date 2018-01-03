@@ -49,6 +49,10 @@ module BranchIOCLI
       def tool_helper
         Helper::ToolHelper
       end
+
+      def env
+        Configuration::Environment
+      end
     end
   end
 end

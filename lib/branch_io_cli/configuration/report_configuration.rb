@@ -8,14 +8,17 @@ module BranchIOCLI
         def summary
           "Generate and optionally submit a build diagnostic report."
         end
+
+        def examples
+          {
+            "Show general project information without building" => "br report -H",
+            "Perform a full build and report all errors to report.txt" => "br report",
+            "Don't clean before building" => "br report --no-clean"
+          }
+        end
       end
 
       attr_reader :report_path
-
-      def initialize(options)
-        @confirm = options.confirm
-        super
-      end
 
       def validate_options
         @clean = options.clean
@@ -67,6 +70,7 @@ EOF
 <%= color('Xcode project:', BOLD) %> #{xcodeproj_path || '(none)'}
 <%= color('Scheme:', BOLD) %> #{scheme || '(none)'}
 <%= color('Target:', BOLD) %> #{target || '(none)'}
+<%= color('Target type:', BOLD) %> #{target.product_type}
 <%= color('Configuration:', BOLD) %> #{configuration || '(none)'}
 <%= color('SDK:', BOLD) %> #{sdk}
 <%= color('Podfile:', BOLD) %> #{relative_path(podfile_path) || '(none)'}

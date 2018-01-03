@@ -1,3 +1,4 @@
+require "active_support/core_ext/string"
 require "cocoapods-core"
 require "fileutils"
 require "pathname"
@@ -14,6 +15,10 @@ module BranchIOCLI
           Configuration::Configuration.current
         end
 
+        def env
+          Configuration::Environment
+        end
+
         def helper
           BranchHelper
         end
@@ -23,10 +28,10 @@ module BranchIOCLI
 
           podfile_path = options.podfile_path
 
-          install_command = "pod install"
-          install_command += " --repo-update" if options.pod_repo_update
+          install_command = %w(pod install)
+          install_command << "--repo-update" if options.pod_repo_update
           Dir.chdir(File.dirname(podfile_path)) do
-            sh "pod init"
+            sh %w(pod init)
             PatternPatch::Patch.new(
               regexp: /^(\s*)# Pods for #{options.target.name}$/,
               mode: :append,
@@ -34,7 +39,7 @@ module BranchIOCLI
             ).apply podfile_path
             # Store a Pod::Podfile representation of this file.
             options.open_podfile
-            sh install_command
+            sh(*install_command)
           end
 
           return unless options.commit
@@ -72,7 +77,7 @@ github "BranchMetrics/ios-branch-deep-linking"
           end
 
           # 2. carthage update
-          sh "carthage #{options.carthage_command}", chdir: File.dirname(config.cartfile_path)
+          sh "carthage", options.carthage_command, chdir: File.dirname(config.cartfile_path)
 
           # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
           helper.add_change cartfile_path
@@ -130,7 +135,7 @@ github "BranchMetrics/ios-branch-deep-linking"
             File.unlink zip_path if File.exist? zip_path
 
             # Download the framework zip
-            helper.download framework_url, zip_path
+            helper.download framework_url, zip_path, size: framework_asset["size"]
 
             say "Unzipping Branch.framework"
 
@@ -189,10 +194,10 @@ github "BranchMetrics/ios-branch-deep-linking"
 
           # 2. pod install
           # command = "PATH='#{ENV['PATH']}' pod install"
-          command = 'pod install'
-          command += ' --repo-update' if options.pod_repo_update
+          command = %w(pod install)
+          command << '--repo-update' if options.pod_repo_update
 
-          sh command, chdir: File.dirname(config.podfile_path)
+          sh(*command, chdir: File.dirname(config.podfile_path))
 
           # 3. Add Podfile and Podfile.lock to commit (in case :commit param specified)
           helper.add_change podfile_path
@@ -220,9 +225,9 @@ github "BranchMetrics/ios-branch-deep-linking"
           return false unless PatchHelper.patch_cartfile cartfile_path
 
           # 2. carthage bootstrap (or other command)
-          cmd = "carthage #{options.carthage_command}"
-          cmd << " ios-branch-deep-linking" if options.carthage_command =~ /^(update|build)/
-          sh cmd, chdir: File.dirname(config.cartfile_path)
+          cmd = ["carthage", *options.carthage_command.shellsplit]
+          cmd << "ios-branch-deep-linking" if options.carthage_command =~ /^(update|build)/
+          sh(*cmd, chdir: File.dirname(config.cartfile_path))
 
           # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
           helper.add_change cartfile_path
@@ -257,11 +262,19 @@ github "BranchMetrics/ios-branch-deep-linking"
           true
         end
 
-        def install_cmd
-          ENV["BRANCH_IO_CLI_INSTALLED_FROM_HOMEBREW"] == "true" ? :brew : :gem
-        end
-
         def verify_cocoapods
+          if defined?(Bundler)
+            begin
+              require "cocoapods"
+            rescue LoadError
+              # The only alternative here would be something like patch Gemfile, run bundle install
+              # and then exec %w(bundle exec br) + ARGV, except merge anything inferred or obtained
+              # by asking questions.
+              say %(CocoaPods is required to continue. Please add 'gem "cocoapods"' to your Gemfile, run bundle install and then rerun this command.)
+              exit(-1)
+            end
+          end
+
           pod_cmd = `which pod`
           return unless pod_cmd.empty?
 
@@ -271,7 +284,7 @@ github "BranchMetrics/ios-branch-deep-linking"
             exit(-1)
           end
 
-          sudo = install_cmd == :brew || File.writable?(Gem.dir) ? "" : "sudo "
+          sudo = env.from_homebrew? || File.writable?(Gem.dir) ? "" : "sudo "
           sudo_warning = sudo.blank? ? "" : " (requires a sudo password)"
 
           install = confirm "'pod' command not available in PATH. Install cocoapods#{sudo_warning}?", true
@@ -281,10 +294,20 @@ github "BranchMetrics/ios-branch-deep-linking"
             exit(-1)
           end
 
-          sh "#{sudo}#{install_cmd} install cocoapods"
+          install_cmd = env.from_homebrew? ? "brew" : "gem"
+
+          if sudo.blank?
+            command = [install_cmd.to_s, "install", "cocoapods"]
+          else
+            command = [sudo, install_cmd.to_s, "install", "cocoapods"]
+          end
+
+          sh(*command)
 
           # Ensure master podspec repo is set up (will update if it exists).
-          sh "pod setup"
+          say "Synching master podspec repo. This may take some time."
+          sh %w(pod setup)
+          say "Done ✅"
         end
 
         def verify_carthage
@@ -303,7 +326,7 @@ github "BranchMetrics/ios-branch-deep-linking"
             exit(-1)
           end
 
-          sh "brew install carthage"
+          sh %w(brew install carthage)
         end
 
         def verify_git
@@ -324,7 +347,88 @@ github "BranchMetrics/ios-branch-deep-linking"
             exit(-1)
           end
 
-          sh "xcode-select --install"
+          sh %w(xcode-select --install)
+        end
+
+        def pod_install_if_required(report = STDOUT)
+          return true unless config.pod_install_required?
+          # Only if a Podfile is detected/supplied at the command line.
+
+          say "pod install required in order to build."
+          if config.confirm
+            install = confirm 'Run "pod install" now?', true
+
+            unless install
+              say 'Please run "pod install" or "pod update" first in order to continue.'
+              return false
+            end
+          end
+
+          verify_cocoapods
+
+          install_command = %w(pod install)
+
+          if config.pod_repo_update
+            install_command << " --repo-update"
+          else
+            say <<-EOF
+You have disabled "pod repo update". This can cause "pod install" to fail in
+some cases. If that happens, please rerun without --no-pod-repo-update or run
+"pod install --repo-update" manually.
+                EOF
+          end
+
+          # included by sh, but this is to the screen when generating a report.
+          say "Running #{IO.command_from_args(*install_command)}"
+          if report.sh(*install_command).success?
+            say "Done ✅"
+          else
+            say "#{IO.command_from_args(*install_command)} failed. See report for details."
+            return false
+          end
+
+          true
+        end
+
+        def carthage_bootstrap_if_required(report = STDOUT)
+          return true unless config.cartfile_path
+          return true if Dir.exist?(File.join(File.dirname(config.cartfile_path), "Carthage", "Build", "iOS"))
+
+          say "carthage checkout required in order to build."
+          if config.confirm
+            install = confirm 'Run "carthage checkout && carthage build --platform ios" now?', true
+
+            unless install
+              say 'Please build your Carthage dependencies first in order to continue.'
+              return false
+            end
+          end
+
+          verify_carthage
+
+          checkout_command = %w(carthage checkout)
+
+          # included by sh, but this is to the screen when generating a report.
+          say "Running #{IO.command_from_args(*checkout_command)}"
+          if report.sh(*checkout_command).success?
+            say "Done ✅"
+          else
+            say "#{IO.command_from_args(*checkout_command)} failed. See report for details."
+            return false
+          end
+
+          build_command = %w(carthage build --platform ios)
+
+          # included by sh, but this is to the screen when generating a report.
+          say "Running #{IO.command_from_args(*build_command)}"
+          if report.sh(*build_command).success?
+            say "Done ✅"
+          else
+            say "#{IO.command_from_args(*build_command)} failed. See report for details."
+            return false
+          end
+
+          true
         end
       end
     end

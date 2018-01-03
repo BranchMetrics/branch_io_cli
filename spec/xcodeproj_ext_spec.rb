@@ -1,5 +1,5 @@
 describe 'Xcodeproj extensions' do
-  describe 'PBNativeTarget#expanded_build_setting' do
+  describe 'PBXNativeTarget#expanded_build_setting' do
     let (:project) do
       double :project
     end

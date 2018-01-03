@@ -1,6 +1,17 @@
 module BranchIOCLI
   module Configuration
     class Option
+      def self.global_options
+        [
+          new(
+            name: :confirm,
+            description: "Enable or disable many prompts",
+            default_value: true,
+            skip_confirmation: true
+          )
+        ]
+      end
+
       attr_accessor :name
       attr_accessor :env_name
       attr_accessor :type

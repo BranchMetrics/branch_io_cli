@@ -1,6 +1,6 @@
 require "rubygems"
 require "commander"
-require "branch_io_cli/format"
+require_relative "format"
 
 module BranchIOCLI
   class CLI

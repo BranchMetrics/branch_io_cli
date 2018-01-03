@@ -79,18 +79,25 @@ module BranchIOCLI
       attr_reader :workspace_path
       attr_reader :pod_repo_update
       attr_reader :sdk
+      attr_reader :keys
+      attr_reader :apps
+      attr_reader :quiet
 
       def initialize(options)
         @options = options
         @pod_repo_update = options.pod_repo_update if self.class.available_options.map(&:name).include?(:pod_repo_update)
         @sdk = "iphonesimulator" # to load Xcode build settings for commands without a --sdk option
+        @confirm = options.confirm
 
         Configuration.current = self
 
-        say "\n"
-        print_identification
-        say ASCII_ART
-        say "\n"
+        unless quiet
+          say "\n"
+          print_identification
+          say ASCII_ART
+          say "\n"
+        end
+
         validate_options
         log
       end
@@ -100,6 +107,8 @@ module BranchIOCLI
       end
 
       def log
+        return if quiet
+
         say <<EOF
 <%= color('Configuration:', [CYAN, BOLD, UNDERLINE]) %>
 
@@ -269,6 +278,54 @@ EOF
         end
       end
 
+      def validate_keys(optional: false)
+        @keys = {}
+        @apps = {}
+
+        # 1. Check the options passed in. If nothing (nil) passed, continue.
+        validate_key options.live_key, :live, accept_nil: true
+        validate_key options.test_key, :test, accept_nil: true
+
+        # 2. Did we find a valid key above?
+        while !optional && @keys.empty?
+          # 3. If not, prompt.
+          say "A live key, a test key or both is required."
+          validate_key nil, :live
+          validate_key nil, :test
+        end
+
+        # 4. We have at least one valid key now, unless optional is truthy.
+      end
+
+      def key_valid?(key, type)
+        return false if key.nil?
+        return true if key.empty?
+        unless key =~ /^key_#{type}_.+/
+          say "#{key.inspect} is not a valid #{type} Branch key. It must begin with key_#{type}_."
+          return false
+        end
+
+        # For now: When using --no-validate with the setup command, don't call the Branch API.
+        return true unless self.class.available_options.map(&:name).include?(:validate) && validate
+
+        begin
+          # Retrieve info from the API
+          app = BranchApp[key]
+          @apps[key] = app
+          true
+        rescue StandardError => e
+          say "Error fetching app for key #{key} from Branch API: #{e.message}"
+          false
+        end
+      end
+
+      def validate_key(key, type, options = {})
+        return if options[:accept_nil] && key.nil?
+        key = ask "Please enter your #{type} Branch key or use --#{type}-key [enter for none]: " until key_valid? key, type
+        @keys[type] = key unless key.empty?
+        instance_variable_set "@#{type}_key", key
+      end
+
       def pod_install_required?
         # If this is set, its existence has been verified.
         return false unless podfile_path
@@ -342,6 +399,10 @@ EOF
 
         # If we found a .h, patch the corresponding .m.
         path && path.sub(/\.h$/, '.m')
+      end
+
+      def ios_urischemes_from_api(apps = @apps)
+        Set.new apps.map(&:ios_uri_scheme).compact
       end
 
       # TODO: How many of these can vary by configuration?

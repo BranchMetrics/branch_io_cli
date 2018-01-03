@@ -1,9 +1,11 @@
+require "active_support/core_ext/object"
 require "json"
 require "openssl"
 require "plist"
+require "tty/spinner"
 
-require "branch_io_cli/configuration"
-require "branch_io_cli/helper/methods"
+require_relative "../configuration"
+require_relative "methods"
 
 module BranchIOCLI
   module Helper
@@ -110,7 +112,7 @@ module BranchIOCLI
         end
       end
 
-      def update_info_plist_setting(configuration = RELEASE_CONFIGURATION, &b)
+      def info_plist_path(configuration)
         # find the Info.plist paths for this configuration
         info_plist_path = config.target.expanded_build_setting "INFOPLIST_FILE", configuration
 
@@ -118,12 +120,19 @@ module BranchIOCLI
 
         project_parent = File.dirname config.xcodeproj_path
 
-        info_plist_path = File.expand_path info_plist_path, project_parent
+        File.expand_path info_plist_path, project_parent
+      end
 
+      def info_plist(path)
         # try to open and parse the Info.plist (raises)
-        info_plist = File.open(info_plist_path) { |f| Plist.parse_xml f }
-        raise "Failed to parse #{info_plist_path}" if info_plist.nil?
+        info_plist = File.open(path) { |f| Plist.parse_xml f }
+        raise "Failed to parse #{path}" if info_plist.nil?
+        info_plist
+      end
 
+      def update_info_plist_setting(configuration = RELEASE_CONFIGURATION, &b)
+        info_plist_path = info_plist_path(configuration)
+        info_plist = info_plist(info_plist_path)
         yield info_plist
 
         Plist::Emit.save_plist info_plist, info_plist_path
@@ -249,7 +258,14 @@ module BranchIOCLI
         nil
       end
 
+      def reset_aasa_cache
+        @aasa_files = {}
+      end
+
       def contents_of_aasa_file(domain)
+        @aasa_files ||= {}
+        return @aasa_files[domain] if @aasa_files[domain]
+
         uris = [
           URI("https://#{domain}/.well-known/apple-app-site-association"),
           URI("https://#{domain}/apple-app-site-association")
@@ -264,18 +280,24 @@ module BranchIOCLI
 
           Net::HTTP.start uri.host, uri.port, use_ssl: uri.scheme == "https" do |http|
             request = Net::HTTP::Get.new uri
+            spinner = TTY::Spinner.new "[:spinner] GET #{uri}.", format: :flip
+            spinner.auto_spin
             response = http.request request
 
             # Better to use Net::HTTPRedirection and Net::HTTPSuccess here, but
             # having difficulty with the unit tests.
             if (300..399).cover?(response.code.to_i)
+              spinner.error "#{response.code} #{response.message}"
               say "#{uri} cannot result in a redirect. Ignoring."
               next
             elsif response.code.to_i != 200
               # Try the next URI.
-              say "Could not retrieve #{uri}: #{response.code} #{response.message}. Ignoring."
+              spinner.error "#{response.code} #{response.message}"
+              say "Could not retrieve #{uri}. Ignoring."
               next
             end
+
+            spinner.success "#{response.code} #{response.message}"
 
             content_type = response["Content-type"]
             @errors << "[#{domain}] AASA Response does not contain a Content-type header" and next if content_type.nil?
@@ -289,16 +311,15 @@ module BranchIOCLI
               signature.verify nil, cert_store, nil, OpenSSL::PKCS7::NOVERIFY
               data = signature.data
             else
-              @error << "[#{domain}] Unsigned AASA files must be served via HTTPS" and next if uri.scheme == "http"
+              @errors << "[#{domain}] Unsigned AASA files must be served via HTTPS" and next if uri.scheme == "http"
               data = response.body
             end
-
-            say "GET #{uri}: #{response.code} #{response.message} (Content-type:#{content_type}) ✅"
           end
         end
 
         @errors << "[#{domain}] Failed to retrieve AASA file" and return nil if data.nil?
 
+        @aasa_files[domain] = data
         data
       rescue IOError, SocketError => e
         @errors << "[#{domain}] Socket error: #{e.message}"
@@ -408,6 +429,85 @@ module BranchIOCLI
         return [] if associated_domains.nil?
 
         associated_domains.select { |d| d =~ /^applinks:/ }.map { |d| d.sub(/^applinks:/, "") }
+      end
+
+      # Validates Branch-related settings in a project (keys, domains, URI schemes)
+      def project_valid?(configuration)
+        @errors = []
+
+        info_plist_path = info_plist_path(configuration)
+        info_plist = info_plist(info_plist_path).symbolize_keys
+        branch_key = info_plist[:branch_key]
+
+        if branch_key.blank?
+          say "branch_key not found in Info.plist. ❌"
+          return false
+        end
+
+        if branch_key.kind_of?(Hash)
+          branch_keys = branch_key.map { |k, v| v }
+        else
+          branch_keys = [branch_key]
+        end
+
+        branch_keys = branch_keys.map { |key| config.target.expand_build_settings key, configuration }
+
+        # Retrieve app data from Branch API for all keys in the Info.plist
+        apps = branch_keys.map { |k| BranchApp[k] }.compact.uniq
+        invalid_keys = apps.reject(&:valid?).map(&:key)
+
+        valid = invalid_keys.empty?
+        say "Invalid Branch key(s) in Info.plist for #{configuration} configuration: #{invalid_keys}. ❌" unless valid
+
+        # Get domains and URI schemes loaded from API
+        domains_from_api = domains apps
+
+        # Make sure all domains and URI schemes are present in the project.
+        domains = domains_from_project(configuration)
+        missing_domains = domains_from_api - domains
+        unless missing_domains.empty?
+          valid = false
+          missing_domains.each do |domain|
+            say "[#{domain}] Domain from Dashboard missing from #{configuration} configuration. ❌"
+          end
+        end
+
+        valid
+      end
+
+      def branch_keys_from_project(configurations)
+        configurations.map do |c|
+          path = info_plist_path(c)
+          info_plist = info_plist(path).symbolize_keys
+          branch_key = info_plist[:branch_key]
+          if branch_key.blank?
+            say "branch_key not found in Info.plist. ❌"
+            return []
+          end
+
+          if branch_key.kind_of?(Hash)
+            keys = branch_key.values
+          else
+            keys = [branch_key]
+          end
+
+          keys.map { |key| config.target.expand_build_settings key, c }
+        end.compact.flatten.uniq
+      end
+
+      def branch_apps_from_project(configurations)
+        branch_keys_from_project(configurations).map { |key| BranchApp[key] }
+      end
+
+      def uri_schemes_from_project(configurations)
+        schemes = configurations.map do |c|
+          path = info_plist_path(c)
+          info_plist = info_plist(path)
+          url_types = info_plist["CFBundleURLTypes"] || []
+          url_types.map { |t| t["CFBundleURLSchemes"] }
+        end
+
+        schemes.compact.flatten.uniq
       end
     end
   end

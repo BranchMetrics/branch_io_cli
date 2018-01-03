@@ -22,6 +22,8 @@ desc "Run setup, validate, report and report:full in order"
 task all: [:setup, :validate, :report, "report:full"]
 
 IOS_REPO_DIR = File.expand_path "../../ios-branch-deep-linking", __FILE__
+LIVE_KEY = "key_live_fgvRfyHxLBuCjUuJAKEZNdeiAueoTL6R"
+TEST_KEY = "key_test_efBNprLtMrryfNERzPVh2gkhxyliNN14"
 
 def all_projects
   projects = Dir[File.expand_path("../examples/*Example*", __FILE__)]
@@ -36,13 +38,15 @@ task :setup do
   projects = Dir[File.expand_path("../examples/*Example*", __FILE__)]
   Rake::Task["branch:setup"].invoke(
     projects,
-    live_key: "key_live_xxxx",
-    test_key: "key_test_yyyy",
+    live_key: LIVE_KEY,
+    test_key: TEST_KEY,
     domains: %w(k272.app.link),
+    uri_scheme: "branchfastlaneexample",
     validate: true,
     pod_repo_update: false,
     setting: true,
-    confirm: false
+    confirm: false,
+    trace: true
   )
 end
 
@@ -51,23 +55,38 @@ task :validate do
   projects = Dir[File.expand_path("../examples/*Example*", __FILE__)]
   Rake::Task["branch:validate"].invoke(
     projects,
+    # Expect all projects to have exactly these keys and domains
+    live_key: LIVE_KEY,
+    test_key: TEST_KEY,
     domains: %w(
       k272.app.link
       k272-alternate.app.link
       k272.test-app.link
       k272-alternate.test-app.link
-    )
+    ),
+    trace: true
+  )
+end
+
+desc "Validate iOS repo examples"
+task "validate:ios" do
+  projects = Dir[File.expand_path("../examples/*Example*", __FILE__)]
+  Rake::Task["branch:validate"].invoke(
+    all_projects - projects,
+    trace: true
   )
 end
 
 desc "Report on all examples in repo"
 task :report do
-  Rake::Task["branch:report"].invoke all_projects, header_only: true
+  Rake::Task["branch:report"].invoke all_projects, header_only: true, trace: true
 end
 
-desc "Perform a full build of all examples in the repo"
-task "report:full" do
-  Rake::Task["branch:report"].invoke all_projects, pod_repo_update: false, confirm: false
+namespace :report do
+  desc "Perform a full build of all examples in the repo"
+  task :full do
+    Rake::Task["branch:report"].invoke all_projects, pod_repo_update: false, confirm: false, trace: true
+  end
 end
 
 #
@@ -79,7 +98,7 @@ task "readme" do
   include BranchIOCLI::Format::MarkdownFormat
 
   text = "\\1\n"
-  text += %i(setup validate report).inject("") do |t, command|
+  text += %i(setup validate report env).inject("") do |t, command|
     t + render_command(command)
   end
   text += "\n\\2"

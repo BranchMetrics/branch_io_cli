@@ -61,38 +61,16 @@ any Ruby-related environment variables if using the system Ruby.
 
 Add to `~/.bash_profile` or `~/.bashrc`:
 
-##### RubyGems
-
 ```bash
-. `gem which branch_io_cli | sed 's+branch_io_cli.rb$+assets/completions/completion.bash+'`
-```
-
-##### Homebrew
-
-Source the script from the Cellar, e.g.:
-
-```bash
-br_version=`br -v | awk '{ print $4 }'`
-. /usr/local/Cellar/branch_io_cli/${br_version}/libexec/gems/branch_io_cli-${br_version}/lib/assets/completions/completion.bash
+[[ "$(which br)" == "" ]] || . $(br env -cs bash)
 ```
 
 #### Zsh
 
 Add to `~/.zshrc`:
 
-##### RubyGems
-
 ```zsh
-. `gem which branch_io_cli | sed 's+branch_io_cli.rb$+assets/completions/completion.zsh+'`
-```
-
-##### Homebrew
-
-Source the script from the Cellar, e.g.:
-
-```bash
-br_version=`br -v | awk '{ print $4 }'`
-. /usr/local/Cellar/branch_io_cli/${br_version}/libexec/gems/branch_io_cli-${br_version}/lib/assets/completions/completion.zsh
+[[ "$(which br)" == "" ]] || . $(br env -cs zsh)
 ```
 
 Currently command-line completion for bash is much more extensive than for zsh.
@@ -189,7 +167,7 @@ See https://github.com/BranchMetrics/branch_io_cli#setup-command for more inform
 |--[no-]add-sdk|Add the Branch framework to the project (default: yes)|BRANCH_ADD_SDK|
 |--[no-]patch-source|Add Branch SDK calls to the AppDelegate (default: yes)|BRANCH_PATCH_SOURCE|
 |--commit [message]|Commit the results to Git if non-blank|BRANCH_COMMIT|
-|--[no-]confirm|Confirm configuration before proceeding (default: yes)|BRANCH_CONFIRM|
+|--[no-]confirm|Enable or disable many prompts (default: yes)|BRANCH_CONFIRM|
 
 
 #### Examples
@@ -239,16 +217,26 @@ branch_io validate [OPTIONS]
 br validate [OPTIONS]
 ```
 
-This command validates all Universal Link domains configured in a project without making any
-modification. It validates both Branch and non-Branch domains. Unlike web-based Universal
-Link validators, this command operates directly on the project. It finds the bundle and
-signing team identifiers in the project as well as the app's Associated Domains. It requests
-the apple-app-site-association file for each domain and validates the file against the
-project's settings.
+This command validates all Branch-related settings for a target in an Xcode project,
+including validation of the apple-app-site-association file from each domain.
+Multiple targets may be validated by running the command multiple times using
+the `--target` option. Test targets are not supported.
 
-Only app targets are supported for this command. By default, it will validate the first.
-If your project has multiple app targets, specify the `--target` option to validate other
-targets.
+For each Branch key present in the Info.plist, it retrieves the settings from Branch's
+system. If the information cannot be retrieved (or if the `branch_key` is not present),
+an error is recorded. If the `--live-key` or `--test-key` option is present,
+the set of all keys used by the target must exactly match the options.
+
+All domains and URI schemes configured for the target must include all domains
+and URI schemes configured for all keys used by the target. Other domains or
+URI schemes may also be present in the project.
+
+This command validates all Universal Link domains configured in an application target
+without making any modification. It validates both Branch and non-Branch domains. Unlike
+web-based Universal Link validators, this command operates directly on the project. It
+finds the bundle and signing team identifiers in the project as well as the app's
+Associated Domains. It requests the apple-app-site-association file for each domain
+and validates the file against the project's settings.
 
 By default, all build configurations in the project are validated. To validate a different list
 of configurations, including a single configuration, specify the `--configurations` option.
@@ -257,7 +245,7 @@ If `--domains` is specified, the list of Universal Link domains in the Associate
 Domains entitlement must exactly match this list, without regard to order, for all
 configurations under validation. If no `--domains` are provided, validation passes
 if at least one Universal Link domain is configured for each configuration and passes
-validation, and no Universal Link domain is present in anyconfiguration that does not
+validation, and no Universal Link domain is present in any configuration that does not
 pass validation.
 
 All parameters are optional.
@@ -272,10 +260,45 @@ See https://github.com/BranchMetrics/branch_io_cli#validate-command for more inf
 |-h, --help|Prints a list of commands or help for each command||
 |-v, --version|Prints the current version of the CLI||
 |-t, --trace|Prints a stack trace when exceptions are raised||
-|-D, --domains example.com,www.example.com|Comma-separated list of domains to validate (Branch domains or non-Branch domains) (default: [])|BRANCH_DOMAINS|
-|--xcodeproj MyProject.xcodeproj|Path to an Xcode project to update|BRANCH_XCODEPROJ|
+|-L, --live-key key_live_xxxx|Branch live key expected in project|BRANCH_LIVE_KEY|
+|-T, --test-key key_test_yyyy|Branch test key expected in project|BRANCH_TEST_KEY|
+|-D, --domains example.com,www.example.com|Comma-separated list of domains expected to be configured in the project (Branch domains or non-Branch domains) (default: [])|BRANCH_DOMAINS|
+|--xcodeproj MyProject.xcodeproj|Path to an Xcode project to validate|BRANCH_XCODEPROJ|
 |--target MyAppTarget|Name of a target to validate in the Xcode project|BRANCH_TARGET|
 |--configurations Debug,Release|Comma-separated list of configurations to validate (default: all)|BRANCH_CONFIGURATIONS|
+|--[no-]universal-links-only|Validate only the Universal Link configuration (default: no)|BRANCH_UNIVERSAL_LINKS_ONLY|
+|--[no-]confirm|Enable or disable many prompts (default: yes)|BRANCH_CONFIRM|
+
+
+#### Examples
+
+
+##### Ensure project has at least one correctly configured Branch key and domain
+
+```bash
+br validate
+```
+
+
+##### Ensure project is correctly configured for certain Branch keys
+
+```bash
+br validate -L key_live_xxxx -T key_test_yyyy
+```
+
+
+##### Ensure project is correctly configured to use specific domains
+
+```bash
+br validate -D myapp.app.link,myapp-alternate.app.link
+```
+
+
+##### Validate only Universal Link configuration
+
+```bash
+br validate --universal-links-only
+```
 
 
 
@@ -314,7 +337,72 @@ building.
 |-H, --[no-]header-only|Write a report header to standard output and exit (default: no)|BRANCH_HEADER_ONLY|
 |--[no-]pod-repo-update|Update the local podspec repo before installing (default: yes)|BRANCH_POD_REPO_UPDATE|
 |-o, --out ./report.txt|Report output path (default: ./report.txt)|BRANCH_REPORT_PATH|
-|--[no-]confirm|Confirm before running certain commands (default: yes)|BRANCH_CONFIRM|
+|--[no-]confirm|Enable or disable many prompts (default: yes)|BRANCH_CONFIRM|
+
+
+#### Examples
+
+
+##### Show general project information without building
+
+```bash
+br report -H
+```
+
+
+##### Perform a full build and report all errors to report.txt
+
+```bash
+br report
+```
+
+
+##### Don't clean before building
+
+```bash
+br report --no-clean
+```
+
+
+
+
+### Env command
+
+```bash
+branch_io env [OPTIONS]
+br env [OPTIONS]
+```
+
+Output information about CLI environment.
+
+
+#### Options
+
+|Option|Description|Env. var.|
+|------|-----------|---------|
+|-h, --help|Prints a list of commands or help for each command||
+|-v, --version|Prints the current version of the CLI||
+|-t, --trace|Prints a stack trace when exceptions are raised||
+|-c, --[no-]completion-script|Get the path to the completion script for this shell (default: no)|BRANCH_COMPLETION_SCRIPT|
+|-s, --shell zsh|Specify shell for completion script|SHELL|
+|-V, --[no-]verbose|Generate verbose output (default: no)|BRANCH_VERBOSE|
+
+
+#### Examples
+
+
+##### Show CLI environment
+
+```bash
+br env
+```
+
+
+##### Get completion script for zsh
+
+```bash
+br env -cs zsh
+```
 
 
 
