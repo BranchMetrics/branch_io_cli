@@ -1,4 +1,5 @@
 require "shellwords"
+require "tty/spinner"
 
 module BranchIOCLI
   module Command
@@ -6,14 +7,17 @@ module BranchIOCLI
       def run!
         say "\n"
 
-        say "Loading settings from Xcode"
+        task = Helper::Task.new
+        task.begin "Loading settings from Xcode."
+
         # In case running in a non-CLI context (e.g., Rake or Fastlane) be sure
         # to reset Xcode settings each time, since project, target and
         # configurations will change.
         Configuration::XcodeSettings.reset
         if Configuration::XcodeSettings.all_valid?
-          say "Done ✅"
+          task.success "Done."
         else
+          task.error "Failed."
           say "Failed to load settings from Xcode. Some information may be missing.\n"
         end
 
@@ -50,13 +54,13 @@ module BranchIOCLI
         tool_helper.carthage_bootstrap_if_required report
 
         # run xcodebuild -list
-        report.sh(*report_helper.base_xcodebuild_cmd, "-list")
+        report.sh(*report_helper.base_xcodebuild_cmd, "-list", obfuscate: true)
 
         # If using a workspace, -list all the projects as well
         if config.workspace_path
           config.workspace.file_references.map(&:path).each do |project_path|
             path = File.join File.dirname(config.workspace_path), project_path
-            report.sh "xcodebuild", "-list", "-project", path
+            report.sh "xcodebuild", "-list", "-project", path, obfuscate: true
           end
         end
 
@@ -77,19 +81,21 @@ module BranchIOCLI
         ]
 
         if config.clean
-          say "Cleaning"
-          if report.sh(*base_cmd, "clean").success?
-            say "Done ✅"
+          task = Helper::Task.new use_spinner: report != STDOUT
+          task.begin "Cleaning."
+          if report.sh(*base_cmd, "clean", obfuscate: true).success?
+            task.success "Done."
           else
-            say "Clean failed."
+            task.error "Clean failed."
           end
         end
 
-        say "Building"
-        if report.sh(*base_cmd, "-verbose").success?
-          say "Done ✅"
+        task = Helper::Task.new use_spinner: report != STDOUT
+        task.begin "Building."
+        if report.sh(*base_cmd, "-verbose", obfuscate: true).success?
+          task.success "Done."
         else
-          say "Build failed."
+          task.error "Failed."
         end
       end
 

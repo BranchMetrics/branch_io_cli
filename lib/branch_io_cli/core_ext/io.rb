@@ -1,5 +1,6 @@
 require "open3"
 require "shellwords"
+require_relative "../configuration/environment"
 
 class IO
   # Report the command. Execute the command, capture stdout
@@ -11,10 +12,16 @@ class IO
   def sh(*args)
     write "$ #{IO.command_from_args(*args)}\n\n"
 
+    obfuscate = args.last.delete(:obfuscate) if args.last.kind_of?(Hash)
+
     Open3.popen2e(*args) do |stdin, output, thread|
       # output is stdout and stderr merged
-      while (line = output.gets)
-        puts line
+      output.each do |line|
+        if obfuscate
+          puts BranchIOCLI::Configuration::Environment.obfuscate_user(line)
+        else
+          puts line
+        end
       end
 
       status = thread.value
@@ -34,9 +41,12 @@ end
 #
 # @param command a shell command to execute and report
 def STDOUT.sh(*args)
+  args.last.delete(:obfuscate) if args.last.kind_of?(Hash)
+
   # TODO: Improve this implementation?
   say "<%= color(%q{$ #{IO.command_from_args(*args)}}, [MAGENTA, BOLD]) %>\n\n"
   # May also write to stderr
+  # Cannot obfuscate here.
   system(*args)
 
   status = $?
@@ -52,7 +62,10 @@ def IO.command_from_args(*args)
   raise ArgumentError, "sh requires at least one argument" unless args.count > 0
 
   # Ignore any trailing options in the output
-  args.pop if args.last.kind_of?(Hash)
+  if args.last.kind_of?(Hash)
+    options = args.pop
+    obfuscate = options[:obfuscate]
+  end
 
   command = ""
 
@@ -71,5 +84,9 @@ def IO.command_from_args(*args)
     command += args.shelljoin
   end
 
-  command
+  if obfuscate
+    BranchIOCLI::Configuration::Environment.obfuscate_user(command)
+  else
+    command
+  end
 end

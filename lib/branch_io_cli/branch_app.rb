@@ -1,5 +1,5 @@
 require "active_support/core_ext/hash"
-require "json"
+require "active_support/json"
 require_relative "helper"
 require "tty/spinner"
 

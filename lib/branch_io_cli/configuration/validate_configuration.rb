@@ -34,7 +34,7 @@ module BranchIOCLI
       def log
         super
         say <<EOF
-<%= color('Xcode project:', BOLD) %> #{xcodeproj_path}
+<%= color('Xcode project:', BOLD) %> #{env.display_path(xcodeproj_path)}
 <%= color('Target:', BOLD) %> #{target.name}
 <%= color('Target type:', BOLD) %> #{target.product_type}
 <%= color('Live key:', BOLD) %> #{keys[:live] || '(none)'}

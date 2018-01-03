@@ -50,8 +50,8 @@ module BranchIOCLI
         <<EOF
 Configuration:
 
-Xcode workspace: #{workspace_path || '(none)'}
-Xcode project: #{xcodeproj_path || '(none)'}
+Xcode workspace: #{env.display_path(workspace_path) || '(none)'}
+Xcode project: #{env.display_path(xcodeproj_path) || '(none)'}
 Scheme: #{scheme || '(none)'}
 Target: #{target || '(none)'}
 Configuration: #{configuration || '(none)'}
@@ -66,8 +66,8 @@ EOF
       def log
         super
         say <<EOF
-<%= color('Xcode workspace:', BOLD) %> #{workspace_path || '(none)'}
-<%= color('Xcode project:', BOLD) %> #{xcodeproj_path || '(none)'}
+<%= color('Xcode workspace:', BOLD) %> #{env.display_path(workspace_path) || '(none)'}
+<%= color('Xcode project:', BOLD) %> #{env.display_path(xcodeproj_path) || '(none)'}
 <%= color('Scheme:', BOLD) %> #{scheme || '(none)'}
 <%= color('Target:', BOLD) %> #{target || '(none)'}
 <%= color('Target type:', BOLD) %> #{target.product_type}

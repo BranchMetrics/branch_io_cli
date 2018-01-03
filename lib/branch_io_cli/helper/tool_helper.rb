@@ -31,7 +31,7 @@ module BranchIOCLI
           install_command = %w(pod install)
           install_command << "--repo-update" if options.pod_repo_update
           Dir.chdir(File.dirname(podfile_path)) do
-            sh %w(pod init)
+            sh "pod", "init"
             PatternPatch::Patch.new(
               regexp: /^(\s*)# Pods for #{options.target.name}$/,
               mode: :append,
@@ -77,7 +77,7 @@ github "BranchMetrics/ios-branch-deep-linking"
           end
 
           # 2. carthage update
-          sh "carthage", options.carthage_command, chdir: File.dirname(config.cartfile_path)
+          sh "carthage", *options.carthage_command.shellsplit, chdir: File.dirname(config.cartfile_path)
 
           # 3. Add Cartfile and Cartfile.resolved to commit (in case :commit param specified)
           helper.add_change cartfile_path
@@ -193,7 +193,6 @@ github "BranchMetrics/ios-branch-deep-linking"
           return false unless PatchHelper.patch_podfile podfile_path
 
           # 2. pod install
-          # command = "PATH='#{ENV['PATH']}' pod install"
           command = %w(pod install)
           command << '--repo-update' if options.pod_repo_update
 
@@ -306,7 +305,7 @@ github "BranchMetrics/ios-branch-deep-linking"
 
           # Ensure master podspec repo is set up (will update if it exists).
           say "Synching master podspec repo. This may take some time."
-          sh %w(pod setup)
+          sh "pod", "setup"
           say "Done ✅"
         end
 
@@ -326,7 +325,7 @@ github "BranchMetrics/ios-branch-deep-linking"
             exit(-1)
           end
 
-          sh %w(brew install carthage)
+          sh "brew", "install", "carthage"
         end
 
         def verify_git
@@ -347,7 +346,7 @@ github "BranchMetrics/ios-branch-deep-linking"
             exit(-1)
           end
 
-          sh %w(xcode-select --install)
+          sh "xcode-select", "--install"
         end
 
         def pod_install_if_required(report = STDOUT)
@@ -378,11 +377,13 @@ some cases. If that happens, please rerun without --no-pod-repo-update or run
                 EOF
           end
 
+          task = Task.new use_spinner: report != STDOUT
           # included by sh, but this is to the screen when generating a report.
-          say "Running #{IO.command_from_args(*install_command)}"
+          task.begin "Running #{IO.command_from_args(*install_command)}."
           if report.sh(*install_command).success?
-            say "Done ✅"
+            task.success "Done."
           else
+            task.error "Failed."
             say "#{IO.command_from_args(*install_command)} failed. See report for details."
             return false
           end
@@ -408,22 +409,26 @@ some cases. If that happens, please rerun without --no-pod-repo-update or run
 
           checkout_command = %w(carthage checkout)
 
+          task = Task.new use_spinner: report != STDOUT
           # included by sh, but this is to the screen when generating a report.
-          say "Running #{IO.command_from_args(*checkout_command)}"
+          task.begin "Running #{IO.command_from_args(*checkout_command)}."
           if report.sh(*checkout_command).success?
-            say "Done ✅"
+            task.success "Done."
           else
+            task.error "Failed."
             say "#{IO.command_from_args(*checkout_command)} failed. See report for details."
             return false
           end
 
-          build_command = %w(carthage build --platform ios)
+          build_command = "carthage", "build", "--platform", "ios"
 
+          task = Task.new use_spinner: report != STDOUT
           # included by sh, but this is to the screen when generating a report.
-          say "Running #{IO.command_from_args(*build_command)}"
+          task.begin "Running #{IO.command_from_args(*build_command)}."
           if report.sh(*build_command).success?
-            say "Done ✅"
+            task.success "Done."
           else
+            task.error "Failed."
             say "#{IO.command_from_args(*build_command)} failed. See report for details."
             return false
           end
