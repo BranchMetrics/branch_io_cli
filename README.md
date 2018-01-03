@@ -16,10 +16,8 @@ the same support via Fastlane.
 
 ## Getting started
 
-To install a prerelease version of `0.13`:
-
 ```bash
-gem install branch_io_cli --pre
+gem install branch_io_cli
 ```
 
 Note that this command may require `sudo` access if you are using the system Ruby, i.e. `sudo gem install branch_io_cli`.
