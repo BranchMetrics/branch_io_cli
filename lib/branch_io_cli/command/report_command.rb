@@ -1,4 +1,5 @@
 require "shellwords"
+require "tty/spinner"
 
 module BranchIOCLI
   module Command
@@ -6,14 +7,16 @@ module BranchIOCLI
       def run!
         say "\n"
 
-        say "Loading settings from Xcode"
+        spinner = TTY::Spinner.new "[:spinner] Loading settings from Xcode.", format: :flip
+        spinner.auto_spin
         # In case running in a non-CLI context (e.g., Rake or Fastlane) be sure
         # to reset Xcode settings each time, since project, target and
         # configurations will change.
         Configuration::XcodeSettings.reset
         if Configuration::XcodeSettings.all_valid?
-          say "Done ✅"
+          spinner.success "Done."
         else
+          spinner.error "Failed."
           say "Failed to load settings from Xcode. Some information may be missing.\n"
         end
 
