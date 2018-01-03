@@ -7,16 +7,17 @@ module BranchIOCLI
       def run!
         say "\n"
 
-        spinner = TTY::Spinner.new "[:spinner] Loading settings from Xcode.", format: :flip
-        spinner.auto_spin
+        task = Helper::Task.new
+        task.begin "Loading settings from Xcode."
+
         # In case running in a non-CLI context (e.g., Rake or Fastlane) be sure
         # to reset Xcode settings each time, since project, target and
         # configurations will change.
         Configuration::XcodeSettings.reset
         if Configuration::XcodeSettings.all_valid?
-          spinner.success "Done."
+          task.success "Done."
         else
-          spinner.error "Failed."
+          task.error "Failed."
           say "Failed to load settings from Xcode. Some information may be missing.\n"
         end
 
@@ -80,19 +81,21 @@ module BranchIOCLI
         ]
 
         if config.clean
-          say "Cleaning"
+          task = Helper::Task.new use_spinner: report != STDOUT
+          task.begin "Cleaning."
           if report.sh(*base_cmd, "clean").success?
-            say "Done ✅"
+            task.success "Done."
           else
-            say "Clean failed."
+            task.error "Clean failed."
           end
         end
 
-        say "Building"
+        task = Helper::Task.new use_spinner: report != STDOUT
+        task.begin "Building."
         if report.sh(*base_cmd, "-verbose").success?
-          say "Done ✅"
+          task.success "Done."
         else
-          say "Build failed."
+          task.error "Failed."
         end
       end
 

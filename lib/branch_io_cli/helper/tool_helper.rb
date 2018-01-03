@@ -378,11 +378,13 @@ some cases. If that happens, please rerun without --no-pod-repo-update or run
                 EOF
           end
 
+          task = Task.new use_spinner: report != STDOUT
           # included by sh, but this is to the screen when generating a report.
-          say "Running #{IO.command_from_args(*install_command)}"
+          task.begin "Running #{IO.command_from_args(*install_command)}"
           if report.sh(*install_command).success?
-            say "Done ✅"
+            task.success "Done."
           else
+            task.error "Failed."
             say "#{IO.command_from_args(*install_command)} failed. See report for details."
             return false
           end
@@ -408,22 +410,26 @@ some cases. If that happens, please rerun without --no-pod-repo-update or run
 
           checkout_command = %w(carthage checkout)
 
+          task = Task.new use_spinner: report != STDOUT
           # included by sh, but this is to the screen when generating a report.
-          say "Running #{IO.command_from_args(*checkout_command)}"
+          task.begin "Running #{IO.command_from_args(*checkout_command)}"
           if report.sh(*checkout_command).success?
-            say "Done ✅"
+            task.success "Done."
           else
+            task.error "Failed."
             say "#{IO.command_from_args(*checkout_command)} failed. See report for details."
             return false
           end
 
           build_command = %w(carthage build --platform ios)
 
+          task = Task.new use_spinner: report != STDOUT
           # included by sh, but this is to the screen when generating a report.
-          say "Running #{IO.command_from_args(*build_command)}"
+          task.begin "Running #{IO.command_from_args(*build_command)}"
           if report.sh(*build_command).success?
-            say "Done ✅"
+            task.success "Done ✅"
           else
+            task.error "Failed."
             say "#{IO.command_from_args(*build_command)} failed. See report for details."
             return false
           end

@@ -88,11 +88,12 @@ module BranchIOCLI
           if terminal
             "<%= color('#{label}:', BOLD) %> #{value}\n"
           else
-            "label: #{value}\n"
+            "#{label}: #{value}\n"
           end
         end
 
         def obfuscate_user(path)
+          return nil if path.nil?
           path.gsub(ENV['HOME'], '~').gsub(ENV['USER'], '$USER')
         end
 

@@ -130,6 +130,10 @@ EOF
         target.name.nil? ? nil : target.name
       end
 
+      def env
+        Environment
+      end
+
       def root
         return @root if @root
         if workspace
