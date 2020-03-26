@@ -35,7 +35,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'tty-spinner', '~> 0.7'
   spec.add_dependency 'xcodeproj', '~> 1.4'
 
-  spec.add_development_dependency 'bundler', '~> 1.15'
+  spec.add_development_dependency 'bundler', '>= 1.15'
   spec.add_development_dependency 'cocoapods', '~> 1.3'
   spec.add_development_dependency 'fastlane', '~> 2.69'
   spec.add_development_dependency 'pry', '~> 0.11'
